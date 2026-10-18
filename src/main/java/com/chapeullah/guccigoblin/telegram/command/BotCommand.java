@@ -2,8 +2,10 @@ package com.chapeullah.guccigoblin.telegram.command;
 
 public interface BotCommand {
 
-    String name();
+    String getName();
 
-    String execute(String args);
+    String getDescription();
+
+    String execute(String args, long chatId);
 
 }

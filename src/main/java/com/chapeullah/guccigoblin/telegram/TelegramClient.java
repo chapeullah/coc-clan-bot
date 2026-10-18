@@ -1,8 +1,9 @@
 package com.chapeullah.guccigoblin.telegram;
 
-import com.chapeullah.guccigoblin.telegram.dto.ApiResponse;
-import com.chapeullah.guccigoblin.telegram.dto.Update;
+import com.chapeullah.guccigoblin.telegram.dto.TelegramApiResponse;
+import com.chapeullah.guccigoblin.telegram.dto.TelegramUpdate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
+@DependsOn("environmentVariablesValidator")
 public class TelegramClient {
 
     private final RestClient restClient;
@@ -33,8 +35,8 @@ public class TelegramClient {
                 .build();
     }
 
-    public List<Update> getUpdates(long offset) {
-        ApiResponse<List<Update>> response = restClient.get()
+    public List<TelegramUpdate> getUpdates(long offset) {
+        TelegramApiResponse<List<TelegramUpdate>> response = restClient.get()
                 .uri(builder -> builder
                         .path("/getUpdates")
                         .queryParam("offset", offset)

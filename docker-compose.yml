@@ -6,12 +6,13 @@ services:
       POSTGRES_USER: gucci
       POSTGRES_PASSWORD: gucci
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:15432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
   app:
-    build: .
+    build:
+      context: .
     depends_on:
       - db
     environment:
@@ -21,10 +22,16 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Moscow"
       LOG_DIR: /logs
+      LOGGING_LEVEL_COM_CHAPEULLAH_GUCCIGOBLIN: DEBUG
 
       COC_API_TOKEN: ${COC_API_TOKEN}
+      COC_CLAN_TAG: ${COC_CLAN_TAG}
+      COC_API_BASE_URL: ${COC_API_BASE_URL}
+
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      CLAN_TAG: ${CLAN_TAG}
+      TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID}
+      TELEGRAM_CLAN_CHAT_LINK: ${TELEGRAM_CLAN_CHAT_LINK}
+
     volumes:
       - applogs:/logs
 

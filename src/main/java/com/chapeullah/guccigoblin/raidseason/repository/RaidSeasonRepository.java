@@ -1,9 +1,7 @@
 package com.chapeullah.guccigoblin.raidseason.repository;
 
 import com.chapeullah.guccigoblin.raidseason.model.RaidSeason;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -17,8 +15,6 @@ public interface RaidSeasonRepository extends JpaRepository<RaidSeason, Long> {
 
     List<RaidSeason> findTop5ByClanTagOrderByStartTimeDesc(String clanTag);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<RaidSeason> findByClanTagAndStartTime(
-            String clanTag,
-            Instant startTime);
+    Optional<RaidSeason> findByClanTagAndStartTime(String clanTag, Instant startTime);
+
 }

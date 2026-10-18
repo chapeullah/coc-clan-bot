@@ -1,10 +1,20 @@
 coc:
-  apiToken: ${COC_API_TOKEN}
-  clanTag: ${CLAN_TAG}
+  base-url: ${COC_API_BASE_URL}
+  api-token: ${COC_API_TOKEN}
+  clan-tag: ${COC_CLAN_TAG}
 
 telegram:
+  admin:
+    chat-id: ${TELEGRAM_ADMIN_CHAT_ID}
   bot:
     token: ${TELEGRAM_BOT_TOKEN}
+    poll-delay-ms: 1000
+  clan:
+    chat-link: ${TELEGRAM_CLAN_CHAT_LINK}
+    chat-id: ${TELEGRAM_CHAT_ID}
+    threads:
+      war: ${TELEGRAM_WAR_THREAD_ID}
+      raid: ${TELEGRAM_RAID_THREAD_ID}
 
 spring:
   task:
@@ -20,6 +30,12 @@ spring:
     properties:
       hibernate:
         format_sql: 'true'
+        jdbc:
+          batch_size: 50
 
   main:
     web-application-type: none
+
+logging:
+  level:
+    com.chapeullah.guccigoblin: DEBUG

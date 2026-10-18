@@ -11,5 +11,5 @@ public record WarResponse(
         String preparationStartTime,
         String startTime,
         String endTime,
-        ClanResponse clan,
-        ClanResponse opponent) {}
+        WarClanResponse clan,
+        WarClanResponse opponent) {}

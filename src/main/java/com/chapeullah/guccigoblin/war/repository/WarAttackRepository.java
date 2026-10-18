@@ -8,8 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface WarAttackRepository
-        extends JpaRepository<WarAttack, Long> {
+public interface WarAttackRepository extends JpaRepository<WarAttack, Long> {
+
+    boolean existsByWar(War war);
 
     boolean existsByWarAndAttackOrder(War war, Integer attackOrder);
 

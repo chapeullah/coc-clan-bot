@@ -3,7 +3,11 @@ package com.chapeullah.guccigoblin.raidseason.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
+
+import java.time.Instant;
+import java.util.Objects;
 
 @Entity
 @Table(
@@ -30,33 +34,82 @@ public class RaidSeasonParticipant {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "attacks", nullable = false)
-    private Integer attacks;
+    @Column(name = "name_changed_at", nullable = true)
+    private Instant nameChangedAt;
 
-    @Column(name = "attack_limit", nullable = false)
+    @Column(name = "attack_count", nullable = true)
+    private Integer attackCount;
+
+    @Column(name = "attack_count_changed_at", nullable = true)
+    private Instant attackCountChangedAt;
+
+    @Column(name = "attack_limit", nullable = true)
     private Integer attackLimit;
 
-    @Column(name = "bonus_attack_limit", nullable = false)
+    @Column(name = "attack_limit_changed_at", nullable = true)
+    private Instant attackLimitChangedAt;
+
+    @Column(name = "bonus_attack_limit", nullable = true)
     private Integer bonusAttackLimit;
 
-    @Column(name = "capital_resources_looted", nullable = false)
+    @Column(name = "bonus_attack_limit_changed_at", nullable = true)
+    private Instant bonusAttackLimitChangedAt;
+
+    @Column(name = "capital_resources_looted", nullable = true)
     private Integer capitalResourcesLooted;
 
+    @Column(name = "capital_resources_looted_changed_at", nullable = true)
+    private Instant capitalResourcesLootedChangedAt;
+
     public RaidSeasonParticipant(
-            RaidSeason raidSeason,
-            String tag,
-            String name,
-            Integer attacks,
+            @NonNull RaidSeason raidSeason,
+            @NonNull String tag,
+            @NonNull String name,
+            Integer attackCount,
             Integer attackLimit,
             Integer bonusAttackLimit,
             Integer capitalResourcesLooted) {
         this.raidSeason = raidSeason;
         this.tag = tag;
         this.name = name;
-        this.attacks = attacks;
+        this.attackCount = attackCount;
         this.attackLimit = attackLimit;
         this.bonusAttackLimit = bonusAttackLimit;
         this.capitalResourcesLooted = capitalResourcesLooted;
+    }
+
+    public void update(
+            @NonNull String name,
+            Integer attackCount,
+            Integer attackLimit,
+            Integer bonusAttackLimit,
+            Integer capitalResourcesLooted) {
+        Instant now = Instant.now();
+
+        if (!Objects.equals(this.name, name)) {
+            this.name = name;
+            this.nameChangedAt = now;
+        }
+
+        if (!Objects.equals(this.attackCount, attackCount)) {
+            this.attackCount = attackCount;
+            this.attackCountChangedAt = now;
+        }
+
+        if (!Objects.equals(this.attackLimit, attackLimit)) {
+            this.attackLimit = attackLimit;
+            this.attackLimitChangedAt = now;
+        }
+
+        if (!Objects.equals(this.bonusAttackLimit, bonusAttackLimit)) {
+            this.bonusAttackLimit = bonusAttackLimit;
+            this.bonusAttackLimitChangedAt = now;
+        }
+
+        if (!Objects.equals(this.capitalResourcesLooted, capitalResourcesLooted)) {
+            this.capitalResourcesLooted = capitalResourcesLooted;
+            this.capitalResourcesLootedChangedAt = now;
+        }
     }
 
 }

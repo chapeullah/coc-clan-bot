@@ -1,16 +1,23 @@
 package com.chapeullah.guccigoblin.member.dto;
 
-import lombok.NonNull;
+import com.chapeullah.guccigoblin.builderbaseleague.dto.BuilderBaseLeagueResponse;
+import com.chapeullah.guccigoblin.clan.dto.ClanLeagueResponse;
+import com.chapeullah.guccigoblin.leaguetier.dto.LeagueTierResponse;
+import com.chapeullah.guccigoblin.player.dto.PlayerHouseResponse;
 
 public record MemberResponse(
-        @NonNull String tag,
-        @NonNull String name,
-        @NonNull String role,
-        @NonNull Integer townHallLevel,
-        @NonNull Integer expLevel,
-        @NonNull Integer donations,
-        @NonNull Integer donationsReceived,
-        @NonNull Integer builderBaseTrophies,
-        @NonNull BuilderBaseLeagueResponse builderBaseLeague,
-        @NonNull LeagueTierResponse leagueTier,
-        @NonNull Integer clanRank) {}
+        String tag,
+        String name,
+        String role,
+        Integer townHallLevel,
+        Integer expLevel,
+        ClanLeagueResponse league,
+        LeagueTierResponse leagueTier,
+        Integer trophies,
+        Integer builderBaseTrophies,
+        Integer clanRank,
+        Integer previousClanRank,
+        Integer donations,
+        Integer donationsReceived,
+        PlayerHouseResponse playerHouse,
+        BuilderBaseLeagueResponse builderBaseLeague) {}

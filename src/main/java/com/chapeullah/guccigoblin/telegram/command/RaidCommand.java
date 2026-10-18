@@ -1,6 +1,6 @@
 package com.chapeullah.guccigoblin.telegram.command;
 
-import com.chapeullah.guccigoblin.telegram.CommandService;
+import com.chapeullah.guccigoblin.telegram.TelegramCommandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -8,16 +8,24 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RaidCommand implements BotCommand {
 
-    private final CommandService commandService;
+    private final TelegramCommandService telegramCommandService;
+
+    private static final String NAME = "/raid";
+    private static final String DESCRIPTION = "Текущий сезон рейдов";
 
     @Override
-    public String name() {
-        return "/raid";
+    public String getName() {
+        return NAME;
     }
 
     @Override
-    public String execute(String args) {
-        return commandService.raid();
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public String execute(String args, long chatId) {
+        return telegramCommandService.getRaidMessage();
     }
 
 }
