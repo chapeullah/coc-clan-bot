@@ -38,4 +38,4 @@ spring:
 
 logging:
   level:
-    com.chapeullah.guccigoblin: DEBUG
+    com.chapeullah.guccigoblin: INFO
