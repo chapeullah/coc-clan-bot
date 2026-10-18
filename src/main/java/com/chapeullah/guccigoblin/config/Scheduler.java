@@ -33,8 +33,6 @@ public class Scheduler {
 
     @Scheduled(cron = "0 * * * * *")
     public void synchronize() {
-        testExceptionNotification();
-
         synchronizeClan();
         finishEndedWars();
         synchronizeCurrentWar();
@@ -112,10 +110,10 @@ public class Scheduler {
 
     private void testExceptionNotification() {
         try {
-            throw new IllegalStateException("Тестовая ошибка синхронизации");
+            throw new IllegalStateException("Test synchronization error");
         } catch (Exception e) {
             log.error("Test synchronization failed", e);
-            telegramNotificationService.sendError("Тест", e);
+            telegramNotificationService.sendError("Test", e);
         }
     }
 
