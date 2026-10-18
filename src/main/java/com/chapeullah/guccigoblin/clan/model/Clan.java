@@ -26,117 +26,153 @@ public class Clan {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Setter
     @Column(name = "type", nullable = false)
     private String type;
 
+    @Setter
     @Column(name = "type_changed_at", nullable = true)
     private Instant typeChangedAt;
 
+    @Setter
     @Column(name = "description", nullable = true)
     private String description;
 
+    @Setter
     @Column(name = "description_changed_at", nullable = true)
     private Instant descriptionChangedAt;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "location_id", nullable = true)
     private Location location;
 
+    @Setter
     @Column(name = "location_changed_at", nullable = true)
     private Instant locationChangedAt;
 
     @Column(name = "is_family_friendly", nullable = true)
     private Boolean isFamilyFriendly;
 
+    @Setter
     @Embedded
     private ClanBadgeUrls clanBadgeUrls;
 
+    @Setter
     @Column(name = "clan_badge_urls_changed_at", nullable = true)
     private Instant clanBadgeUrlsChangedAt;
 
+    @Setter
     @Column(name = "clan_level", nullable = true)
     private Integer clanLevel;
 
+    @Setter
     @Column(name = "clan_level_changed_at", nullable = true)
     private Instant clanLevelChangedAt;
 
+    @Setter
     @Column(name = "clan_points", nullable = true)
     private Integer clanPoints;
 
+    @Setter
     @Column(name = "clan_points_changed_at", nullable = true)
     private Instant clanPointsChangedAt;
 
+    @Setter
     @Column(name = "clan_builder_base_points", nullable = true)
     private Integer clanBuilderBasePoints;
 
+    @Setter
     @Column(name = "clan_builder_base_points_changed_at", nullable = true)
     private Instant clanBuilderBasePointsChangedAt;
 
+    @Setter
     @Column(name = "clan_capital_points", nullable = true)
     private Integer clanCapitalPoints;
 
+    @Setter
     @Column(name = "clan_capital_points_changed_at", nullable = true)
     private Instant clanCapitalPointsChangedAt;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "capital_league_id", nullable = true)
     private CapitalLeague capitalLeague;
 
+    @Setter
     @Column(name = "capital_league_changed_at", nullable = true)
     private Instant capitalLeagueChangedAt;
 
+    @Setter
     @Column(name = "required_trophies", nullable = true)
     private Integer requiredTrophies;
 
+    @Setter
     @Column(name = "required_trophies_changed_at", nullable = true)
     private Instant requiredTrophiesChangedAt;
 
+    @Setter
     @Column(name = "war_frequency", nullable = true)
     private String warFrequency;
 
+    @Setter
     @Column(name = "war_frequency_changed_at", nullable = true)
     private Instant warFrequencyChangedAt;
 
+    @Setter
     @Column(name = "war_win_streak", nullable = true)
     private Integer warWinStreak;
 
+    @Setter
     @Column(name = "war_win_streak_changed_at", nullable = true)
     private Instant warWinStreakChangedAt;
 
+    @Setter
     @Column(name = "war_wins", nullable = true)
     private Integer warWins;
 
+    @Setter
     @Column(name = "war_wins_changed_at", nullable = true)
     private Instant warWinsChangedAt;
 
+    @Setter
     @Column(name = "war_ties", nullable = true)
     private Integer warTies;
 
+    @Setter
     @Column(name = "war_ties_changed_at", nullable = true)
     private Instant warTiesChangedAt;
 
+    @Setter
     @Column(name = "war_losses", nullable = true)
     private Integer warLosses;
 
+    @Setter
     @Column(name = "war_losses_changed_at", nullable = true)
     private Instant warLossesChangedAt;
 
+    @Setter
     @Column(name = "is_war_log_public", nullable = true)
     private Boolean isWarLogPublic;
 
+    @Setter
     @Column(name = "is_war_log_public_changed_at", nullable = true)
     private Instant isWarLogPublicChangedAt;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "war_league_id", nullable = true)
     private WarLeague warLeague;
 
+    @Setter
     @Column(name = "war_league_changed_at", nullable = true)
     private Instant warLeagueChangedAt;
 
+    @Setter
     @Column(name = "member_count", nullable = true)
     private Integer memberCount;
 
+    @Setter
     @Column(name = "member_count_changed_at", nullable = true)
     private Instant memberCountChangedAt;
 
@@ -146,6 +182,7 @@ public class Clan {
             cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Member> memberList = new ArrayList<>();
 
+    @Setter
     @Column(name = "member_list_changed_at", nullable = true)
     private Instant memberListChangedAt;
 
@@ -153,35 +190,45 @@ public class Clan {
     @OneToMany(mappedBy = "clan", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ClanLabelLink> labelLinks = new ArrayList<>();
 
+    @Setter
     @Column(name = "label_links_changed_at", nullable = true)
     private Instant labelLinksChangedAt;
 
+    @Setter
     @Column(name = "required_builder_base_trophies", nullable = true)
     private Integer requiredBuilderBaseTrophies;
 
+    @Setter
     @Column(name = "required_builder_base_trophies_changed_at", nullable = true)
     private Instant requiredBuilderBaseTrophiesChangedAt;
 
+    @Setter
     @Column(name = "required_townhall_level", nullable = true)
     private Integer requiredTownHallLevel;
 
+    @Setter
     @Column(name = "required_townhall_level_changed_at", nullable = true)
     private Instant requiredTownHallLevelChangedAt;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "required_league_tier_id", nullable = true)
     private LeagueTier requiredLeagueTier;
 
+    @Setter
     @Column(name = "required_league_tier_changed_at", nullable = true)
     private Instant requiredLeagueTierChangedAt;
 
+    @Setter
     @OneToOne(mappedBy = "clan")
     private ClanCapital clanCapital;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "chat_language_id", nullable = true)
     private ClanChatLanguage clanChatLanguage;
 
+    @Setter
     @Column(name = "clan_chat_language_changed_at", nullable = true)
     private Instant clanChatLanguageChangedAt;
 
@@ -242,203 +289,6 @@ public class Clan {
         this.requiredTownHallLevel = requiredTownHallLevel;
         this.requiredLeagueTier = requiredLeagueTier;
         this.clanChatLanguage = clanChatLanguage;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setTypeChangedAt(Instant typeChangedAt) {
-        this.typeChangedAt = typeChangedAt;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setDescriptionChangedAt(Instant descriptionChangedAt) {
-        this.descriptionChangedAt = descriptionChangedAt;
-    }
-
-    public void setLocation(Location location) {
-        this.location = location;
-    }
-
-    public void setLocationChangedAt(Instant locationChangedAt) {
-        this.locationChangedAt = locationChangedAt;
-    }
-
-    public void setClanBadgeUrls(ClanBadgeUrls clanBadgeUrls) {
-        this.clanBadgeUrls = clanBadgeUrls;
-    }
-
-    public void setClanBadgeUrlsChangedAt(Instant clanBadgeUrlsChangedAt) {
-        this.clanBadgeUrlsChangedAt = clanBadgeUrlsChangedAt;
-    }
-
-    public void setClanLevel(Integer clanLevel) {
-        this.clanLevel = clanLevel;
-    }
-
-    public void setClanLevelChangedAt(Instant clanLevelChangedAt) {
-        this.clanLevelChangedAt = clanLevelChangedAt;
-    }
-
-    public void setClanPoints(Integer clanPoints) {
-        this.clanPoints = clanPoints;
-    }
-
-    public void setClanPointsChangedAt(Instant clanPointsChangedAt) {
-        this.clanPointsChangedAt = clanPointsChangedAt;
-    }
-
-    public void setClanBuilderBasePoints(Integer clanBuilderBasePoints) {
-        this.clanBuilderBasePoints = clanBuilderBasePoints;
-    }
-
-    public void setClanBuilderBasePointsChangedAt(Instant clanBuilderBasePointsChangedAt) {
-        this.clanBuilderBasePointsChangedAt = clanBuilderBasePointsChangedAt;
-    }
-
-    public void setClanCapitalPoints(Integer clanCapitalPoints) {
-        this.clanCapitalPoints = clanCapitalPoints;
-    }
-
-    public void setClanCapitalPointsChangedAt(Instant clanCapitalPointsChangedAt) {
-        this.clanCapitalPointsChangedAt = clanCapitalPointsChangedAt;
-    }
-
-    public void setCapitalLeague(CapitalLeague capitalLeague) {
-        this.capitalLeague = capitalLeague;
-    }
-
-    public void setCapitalLeagueChangedAt(Instant capitalLeagueChangedAt) {
-        this.capitalLeagueChangedAt = capitalLeagueChangedAt;
-    }
-
-    public void setRequiredTrophies(Integer requiredTrophies) {
-        this.requiredTrophies = requiredTrophies;
-    }
-
-    public void setRequiredTrophiesChangedAt(Instant requiredTrophiesChangedAt) {
-        this.requiredTrophiesChangedAt = requiredTrophiesChangedAt;
-    }
-
-    public void setWarFrequency(String warFrequency) {
-        this.warFrequency = warFrequency;
-    }
-
-    public void setWarFrequencyChangedAt(Instant warFrequencyChangedAt) {
-        this.warFrequencyChangedAt = warFrequencyChangedAt;
-    }
-
-    public void setWarWinStreak(Integer warWinStreak) {
-        this.warWinStreak = warWinStreak;
-    }
-
-    public void setWarWinStreakChangedAt(Instant warWinStreakChangedAt) {
-        this.warWinStreakChangedAt = warWinStreakChangedAt;
-    }
-
-    public void setWarWins(Integer warWins) {
-        this.warWins = warWins;
-    }
-
-    public void setWarWinsChangedAt(Instant warWinsChangedAt) {
-        this.warWinsChangedAt = warWinsChangedAt;
-    }
-
-    public void setWarTies(Integer warTies) {
-        this.warTies = warTies;
-    }
-
-    public void setWarTiesChangedAt(Instant warTiesChangedAt) {
-        this.warTiesChangedAt = warTiesChangedAt;
-    }
-
-    public void setWarLosses(Integer warLosses) {
-        this.warLosses = warLosses;
-    }
-
-    public void setWarLossesChangedAt(Instant warLossesChangedAt) {
-        this.warLossesChangedAt = warLossesChangedAt;
-    }
-
-    public void setIsWarLogPublic(Boolean warLogPublic) {
-        this.isWarLogPublic = warLogPublic;
-    }
-
-    public void setIsWarLogPublicChangedAt(Instant isWarLogPublicChangedAt) {
-        this.isWarLogPublicChangedAt = isWarLogPublicChangedAt;
-    }
-
-    public void setWarLeague(WarLeague warLeague) {
-        this.warLeague = warLeague;
-    }
-
-    public void setWarLeagueChangedAt(Instant warLeagueChangedAt) {
-        this.warLeagueChangedAt = warLeagueChangedAt;
-    }
-
-    public void setMemberCount(Integer memberCount) {
-        this.memberCount = memberCount;
-    }
-
-    public void setMemberCountChangedAt(Instant memberCountChangedAt) {
-        this.memberCountChangedAt = memberCountChangedAt;
-    }
-
-    public void setMemberList(List<Member> memberList) {
-        this.memberList = memberList;
-    }
-
-    public void setMemberListChangedAt(Instant memberListChangedAt) {
-        this.memberListChangedAt = memberListChangedAt;
-    }
-
-    public void setLabelLinks(List<ClanLabelLink> labelLinks) {
-        this.labelLinks = labelLinks;
-    }
-
-    public void setLabelLinksChangedAt(Instant labelLinksChangedAt) {
-        this.labelLinksChangedAt = labelLinksChangedAt;
-    }
-
-    public void setRequiredBuilderBaseTrophies(Integer requiredBuilderBaseTrophies) {
-        this.requiredBuilderBaseTrophies = requiredBuilderBaseTrophies;
-    }
-
-    public void setRequiredBuilderBaseTrophiesChangedAt(Instant requiredBuilderBaseTrophiesChangedAt) {
-        this.requiredBuilderBaseTrophiesChangedAt = requiredBuilderBaseTrophiesChangedAt;
-    }
-
-    public void setRequiredTownHallLevel(Integer requiredTownHallLevel) {
-        this.requiredTownHallLevel = requiredTownHallLevel;
-    }
-
-    public void setRequiredTownHallLevelChangedAt(Instant requiredTownHallLevelChangedAt) {
-        this.requiredTownHallLevelChangedAt = requiredTownHallLevelChangedAt;
-    }
-
-    public void setRequiredLeagueTier(LeagueTier requiredLeagueTier) {
-        this.requiredLeagueTier = requiredLeagueTier;
-    }
-
-    public void setRequiredLeagueTierChangedAt(Instant requiredLeagueTierChangedAt) {
-        this.requiredLeagueTierChangedAt = requiredLeagueTierChangedAt;
-    }
-
-    public void setClanCapital(ClanCapital clanCapital) {
-        this.clanCapital = clanCapital;
-    }
-
-
-    public void setClanChatLanguage(ClanChatLanguage clanChatLanguage) {
-        this.clanChatLanguage = clanChatLanguage;
-    }
-
-    public void setClanChatLanguageChangedAt(Instant clanChatLanguageChangedAt) {
-        this.clanChatLanguageChangedAt = clanChatLanguageChangedAt;
     }
 
 }

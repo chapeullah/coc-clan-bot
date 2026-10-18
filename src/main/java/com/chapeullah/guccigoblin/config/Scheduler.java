@@ -32,7 +32,9 @@ public class Scheduler {
     private String clanTag;
 
     @Scheduled(cron = "0 * * * * *")
-    public void sync() {
+    public void synchronize() {
+        testExceptionNotification();
+
         synchronizeClan();
         finishEndedWars();
         synchronizeCurrentWar();
@@ -105,6 +107,15 @@ public class Scheduler {
         } catch (Exception e) {
             log.error("Raid season synchronization failed: clanTag=\"{}\"", clanTag, e);
             telegramNotificationService.sendError("Синхронизация сезона рейдов", e);
+        }
+    }
+
+    private void testExceptionNotification() {
+        try {
+            throw new IllegalStateException("Тестовая ошибка синхронизации");
+        } catch (Exception e) {
+            log.error("Test synchronization failed", e);
+            telegramNotificationService.sendError("Тест", e);
         }
     }
 
