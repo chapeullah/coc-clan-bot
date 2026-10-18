@@ -49,29 +49,17 @@ public class WarLogEntry {
     @Column(name = "result", nullable = true)
     private String result;
 
-    @Column(name = "result_changed_at", nullable = true)
-    private Instant resultChangedAt;
-
     @Column(name = "end_time", nullable = false)
     private Instant endTime;
 
-    @Column(name = "team_size", nullable = true)
+    @Column(name = "team_size", nullable = false)
     private Integer teamSize;
 
-    @Column(name = "team_size_changed_at", nullable = true)
-    private Instant teamSizeChangedAt;
-
-    @Column(name = "attacks_per_member", nullable = true)
+    @Column(name = "attacks_per_member", nullable = false)
     private Integer attacksPerMember;
-
-    @Column(name = "attacks_per_member_changed_at", nullable = true)
-    private Instant attacksPerMemberChangedAt;
 
     @Column(name = "battle_modifier", nullable = true)
     private String battleModifier;
-
-    @Column(name = "battle_modifier_changed_at", nullable = true)
-    private Instant battleModifierChangedAt;
 
     /**
      * CLAN
@@ -82,9 +70,6 @@ public class WarLogEntry {
 
     @Column(name = "clan_name", nullable = true)
     private String clanName;
-
-    @Column(name = "clan_name_changed_at", nullable = true)
-    private Instant clanNameChangedAt;
 
     @Column(name = "clan_level", nullable = true)
     private Integer clanLevel;
@@ -129,14 +114,8 @@ public class WarLogEntry {
     @Column(name = "opponent_clan_tag", nullable = true)
     private String opponentClanTag;
 
-    @Column(name = "opponent_clan_tag_changed_at", nullable = true)
-    private Instant opponentClanTagChangedAt;
-
     @Column(name = "opponent_clan_name", nullable = true)
     private String opponentClanName;
-
-    @Column(name = "opponent_clan_name_changed_at", nullable = true)
-    private Instant opponentClanNameChangedAt;
 
     @Column(name = "opponent_clan_level", nullable = true)
     private Integer opponentClanLevel;
@@ -229,36 +208,6 @@ public class WarLogEntry {
         Instant now = Instant.now();
         boolean changed = false;
 
-        if (!Objects.equals(this.result, incoming.getResult())) {
-            this.result = incoming.getResult();
-            this.resultChangedAt = now;
-            changed = true;
-        }
-
-        if (!Objects.equals(this.teamSize, incoming.getTeamSize())) {
-            this.teamSize = incoming.getTeamSize();
-            this.teamSizeChangedAt = now;
-            changed = true;
-        }
-
-        if (!Objects.equals(this.attacksPerMember, incoming.getAttacksPerMember())) {
-            this.attacksPerMember = incoming.getAttacksPerMember();
-            this.attacksPerMemberChangedAt = now;
-            changed = true;
-        }
-
-        if (!Objects.equals(this.battleModifier, incoming.getBattleModifier())) {
-            this.battleModifier = incoming.getBattleModifier();
-            this.battleModifierChangedAt = now;
-            changed = true;
-        }
-
-        if (!Objects.equals(this.clanName, incoming.getClanName())) {
-            this.clanName = incoming.getClanName();
-            this.clanNameChangedAt = now;
-            changed = true;
-        }
-
         if (!Objects.equals(this.clanLevel, incoming.getClanLevel())) {
             this.clanLevel = incoming.getClanLevel();
             this.clanLevelChangedAt = now;
@@ -292,18 +241,6 @@ public class WarLogEntry {
         if (!Objects.equals(this.clanBadgeUrls, incoming.getClanBadgeUrls())) {
             this.clanBadgeUrls = incoming.getClanBadgeUrls();
             this.clanBadgeUrlsChangedAt = now;
-            changed = true;
-        }
-
-        if (!Objects.equals(this.opponentClanTag, incoming.getOpponentClanTag())) {
-            this.opponentClanTag = incoming.getOpponentClanTag();
-            this.opponentClanTagChangedAt = now;
-            changed = true;
-        }
-
-        if (!Objects.equals(this.opponentClanName, incoming.getOpponentClanName())) {
-            this.opponentClanName = incoming.getOpponentClanName();
-            this.opponentClanNameChangedAt = now;
             changed = true;
         }
 

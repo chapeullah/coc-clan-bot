@@ -21,6 +21,8 @@ public class RatingService {
     private final RaidSeasonClanMemberSnapshotService raidSeasonClanMemberSnapshotService;
     private final RaidSeasonParticipantService raidSeasonParticipantService;
 
+    public WarAverages
+
     public RaidAverages calculateRaidAverages(@NonNull RaidSeason raidSeason) {
         List<RaidSeasonClanMemberSnapshot> clanMemberSnapshot =
                 raidSeasonClanMemberSnapshotService.getByRaidSeason(raidSeason);
@@ -39,19 +41,21 @@ public class RatingService {
 
 
         int attackCountSum = 0;
+        int bonusAttackLimitSum = 0;
         int resourceLootedSum = 0;
         for (var member : clanMemberSnapshot) {
             var participant = raidSeasonParticipantsByTag.get(member.getTag());
             if (participant != null) {
                 attackCountSum += participant.getAttackCount();
+                bonusAttackLimitSum += participant.getBonusAttackLimit();
                 resourceLootedSum += participant.getCapitalResourcesLooted();
             }
         }
 
         int clanMemberSnapshotSize = clanMemberSnapshot.size();
-
         return new RaidAverages(
                 (double) attackCountSum / clanMemberSnapshotSize,
+                (double) bonusAttackLimitSum / clanMemberSnapshotSize,
                 (double) resourceLootedSum / clanMemberSnapshotSize);
     }
 
