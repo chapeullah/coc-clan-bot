@@ -21,8 +21,6 @@ public class RatingService {
     private final RaidSeasonClanMemberSnapshotService raidSeasonClanMemberSnapshotService;
     private final RaidSeasonParticipantService raidSeasonParticipantService;
 
-    public WarAverages
-
     public RaidAverages calculateRaidAverages(@NonNull RaidSeason raidSeason) {
         List<RaidSeasonClanMemberSnapshot> clanMemberSnapshot =
                 raidSeasonClanMemberSnapshotService.getByRaidSeason(raidSeason);
