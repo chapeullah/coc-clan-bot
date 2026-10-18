@@ -113,7 +113,7 @@ public class Scheduler {
             throw new IllegalStateException("Test synchronization error");
         } catch (Exception e) {
             log.error("Test synchronization failed", e);
-            telegramNotificationService.sendError("Test", e);
+            telegramNotificationService.sendError("Test123", e);
         }
     }
 
