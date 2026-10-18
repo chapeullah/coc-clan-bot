@@ -20,6 +20,23 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlayerHouseElement {
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof PlayerHouseElement other)) {
+            return false;
+        }
+        return Objects.equals(this.getPlayer(), other.getPlayer())
+                && Objects.equals(this.getElementId(), other.getElementId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getPlayer(), this.getElementId());
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

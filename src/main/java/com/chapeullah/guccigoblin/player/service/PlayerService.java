@@ -122,7 +122,7 @@ public class PlayerService {
         labelsResponse.forEach(label -> labelIds.add(label.id()));
 
         player.getLabelLinks().removeIf(
-                link -> !labelIds.contains(link.getPlayerLabel().getId()));
+                link -> !labelIds.contains(link.getLabel().getId()));
 
         if (!labelsResponse.isEmpty()) {
             var allLabels = playerLabelService.syncAll();
@@ -136,7 +136,7 @@ public class PlayerService {
                     .filter(label -> labelIds.contains(label.getId()))
                     .filter(label -> player.getLabelLinks().stream()
                             .noneMatch(link ->
-                                    link.getPlayerLabel().getId().equals(label.getId())))
+                                    link.getLabel().getId().equals(label.getId())))
                     .forEach(label ->
                             player.getLabelLinks().add(new PlayerLabelLink(player, label)));
         }
@@ -157,7 +157,7 @@ public class PlayerService {
         boolean linksRemoved = false;
         for (PlayerHero playerHero : player.getHeroes()) {
             linksRemoved |= playerHero.getPlayerHeroEquipmentLinks().removeIf(
-                    link -> !equipmentNames.contains(link.getPlayerHeroEquipment().getName()));
+                    link -> !equipmentNames.contains(link.getHeroEquipment().getName()));
         }
 
         if (linksRemoved) {

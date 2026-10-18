@@ -22,13 +22,13 @@ public class PlayerHeroEquipmentLinkService {
     public List<PlayerHeroEquipmentLink> syncHeroEquipmentLinks(
             @NonNull PlayerHero playerHero,
             @NonNull List<PlayerHeroEquipmentResponse> playerHeroEquipmentRespons) {
-        List<PlayerHeroEquipmentLink> playerHeroEquipmentLinks = playerHeroEquipmentLinkRepository.findAllByPlayerHeroId(playerHero.getId());
+        List<PlayerHeroEquipmentLink> playerHeroEquipmentLinks = playerHeroEquipmentLinkRepository.findAllByHeroId(playerHero.getId());
         List<PlayerHeroEquipmentLink> newPlayerHeroEquipmentLinks = toHeroEquipmentLinks(playerHero, playerHeroEquipmentRespons);
         Map<String, PlayerHeroEquipmentLink> heroEquipmentLinkMap = new HashMap<>();
         Set<String> heroEquipmentLinkSet = new HashSet<>();
-        playerHeroEquipmentLinks.forEach(item -> heroEquipmentLinkMap.put(item.getPlayerHeroEquipment().getName(), item));
+        playerHeroEquipmentLinks.forEach(item -> heroEquipmentLinkMap.put(item.getHeroEquipment().getName(), item));
         for (PlayerHeroEquipmentLink playerHeroEquipmentLink : newPlayerHeroEquipmentLinks) {
-            String name = playerHeroEquipmentLink.getPlayerHeroEquipment().getName();
+            String name = playerHeroEquipmentLink.getHeroEquipment().getName();
             PlayerHeroEquipmentLink existingPlayerHeroEquipmentLink = heroEquipmentLinkMap.get(name);
             if (existingPlayerHeroEquipmentLink == null) {
                 heroEquipmentLinkMap.put(name, playerHeroEquipmentLink);
@@ -38,7 +38,7 @@ public class PlayerHeroEquipmentLinkService {
         List<PlayerHeroEquipmentLink> savedPlayerHeroEquipmentLinks = playerHeroEquipmentLinkRepository
                 .saveAll(heroEquipmentLinkSet.stream().map(heroEquipmentLinkMap::get).toList());
         for (PlayerHeroEquipmentLink playerHeroEquipmentLink : heroEquipmentLinkMap.values()) {
-            if (!heroEquipmentLinkSet.contains(playerHeroEquipmentLink.getPlayerHeroEquipment().getName())) {
+            if (!heroEquipmentLinkSet.contains(playerHeroEquipmentLink.getHeroEquipment().getName())) {
                 playerHeroEquipmentLinkRepository.delete(playerHeroEquipmentLink);
             }
         }

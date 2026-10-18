@@ -19,6 +19,23 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlayerHeroEquipment {
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof PlayerHeroEquipment other)) {
+            return false;
+        }
+        return Objects.equals(this.getPlayer(), other.getPlayer())
+                && Objects.equals(this.getName(), other.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getPlayer(), this.getName());
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

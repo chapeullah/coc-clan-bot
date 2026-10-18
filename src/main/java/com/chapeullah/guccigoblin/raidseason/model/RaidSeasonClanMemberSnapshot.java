@@ -8,6 +8,7 @@ import lombok.NonNull;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
+import java.util.Objects;
 
 @Entity @Table(
         name = "raid_season_clan_member_snapshots",
@@ -17,6 +18,23 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RaidSeasonClanMemberSnapshot {
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof RaidSeasonClanMemberSnapshot other)) {
+            return false;
+        }
+        return Objects.equals(this.getRaidSeason(), other.getRaidSeason())
+                && Objects.equals(this.getTag(), other.getTag());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getRaidSeason(), this.getTag());
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

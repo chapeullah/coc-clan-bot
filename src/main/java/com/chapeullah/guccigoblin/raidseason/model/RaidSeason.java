@@ -1,6 +1,7 @@
 package com.chapeullah.guccigoblin.raidseason.model;
 
 import com.chapeullah.guccigoblin.clan.model.Clan;
+import com.chapeullah.guccigoblin.label.player.PlayerLabel;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,9 +21,26 @@ import java.util.Objects;
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_raids_clan_start",
                 columnNames = {"clan_tag", "start_time"}))
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 public class RaidSeason {
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof RaidSeason other)) {
+            return false;
+        }
+        return Objects.equals(this.getClan(), other.getClan())
+                && Objects.equals(this.getStartTime(), other.getStartTime());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getClan(), this.getStartTime());
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -80,6 +98,7 @@ public class RaidSeason {
     @Column(name = "defensive_reward_changed_at", nullable = true)
     private Instant defensiveRewardChangedAt;
 
+    @Setter
     @OneToMany(mappedBy = "raidSeason", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<RaidSeasonParticipant> participants = new ArrayList<>();
 

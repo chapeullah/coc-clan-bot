@@ -1,16 +1,35 @@
 package com.chapeullah.guccigoblin.label.player;
 
 import com.chapeullah.guccigoblin.label.IconUrls;
+import com.chapeullah.guccigoblin.label.clan.ClanLabel;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+import java.util.Objects;
+
 @Entity @Table(name = "player_labels")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlayerLabel {
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof PlayerLabel other)) {
+            return false;
+        }
+        return Objects.equals(this.getId(), other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getId());
+    }
 
     @Id
     @Column(name = "id",

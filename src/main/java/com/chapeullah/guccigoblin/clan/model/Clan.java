@@ -4,6 +4,7 @@ import com.chapeullah.guccigoblin.capitalleague.CapitalLeague;
 import com.chapeullah.guccigoblin.leaguetier.LeagueTier;
 import com.chapeullah.guccigoblin.location.Location;
 import com.chapeullah.guccigoblin.member.model.Member;
+import com.chapeullah.guccigoblin.player.model.PlayerLabelLink;
 import com.chapeullah.guccigoblin.warleague.WarLeague;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,11 +14,28 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity @Table(name = "clans")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Clan {
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof Clan other)) {
+            return false;
+        }
+        return Objects.equals(this.getTag(), other.getTag());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getTag());
+    }
 
     @Id
     @Column(name = "tag", nullable = false)

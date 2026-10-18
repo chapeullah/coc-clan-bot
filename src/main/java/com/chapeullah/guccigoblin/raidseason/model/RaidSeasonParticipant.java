@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -16,9 +18,25 @@ import java.util.Objects;
                 name = "uk_raid_season_participants_season_tag",
                 columnNames = {"raid_season_id", "tag"}))
 @Getter
-@Setter
 @NoArgsConstructor
 public class RaidSeasonParticipant {
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof RaidSeasonParticipant other)) {
+            return false;
+        }
+        return Objects.equals(this.getRaidSeason(), other.getRaidSeason())
+                && Objects.equals(this.getTag(), other.getTag());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getRaidSeason(), this.getTag());
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -60,6 +78,14 @@ public class RaidSeasonParticipant {
 
     @Column(name = "capital_resources_looted_changed_at", nullable = true)
     private Instant capitalResourcesLootedChangedAt;
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
     public RaidSeasonParticipant(
             @NonNull RaidSeason raidSeason,

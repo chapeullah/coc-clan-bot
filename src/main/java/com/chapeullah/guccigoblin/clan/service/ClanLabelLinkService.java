@@ -45,7 +45,7 @@ public class ClanLabelLinkService {
         List<ClanLabelLink> incoming = new ArrayList<>();
         for (Integer labelId : incomingIds) {
             ClanLabelLink link = current.stream()
-                    .filter(existing -> existing.getClanLabel().getId().equals(labelId))
+                    .filter(existing -> existing.getLabel().getId().equals(labelId))
                     .findFirst()
                     .orElse(null);
             if (link == null) {

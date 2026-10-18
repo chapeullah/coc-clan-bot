@@ -21,6 +21,22 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Player {
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof Player other)) {
+            return false;
+        }
+        return Objects.equals(this.getTag(), other.getTag());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getTag());
+    }
+
     @Id
     @Column(name = "tag", nullable = false)
     private String tag;

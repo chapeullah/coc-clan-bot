@@ -20,6 +20,23 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WarLogEntry {
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof WarLogEntry other)) {
+            return false;
+        }
+        return Objects.equals(this.getClanTag(), other.getClanTag())
+                && Objects.equals(this.getEndTime(), other.getEndTime());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getClanTag(), this.getEndTime());
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

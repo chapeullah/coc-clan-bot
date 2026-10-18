@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface PlayerHeroEquipmentLinkRepository extends JpaRepository<PlayerHeroEquipmentLink, Long> {
 
-    List<PlayerHeroEquipmentLink> findAllByPlayerHeroId(Long heroId);
+    List<PlayerHeroEquipmentLink> findAllByHeroId(Long heroId);
 
 }

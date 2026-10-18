@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+import java.util.Objects;
+
 @Entity @Table(
         name = "player_label_links",
         uniqueConstraints = @UniqueConstraint(
@@ -15,6 +17,23 @@ import lombok.NonNull;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlayerLabelLink {
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof PlayerLabelLink other)) {
+            return false;
+        }
+        return Objects.equals(this.getPlayer(), other.getPlayer())
+                && Objects.equals(this.getLabel(), other.getLabel());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getPlayer(), this.getLabel());
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,13 +47,13 @@ public class PlayerLabelLink {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "label_id", nullable = false)
-    private PlayerLabel playerLabel;
+    private PlayerLabel label;
 
     public PlayerLabelLink(
             @NonNull Player player,
-            @NonNull PlayerLabel playerLabel) {
+            @NonNull PlayerLabel label) {
         this.player = player;
-        this.playerLabel = playerLabel;
+        this.label = label;
     }
 
 }

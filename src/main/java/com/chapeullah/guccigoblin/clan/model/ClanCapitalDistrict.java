@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.time.Instant;
+import java.util.Objects;
 
 @Entity
 @Table(
@@ -17,6 +18,23 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ClanCapitalDistrict {
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof ClanCapitalDistrict other)) {
+            return false;
+        }
+        return Objects.equals(this.getClanCapital(), other.getClanCapital())
+                && Objects.equals(this.getDistrictId(), other.getDistrictId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getClanCapital(), this.getDistrictId());
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

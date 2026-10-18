@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+import java.util.Objects;
+
 @Entity @Table(
         name = "clan_label_links",
         uniqueConstraints = @UniqueConstraint(
@@ -16,10 +18,26 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ClanLabelLink {
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof ClanLabelLink other)) {
+            return false;
+        }
+        return Objects.equals(this.getClan(), other.getClan())
+                && Objects.equals(this.getLabel(), other.getLabel());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getClan(), this.getLabel());
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id",
-            nullable = false)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -28,13 +46,13 @@ public class ClanLabelLink {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "label_id", nullable = false)
-    private ClanLabel clanLabel;
+    private ClanLabel label;
 
     public ClanLabelLink(
             @NonNull Clan clan,
-            @NonNull ClanLabel clanLabel) {
+            @NonNull ClanLabel label) {
         this.clan = clan;
-        this.clanLabel = clanLabel;
+        this.label = label;
     }
 
 }

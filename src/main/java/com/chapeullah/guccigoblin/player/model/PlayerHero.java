@@ -21,6 +21,23 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlayerHero {
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof PlayerHero other)) {
+            return false;
+        }
+        return Objects.equals(this.getPlayer(), other.getPlayer())
+                && Objects.equals(this.getName(), other.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getPlayer(), this.getName());
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -46,7 +63,7 @@ public class PlayerHero {
     private Instant maxLevelChangedAt;
 
     @SuppressWarnings("FieldMayBeFinal")
-    @OneToMany(mappedBy = "playerHero", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "hero", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PlayerHeroEquipmentLink> playerHeroEquipmentLinks = new ArrayList<>();
 
     @Column(name = "village", nullable = false)

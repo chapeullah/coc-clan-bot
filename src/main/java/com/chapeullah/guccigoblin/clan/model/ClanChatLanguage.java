@@ -16,20 +16,17 @@ import java.util.Objects;
 public class ClanChatLanguage {
 
     @Id
-    @Column(name = "id",
-            nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @SuppressWarnings("FieldMayBeFinal")
     @OneToMany(mappedBy = "clanChatLanguage")
     private List<Clan> clans = new ArrayList<>();
 
-    @Column(name = "name",
-            nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "language_code",
-            nullable = true)
+    @Column(name = "language_code", nullable = true)
     private String languageCode;
 
     public ClanChatLanguage(
