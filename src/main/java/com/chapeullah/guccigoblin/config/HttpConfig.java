@@ -40,8 +40,7 @@ public class HttpConfig {
                         (request, response) -> {
                             throw new RestClientResponseException(
                                     "Unexpected HTTP status: "
-                                            + response.getStatusCode()
-                                            + " for " + request.getURI(),
+                                            + response.getStatusCode() + " for " + request.getURI(),
                                     response.getStatusCode(),
                                     response.getStatusText(),
                                     response.getHeaders(),
