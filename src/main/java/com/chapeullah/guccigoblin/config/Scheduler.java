@@ -108,13 +108,4 @@ public class Scheduler {
         }
     }
 
-    private void testExceptionNotification() {
-        try {
-            throw new IllegalStateException("Test synchronization error");
-        } catch (Exception e) {
-            log.error("Test synchronization failed", e);
-            telegramNotificationService.sendError("Test123", e);
-        }
-    }
-
 }
