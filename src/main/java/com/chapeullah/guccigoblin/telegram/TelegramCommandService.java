@@ -14,6 +14,7 @@ import com.chapeullah.guccigoblin.raidseason.model.RaidSeasonParticipant;
 import com.chapeullah.guccigoblin.raidseason.service.RaidSeasonParticipantService;
 import com.chapeullah.guccigoblin.raidseason.service.RaidSeasonClanMemberSnapshotService;
 import com.chapeullah.guccigoblin.raidseason.service.RaidSeasonService;
+import com.chapeullah.guccigoblin.rating.RatingService;
 import com.chapeullah.guccigoblin.war.model.War;
 import com.chapeullah.guccigoblin.war.model.WarAttack;
 import com.chapeullah.guccigoblin.war.model.WarParticipant;
@@ -54,6 +55,7 @@ public class TelegramCommandService {
     private final RaidSeasonParticipantService raidSeasonParticipantService;
     private final RaidSeasonClanMemberSnapshotService raidSeasonClanMemberSnapshotService;
     private final MemberService memberService;
+    private final RatingService ratingService;
     private final ClanService clanService;
     private final PlayerService playerService;
 
@@ -107,17 +109,22 @@ public class TelegramCommandService {
             return "Список участников клана пуст";
         }
 
+        Map<String, Double> ratingsByTag = ratingService.calculateClanMemberRatings(clanTag);
+
         StringBuilder message = new StringBuilder("<b>Участники клана</b>\n\n");
         for (Member member : members) {
             String name = TelegramUtils.escapeHtml(
                     TelegramUtils.replaceEmojisWithSquares(member.getName()));
-            String role = TelegramUtils.escapeHtml(
-                    ROLE_NAMES_RU.getOrDefault(member.getRole(), member.getRole()));
-            message.append("<b>%02d. %s</b> | <code>%s</code>\n"
+            Double rating = ratingsByTag.get(member.getTag());
+            String ratingText = rating == null
+                    ? "Нет данных"
+                    : String.format(Locale.ROOT, "%.2f", rating);
+            message.append("<b>%02d. %s</b> | <code>%s</code> | %s\n"
                     .formatted(
                             member.getClanRank(),
                             name,
-                            TelegramUtils.escapeHtml(member.getTag())));
+                            TelegramUtils.escapeHtml(member.getTag()),
+                            ratingText));
         }
         return message.toString().strip();
     }

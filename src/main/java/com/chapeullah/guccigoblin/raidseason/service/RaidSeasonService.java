@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -32,6 +33,15 @@ public class RaidSeasonService {
     private final RaidSeasonClanMemberSnapshotService clanMemberSnapshotService;
 
     private final JsonMapper jsonMapper;
+
+    @Transactional
+    public List<RaidSeason> getRecentCompletedByClanTag(@NonNull String clanTag, int limit) {
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Limit must be greater than zero");
+        }
+        return raidSeasonRepository
+                .findByClanTagAndStateOrderByEndTimeDesc(clanTag, "ended", Limit.of(limit));
+    }
 
     @Transactional
     public Optional<RaidSeason> findLatestByClanTag(@NonNull String clanTag) {

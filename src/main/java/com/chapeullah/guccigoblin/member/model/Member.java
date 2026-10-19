@@ -116,10 +116,7 @@ public class Member {
     private Instant totalDonationsReceivedChangedAt;
 
     @SuppressWarnings("FieldMayBeFinal")
-    @OneToMany(
-            mappedBy = "member",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberHouseElement> memberHouseElements = new ArrayList<>();
 
     @Column(name = "member_house_elements_changed_at", nullable = true)

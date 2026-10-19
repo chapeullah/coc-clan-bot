@@ -98,15 +98,22 @@ public class RaidSeason {
     @Column(name = "defensive_reward_changed_at", nullable = true)
     private Instant defensiveRewardChangedAt;
 
-    @Setter
-    @OneToMany(mappedBy = "raidSeason", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private List<RaidSeasonParticipant> participants = new ArrayList<>();
-
     @Column(name = "raw_json", columnDefinition = "text", nullable = false)
     private String rawJson;
 
     @Column(name = "raw_json_changed_at", nullable = true)
     private Instant rawJsonChangedAt;
+
+    @SuppressWarnings("FieldMayBeFinal")
+    @OneToMany(mappedBy = "raidSeason", fetch = FetchType.LAZY)
+    private List<RaidSeasonClanMemberSnapshot> memberSnapshots = new ArrayList<>();
+
+    @Setter
+    @OneToMany(
+            mappedBy = "raidSeason",
+            fetch = FetchType.LAZY,
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<RaidSeasonParticipant> participants = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)

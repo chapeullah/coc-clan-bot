@@ -1,6 +1,7 @@
 package com.chapeullah.guccigoblin.raidseason.repository;
 
 import com.chapeullah.guccigoblin.raidseason.model.RaidSeason;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,5 +17,7 @@ public interface RaidSeasonRepository extends JpaRepository<RaidSeason, Long> {
     List<RaidSeason> findTop5ByClanTagOrderByStartTimeDesc(String clanTag);
 
     Optional<RaidSeason> findByClanTagAndStartTime(String clanTag, Instant startTime);
+
+    List<RaidSeason> findByClanTagAndStateOrderByEndTimeDesc(String clanTag, String state, Limit limit);
 
 }

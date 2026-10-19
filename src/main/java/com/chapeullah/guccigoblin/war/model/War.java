@@ -6,6 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -126,6 +128,14 @@ public class War {
 
     @Column(name = "end_time", nullable = false)
     private Instant endTime;
+
+    @SuppressWarnings("FieldMayBeFinal")
+    @OneToMany(mappedBy = "war", fetch = FetchType.LAZY)
+    private List<WarParticipant> participants = new ArrayList<>();
+
+    @SuppressWarnings("FieldMayBeFinal")
+    @OneToMany(mappedBy = "war", fetch = FetchType.LAZY)
+    private List<WarAttack> attacks = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)

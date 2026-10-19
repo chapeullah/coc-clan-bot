@@ -11,6 +11,8 @@ import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -36,6 +38,28 @@ public class WarService {
     private final WarParticipantService warParticipantService;
     private final WarAttackService warAttackService;
     private final WarLogService warLogService;
+
+    @Transactional
+    public List<War> getCompletedByClanTagAndMemberTag(
+            @NonNull String clanTag,
+            @NonNull String memberTag) {
+
+        return warRepository
+                .findDistinctByClanTagAndStateAndWarLogSyncedAtIsNotNullAndParticipantsPlayerTagAndParticipants_ClanTag(
+                        clanTag,
+                        "warEnded",
+                        memberTag,
+                        clanTag,
+                        Sort.by(Sort.Direction.DESC, "endTime", "id"));
+    }
+
+    @Transactional
+    public List<War> getRecentCompletedByClanTag(@NonNull String clanTag, int limit) {
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Limit must be greater than zero");
+        }
+        return warRepository.findByClanTagAndStateOrderByEndTimeDesc(clanTag, "warEnded", Limit.of(limit));
+    }
 
     @Transactional
     public Optional<War> findCurrentByClanTag(@NonNull String clanTag) {

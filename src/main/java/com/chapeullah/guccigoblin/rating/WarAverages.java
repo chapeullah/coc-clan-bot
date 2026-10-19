@@ -1,3 +1,8 @@
 package com.chapeullah.guccigoblin.rating;
 
-public record WarAverages() {}
+import java.util.Optional;
+
+public record WarAverages(
+        double stars,
+        double destructionPercentage,
+        Optional<Double> durationSeconds) {}

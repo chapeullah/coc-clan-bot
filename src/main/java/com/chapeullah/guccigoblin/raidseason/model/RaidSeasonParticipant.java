@@ -91,10 +91,10 @@ public class RaidSeasonParticipant {
             @NonNull RaidSeason raidSeason,
             @NonNull String tag,
             @NonNull String name,
-            Integer attackCount,
-            Integer attackLimit,
-            Integer bonusAttackLimit,
-            Integer capitalResourcesLooted) {
+            @NonNull Integer attackCount,
+            @NonNull Integer attackLimit,
+            @NonNull Integer bonusAttackLimit,
+            @NonNull Integer capitalResourcesLooted) {
         this.raidSeason = raidSeason;
         this.tag = tag;
         this.name = name;
@@ -106,10 +106,10 @@ public class RaidSeasonParticipant {
 
     public void update(
             @NonNull String name,
-            Integer attackCount,
-            Integer attackLimit,
-            Integer bonusAttackLimit,
-            Integer capitalResourcesLooted) {
+            @NonNull Integer attackCount,
+            @NonNull Integer attackLimit,
+            @NonNull Integer bonusAttackLimit,
+            @NonNull Integer capitalResourcesLooted) {
         Instant now = Instant.now();
 
         if (!Objects.equals(this.name, name)) {

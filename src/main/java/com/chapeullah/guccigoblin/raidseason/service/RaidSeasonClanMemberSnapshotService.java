@@ -6,11 +6,11 @@ import com.chapeullah.guccigoblin.member.dto.MemberResponses;
 import com.chapeullah.guccigoblin.raidseason.model.RaidSeason;
 import com.chapeullah.guccigoblin.raidseason.model.RaidSeasonClanMemberSnapshot;
 import com.chapeullah.guccigoblin.raidseason.repository.RaidSeasonClanMemberSnapshotRepository;
-import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -23,7 +23,7 @@ public class RaidSeasonClanMemberSnapshotService {
     private final ClashOfClansClient client;
     private final RaidSeasonClanMemberSnapshotRepository snapshotRepository;
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<RaidSeasonClanMemberSnapshot> getByRaidSeason(@NonNull RaidSeason raidSeason) {
         return snapshotRepository.findAllByRaidSeason(raidSeason);
     }
