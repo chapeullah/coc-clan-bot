@@ -107,6 +107,8 @@ public class RaidSeasonService {
                             + ", actualCount=" + actualAttacks);
         }
 
+        clanMemberSnapshotService.syncClanMemberSnapshots(raidSeason);
+
         return Optional.of(raidSeason);
     }
 
@@ -131,8 +133,6 @@ public class RaidSeasonService {
         raidSeason.setParticipants(
                 raidSeasonParticipantService.syncRaidSeasonParticipants(
                         raidSeason, response.members()));
-
-        clanMemberSnapshotService.captureClanMembers(raidSeason);
 
         return raidSeason;
     }

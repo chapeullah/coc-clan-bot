@@ -639,7 +639,8 @@ public class TelegramCommandService {
 
                 Период: %s (МСК)
                 Статус: %s
-                Состав клана на момент сохранения снимка
+                Состав клана, сохранённый в течение сезона
+                Подтверждённо недопущенные участники исключены
 
                 """.formatted(
                         getRaidPeriod(season),
@@ -647,7 +648,8 @@ public class TelegramCommandService {
 
         int number = 1;
         for (RaidSeasonClanMemberSnapshot member : members) {
-            if (attackedTags.contains(member.getTag())) {
+            if (attackedTags.contains(member.getTag())
+                    || Boolean.FALSE.equals(member.getParticipationEligible())) {
                 continue;
             }
 
@@ -660,7 +662,7 @@ public class TelegramCommandService {
                             TelegramUtils.escapeHtml(member.getTag())));
         }
         if (number == 1) {
-            message.append("У всех участников из снимка есть атаки в этом сезоне");
+            message.append("Среди учитываемых участников нет игроков без атак");
         }
         return message.toString().strip();
     }

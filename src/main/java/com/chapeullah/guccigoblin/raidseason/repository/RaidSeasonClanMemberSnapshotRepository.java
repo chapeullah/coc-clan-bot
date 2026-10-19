@@ -9,8 +9,6 @@ import java.util.List;
 public interface RaidSeasonClanMemberSnapshotRepository
         extends JpaRepository<RaidSeasonClanMemberSnapshot, Long> {
 
-    boolean existsByRaidSeason(RaidSeason raidSeason);
-
     List<RaidSeasonClanMemberSnapshot> findAllByRaidSeason(RaidSeason raidSeason);
 
 }

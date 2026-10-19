@@ -50,7 +50,8 @@ public class MemberService {
     @Transactional
     public List<Member> syncMembers(
             @NonNull Clan clan,
-            @NonNull List<ClanMemberResponse> clanMemberResponses) {
+            @NonNull List<ClanMemberResponse> clanMemberResponses,
+            @NonNull Instant observedAt) {
         if (clanMemberResponses.isEmpty()) {
             throw new IllegalArgumentException("Clan member list is empty: clanTag=\"" + clan.getTag() + "\"");
         }
@@ -99,6 +100,8 @@ public class MemberService {
                 oldMembersByTag,
                 newMembersByTag);
 
+        clan.setMemberListSyncedAt(observedAt);
+
         return currentMembers;
     }
 
@@ -124,7 +127,8 @@ public class MemberService {
                 response.previousClanRank(),
                 response.donations(),
                 response.donationsReceived(),
-                builderBaseLeague);
+                builderBaseLeague,
+                clan.getMemberListSyncedAt());
 
         Member savedMember = memberRepository.save(member);
 
@@ -179,7 +183,7 @@ public class MemberService {
             member.markHouseElementsChanged(now);
         }
 
-        member.rejoin(now);
+        member.rejoin(now, member.getClan().getMemberListSyncedAt());
     }
 
     private void syncLeagueTiersAndBuilderBaseLeaguesIfMissing(

@@ -51,6 +51,21 @@ public class RaidSeasonClanMemberSnapshot {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "joined_at", nullable = true)
+    private Instant joinedAt;
+
+    @Column(name = "joined_after", nullable = true)
+    private Instant joinedAfter;
+
+    @Column(name = "role", nullable = true)
+    private String role;
+
+    @Column(name = "clan_type", nullable = true)
+    private String clanType;
+
+    @Column(name = "participation_eligible", nullable = true)
+    private Boolean participationEligible;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -58,10 +73,32 @@ public class RaidSeasonClanMemberSnapshot {
     public RaidSeasonClanMemberSnapshot(
             @NonNull RaidSeason raidSeason,
             @NonNull String tag,
-            @NonNull String name) {
+            @NonNull String name,
+            Instant joinedAt,
+            Instant joinedAfter,
+            String role,
+            String clanType,
+            Boolean participationEligible) {
         this.raidSeason = raidSeason;
         this.tag = tag;
         this.name = name;
+        this.joinedAt = joinedAt;
+        this.joinedAfter = joinedAfter;
+        this.role = role;
+        this.clanType = clanType;
+        this.participationEligible = participationEligible;
+    }
+
+    public void updateParticipation(
+            @NonNull String role,
+            @NonNull String clanType,
+            Boolean participationEligible) {
+        this.role = role;
+        this.clanType = clanType;
+
+        if (!Boolean.TRUE.equals(this.participationEligible)) {
+            this.participationEligible = participationEligible;
+        }
     }
 
 }

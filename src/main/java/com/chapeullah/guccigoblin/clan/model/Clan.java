@@ -204,6 +204,10 @@ public class Clan {
     @Column(name = "member_list_changed_at", nullable = true)
     private Instant memberListChangedAt;
 
+    @Setter
+    @Column(name = "member_list_synced_at", nullable = true)
+    private Instant memberListSyncedAt;
+
     @SuppressWarnings("FieldMayBeFinal")
     @OneToMany(mappedBy = "clan", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ClanLabelLink> labelLinks = new ArrayList<>();

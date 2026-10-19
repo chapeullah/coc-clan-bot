@@ -65,6 +65,7 @@ public class ClanService {
 
     @Transactional
     public Clan syncClan(@NonNull String clanTag) {
+        Instant observedAt = Instant.now();
         ClanResponse response = client.getClan(clanTag);
         if (response.memberList() == null || response.memberList().isEmpty()) {
             throw new IllegalStateException("Clan member list is missing or empty: clanTag=\"" + clanTag + "\"");
@@ -95,9 +96,9 @@ public class ClanService {
 
         Clan clan = clanRepository.findById(response.tag()).orElse(null);
         if (clan == null) {
-            clan = createClan(response);
+            clan = createClan(response, observedAt);
         } else {
-            updateClan(clan, response);
+            updateClan(clan, response, observedAt);
         }
 
         clan.setClanCapital(clanCapitalService.syncAndGetByClan(clan, response.clanCapital()));
@@ -178,7 +179,7 @@ public class ClanService {
         }
     }
 
-    public Clan createClan(@NonNull ClanResponse response) {
+    public Clan createClan(@NonNull ClanResponse response, @NonNull Instant observedAt) {
         Location location = response.location() == null ? null
                 : locationService.getById(response.location().id());
 
@@ -223,14 +224,17 @@ public class ClanService {
         clan.setClanBadgeUrls(toClanBadgeUrls(response.badgeUrls()));
         clan = clanRepository.save(clan);
 
-        memberService.syncMembers(clan, response.memberList());
+        memberService.syncMembers(clan, response.memberList(), observedAt);
 
         clanLabelLinkService.syncAndGetByClan(clan, response.labels());
 
         return clan;
     }
 
-    public void updateClan(@NonNull Clan clan, @NonNull ClanResponse response) {
+    public void updateClan(
+            @NonNull Clan clan,
+            @NonNull ClanResponse response,
+            @NonNull Instant observedAt) {
         if (!clan.getTag().equals(response.tag())) {
             throw new IllegalArgumentException("Clan tag mismatch");
         }
@@ -378,7 +382,7 @@ public class ClanService {
                 .map(Member::getTag)
                 .collect(Collectors.toSet());
         Set<String> memberSetAfter = memberService
-                .syncMembers(clan, response.memberList())
+                .syncMembers(clan, response.memberList(), observedAt)
                 .stream()
                 .map(Member::getTag)
                 .collect(Collectors.toSet());

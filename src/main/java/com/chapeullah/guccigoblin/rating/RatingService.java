@@ -92,19 +92,27 @@ public class RatingService {
         int resourcesLootedSum = 0;
 
         for (var raidSeason : raidSeasons) {
-            boolean wasInClan = raidSeason.getMemberSnapshots().stream()
-                    .anyMatch(snapshot ->
-                            Objects.equals(snapshot.getTag(), member.getTag()));
-            if (!wasInClan) {
+            RaidSeasonClanMemberSnapshot memberSnapshot = raidSeason.getMemberSnapshots().stream()
+                    .filter(snapshot -> Objects.equals(snapshot.getTag(), member.getTag()))
+                    .findFirst()
+                    .orElse(null);
+            if (memberSnapshot == null) {
                 continue;
             }
-
-            ++eligibleRaidSeasonCount;
 
             RaidSeasonParticipant participant = raidSeason.getParticipants().stream()
                     .filter(p -> Objects.equals(p.getTag(), member.getTag()))
                     .findFirst()
                     .orElse(null);
+            if (Boolean.FALSE.equals(memberSnapshot.getParticipationEligible())
+                    && (participant == null
+                    || participant.getAttackCount() == null
+                    || participant.getAttackCount() <= 0)) {
+                continue;
+            }
+
+            ++eligibleRaidSeasonCount;
+
             if (participant == null) {
                 continue;
             }
@@ -187,8 +195,6 @@ public class RatingService {
                                 .formatted(raidSeason.getId(), raidSeason.getClan().getTag()));
             }
 
-            memberSnapshotCount += clanMemberSnapshot.size();
-
             Map<String, RaidSeasonParticipant> participantsByTag =
                     raidSeasonParticipantService.getByRaidSeason(raidSeason)
                             .stream()
@@ -198,6 +204,15 @@ public class RatingService {
 
             for (var memberSnapshot : clanMemberSnapshot) {
                 var participant = participantsByTag.get(memberSnapshot.getTag());
+                if (Boolean.FALSE.equals(memberSnapshot.getParticipationEligible())
+                        && (participant == null
+                        || participant.getAttackCount() == null
+                        || participant.getAttackCount() <= 0)) {
+                    continue;
+                }
+
+                ++memberSnapshotCount;
+
                 if (participant == null) {
                     continue;
                 }
@@ -226,6 +241,10 @@ public class RatingService {
                 }
                 resourceLootedSum += capitalResourcesLooted;
             }
+        }
+
+        if (memberSnapshotCount == 0) {
+            return Optional.empty();
         }
 
         return Optional.of(new RaidAverages(

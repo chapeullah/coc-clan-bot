@@ -138,6 +138,9 @@ public class Member {
     @Column(name = "joined_at", nullable = false)
     private Instant joinedAt;
 
+    @Column(name = "joined_after", nullable = true)
+    private Instant joinedAfter;
+
     @Column(name = "left_at", nullable = true)
     private Instant leftAt;
 
@@ -163,7 +166,8 @@ public class Member {
             Integer previousClanRank,
             @NonNull Integer donations,
             @NonNull Integer donationsReceived,
-            BuilderBaseLeague builderBaseLeague) {
+            BuilderBaseLeague builderBaseLeague,
+            Instant joinedAfter) {
         this.tag = tag;
         this.clan = clan;
         this.name = name;
@@ -182,6 +186,7 @@ public class Member {
         this.builderBaseLeague = builderBaseLeague;
         this.inClan = true;
         this.joinedAt = Instant.now();
+        this.joinedAfter = joinedAfter;
     }
 
     public void update(
@@ -275,13 +280,14 @@ public class Member {
         this.leftAt = now;
     }
 
-    public void rejoin(@NonNull Instant now) {
+    public void rejoin(@NonNull Instant now, Instant joinedAfter) {
         if (Boolean.TRUE.equals(this.inClan)) {
             return;
         }
         this.inClan = true;
         this.inClanChangedAt = now;
         this.joinedAt = now;
+        this.joinedAfter = joinedAfter;
     }
 
     public void markHouseElementsChanged(@NonNull Instant now) {
