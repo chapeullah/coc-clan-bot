@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
+import java.util.concurrent.CancellationException;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -235,8 +236,15 @@ public class ClashOfClansClient {
 
     private <T> T executeWithRetry(Supplier<T> request) {
         for (int retry = 0; ; retry++) {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new CancellationException("HTTP request interrupted");
+            }
             try {
-                return request.get();
+                T response = request.get();
+                if (Thread.currentThread().isInterrupted()) {
+                    throw new CancellationException("HTTP request interrupted");
+                }
+                return response;
             } catch (ResourceAccessException e) {
                 if (Thread.currentThread().isInterrupted() || e.contains(InterruptedException.class)) {
                     Thread.currentThread().interrupt();
