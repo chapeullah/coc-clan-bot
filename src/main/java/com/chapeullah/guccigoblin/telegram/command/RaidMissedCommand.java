@@ -10,7 +10,7 @@ public class RaidMissedCommand implements BotCommand {
 
     private final TelegramCommandService telegramCommandService;
 
-    private static final String NAME = "/raidmissed";
+    private static final String NAME = "/raid_missed";
     private static final String DESCRIPTION = "Участники без атак в рейдах";
 
     @Override

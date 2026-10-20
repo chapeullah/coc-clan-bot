@@ -1,0 +1,31 @@
+package com.chapeullah.guccigoblin.telegram.command;
+
+import com.chapeullah.guccigoblin.telegram.TelegramCommandService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class RatingCwCommand implements BotCommand {
+
+    private final TelegramCommandService telegramCommandService;
+
+    private static final String NAME = "/rating_cw";
+    private static final String DESCRIPTION = "Рейтинг и статистика клановых войн";
+
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public String execute(String args, long chatId) {
+        return telegramCommandService.getWarRatingMessage();
+    }
+
+}

@@ -13,16 +13,11 @@ public class TelegramCommandDispatcher {
 
     private final Map<String, BiFunction<String, Long, String>> commands;
 
-    public TelegramCommandDispatcher(
-            List<BotCommand> commands,
-            TelegramCommandService telegramCommandService) {
+    public TelegramCommandDispatcher(List<BotCommand> commands) {
         this.commands = commands.stream()
                 .collect(Collectors.toMap(
                         BotCommand::getName,
                         command -> (BiFunction<String, Long, String>) command::execute));
-        this.commands.put(
-                "/rating",
-                (args, chatId) -> telegramCommandService.getRatingMessage());
     }
 
     public String execute(String commandName, String args, long chatId) {

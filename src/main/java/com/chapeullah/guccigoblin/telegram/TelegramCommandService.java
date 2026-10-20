@@ -15,6 +15,8 @@ import com.chapeullah.guccigoblin.raidseason.service.RaidSeasonParticipantServic
 import com.chapeullah.guccigoblin.raidseason.service.RaidSeasonClanMemberSnapshotService;
 import com.chapeullah.guccigoblin.raidseason.service.RaidSeasonService;
 import com.chapeullah.guccigoblin.rating.MemberStatistic;
+import com.chapeullah.guccigoblin.rating.MemberWarStatistic;
+import com.chapeullah.guccigoblin.rating.MemberRaidStatistic;
 import com.chapeullah.guccigoblin.rating.RatingService;
 import com.chapeullah.guccigoblin.war.model.War;
 import com.chapeullah.guccigoblin.war.model.WarAttack;
@@ -87,10 +89,13 @@ public class TelegramCommandService {
                 
                 /start — Начало работы с ботом
                 /help — Список команд
+                
+                /rating — Общий рейтинг участников клана
+                /rating_cw — Рейтинг и статистика клановых войн
+                /rating_raids — Рейтинг и статистика рейдов
 
                 /clan — Информация о клане
                 /members — Текущий состав клана
-                /rating — Рейтинг участников клана
                 /member #TAG — Информация об участнике клана
                 /player #TAG — Информация об игроке
                 /war — Текущая война клана
@@ -151,40 +156,88 @@ public class TelegramCommandService {
             return "Список участников клана пуст";
         }
 
-        StringBuilder message = new StringBuilder("""
-                <b>Рейтинг участников</b>
-                ОБЩ — общий, КВ — клановые войны, РД — рейды, ПОЗ — позиция, АТ - атака, ТХ — ↑/↓ разница со своей.
-                Представлены средние значения игрока за последние войны/рейды.
-
-                """);
-
+        StringBuilder message = new StringBuilder("<b>Рейтинг участников</b>\n\n");
         int number = 1;
         for (MemberStatistic statistic : statistics) {
-            String name = TelegramUtils.escapeHtml(
-                    TelegramUtils.replaceEmojisWithSquares(statistic.name())
-                            .replaceAll("(?U)\\s+", " ")
-                            .strip());
-            message.append("<b>%02d. %s</b> — ОБЩ %s | КВ %s | РЕЙДЫ %s\n"
-                    .formatted(
-                            number++,
-                            name,
-                            formatStatisticValue(statistic.totalRating(), "%.2f"),
-                            formatStatisticValue(statistic.warRating(), "%.2f"),
-                            formatStatisticValue(statistic.raidRating(), "%.2f")));
-            message.append(formatAverageAttackStatistics(statistic)).append("\n\n");
+            appendRatingMember(message, number++, statistic.name(), statistic.totalRating());
         }
         return message.toString().strip();
     }
 
-    private static String formatAverageAttackStatistics(MemberStatistic statistic) {
-        boolean hasWarAttackData = statistic.averageStarsPerAttack().isPresent()
-                || statistic.averageDestructionPercentagePerAttack().isPresent();
-        boolean hasRaidAttackData = statistic.averageRaidLootPerAttack().isPresent();
-        if (!hasWarAttackData && !hasRaidAttackData) {
-            return "Нет данных";
+    @Transactional(readOnly = true)
+    public String getWarRatingMessage() {
+        List<MemberWarStatistic> statistics = ratingService
+                .calculateClanMemberWarStatistics(clanTag)
+                .values().stream()
+                .sorted(Comparator
+                        .comparingDouble((MemberWarStatistic statistic) ->
+                                statistic.warRating().orElse(Double.NEGATIVE_INFINITY))
+                        .reversed()
+                        .thenComparing(MemberWarStatistic::name, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(MemberWarStatistic::tag))
+                .toList();
+        if (statistics.isEmpty()) {
+            return "Список участников клана пуст";
         }
 
-        String warStatistics = hasWarAttackData
+        StringBuilder message = new StringBuilder("""
+                <b>Рейтинг КВ</b>
+                Рейтинг учитывает разницу ТХ; средние звёзды и разрушение показаны без поправок.
+                ТХ — средняя ратуша целей; ↑/↓ — разница со своей.
+                ПОЗ — позиция целей относительно своей: ↑ выше, ↓ ниже.
+                АТ — выполнено/доступно.
+
+                """);
+        int number = 1;
+        for (MemberWarStatistic statistic : statistics) {
+            appendRatingMember(message, number++, statistic.name(), statistic.warRating());
+            message.append(formatWarAttackStatistics(statistic)).append("\n\n");
+        }
+        return message.toString().strip();
+    }
+
+    @Transactional(readOnly = true)
+    public String getRaidRatingMessage() {
+        List<MemberRaidStatistic> statistics = ratingService
+                .calculateClanMemberRaidStatistics(clanTag)
+                .values().stream()
+                .sorted(Comparator
+                        .comparingDouble((MemberRaidStatistic statistic) ->
+                                statistic.raidRating().orElse(Double.NEGATIVE_INFINITY))
+                        .reversed()
+                        .thenComparing(MemberRaidStatistic::name, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(MemberRaidStatistic::tag))
+                .toList();
+        if (statistics.isEmpty()) {
+            return "Список участников клана пуст";
+        }
+
+        StringBuilder message = new StringBuilder("""
+                <b>Рейтинг рейдов</b>
+                Среднее золото за атаку; АТ — среднее число атак за рейд.
+
+                """);
+        int number = 1;
+        for (MemberRaidStatistic statistic : statistics) {
+            appendRatingMember(message, number++, statistic.name(), statistic.raidRating());
+            message.append(formatRaidAttackStatistics(statistic)).append("\n\n");
+        }
+        return message.toString().strip();
+    }
+
+    private static void appendRatingMember(
+            StringBuilder message, int number, String memberName, Optional<Double> rating) {
+        String name = TelegramUtils.escapeHtml(
+                TelegramUtils.replaceEmojisWithSquares(memberName)
+                        .replaceAll("(?U)\\s+", " ")
+                        .strip());
+        message.append("<b>%02d. %s</b> — %s\n"
+                .formatted(number, name, formatStatisticValue(rating, "%.2f")));
+    }
+
+    private static String formatWarAttackStatistics(MemberWarStatistic statistic) {
+        return statistic.averageStarsPerAttack().isPresent()
+                || statistic.averageDestructionPercentagePerAttack().isPresent()
                 ? "%s | %s | ТХ %s %s | ПОЗ %s | АТ %s".formatted(
                         formatStatisticValue(statistic.averageStarsPerAttack(), "%.2f★"),
                         formatStatisticValue(statistic.averageDestructionPercentagePerAttack(), "%.1f%%"),
@@ -193,12 +246,14 @@ public class TelegramCommandService {
                         formatAverageDifference(statistic.averageMapPositionDifferencePerAttack()),
                         formatAttackUsage(statistic.warAttackCount(), statistic.missedWarAttackCount()))
                 : "Нет данных";
-        String raidStatistics = hasRaidAttackData
-                ? "%s | ат. %s".formatted(
+    }
+
+    private static String formatRaidAttackStatistics(MemberRaidStatistic statistic) {
+        return statistic.averageRaidLootPerAttack().isPresent()
+                ? "%s | АТ %s".formatted(
                         formatStatisticValue(statistic.averageRaidLootPerAttack(), "%.0f/ат."),
                         formatStatisticValue(statistic.averageRaidAttacksPerSeason(), "%.2f"))
                 : "Нет данных";
-        return "КВ %s | РЕЙДЫ %s".formatted(warStatistics, raidStatistics);
     }
 
     private static String formatStatisticValue(Optional<Double> value, String format) {

@@ -40,18 +40,7 @@ public class RatingService {
         List<Member> currentMembers =
                 memberService.getCurrentMembersByClanTag(clanTag);
 
-        List<RaidSeason> recentCompletedRaidSeasons = raidSeasonService
-                .getRecentCompletedByClanTag(clanTag, RAID_SEASON_LIMIT)
-                .stream()
-                .filter(raidSeason -> !raidSeason.getMemberSnapshots().isEmpty()
-                        || raidSeason.getParticipants().stream().anyMatch(this::hasRaidAttacks))
-                .toList();
-
-        Map<RaidSeason, RaidAverages> raidAveragesBySeason = new LinkedHashMap<>();
-        for (var raidSeason : recentCompletedRaidSeasons) {
-            calculateRaidAverages(List.of(raidSeason))
-                    .ifPresent(averages -> raidAveragesBySeason.put(raidSeason, averages));
-        }
+        Map<RaidSeason, RaidAverages> raidAveragesBySeason = calculateRecentRaidAverages(clanTag);
 
         Map<String, MemberStatistic> statisticsByTag = new HashMap<>();
 
@@ -118,6 +107,43 @@ public class RatingService {
                             raidStatistic.raidAttackUsagePercentage()));
         }
         return statisticsByTag;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, MemberWarStatistic> calculateClanMemberWarStatistics(@NonNull String clanTag) {
+        List<Member> currentMembers = memberService.getCurrentMembersByClanTag(clanTag);
+        Map<String, MemberWarStatistic> statisticsByTag = new HashMap<>();
+        for (var member : currentMembers) {
+            statisticsByTag.put(member.getTag(), calculateMemberWarStatistic(member));
+        }
+        return statisticsByTag;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, MemberRaidStatistic> calculateClanMemberRaidStatistics(@NonNull String clanTag) {
+        List<Member> currentMembers = memberService.getCurrentMembersByClanTag(clanTag);
+        Map<RaidSeason, RaidAverages> raidAveragesBySeason = calculateRecentRaidAverages(clanTag);
+        Map<String, MemberRaidStatistic> statisticsByTag = new HashMap<>();
+        for (var member : currentMembers) {
+            statisticsByTag.put(member.getTag(), calculateMemberRaidStatistic(raidAveragesBySeason, member));
+        }
+        return statisticsByTag;
+    }
+
+    private Map<RaidSeason, RaidAverages> calculateRecentRaidAverages(String clanTag) {
+        List<RaidSeason> recentCompletedRaidSeasons = raidSeasonService
+                .getRecentCompletedByClanTag(clanTag, RAID_SEASON_LIMIT)
+                .stream()
+                .filter(raidSeason -> !raidSeason.getMemberSnapshots().isEmpty()
+                        || raidSeason.getParticipants().stream().anyMatch(this::hasRaidAttacks))
+                .toList();
+
+        Map<RaidSeason, RaidAverages> raidAveragesBySeason = new LinkedHashMap<>();
+        for (var raidSeason : recentCompletedRaidSeasons) {
+            calculateRaidAverages(List.of(raidSeason))
+                    .ifPresent(averages -> raidAveragesBySeason.put(raidSeason, averages));
+        }
+        return raidAveragesBySeason;
     }
 
     @Transactional(readOnly = true)
