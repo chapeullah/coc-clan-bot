@@ -52,7 +52,6 @@ public class TelegramBot {
         }
 
         long chatId = telegramMessage.telegramChat().id();
-
         log.debug("Telegram IDs: chatId={}, threadId={}", chatId, telegramMessage.threadId());
 
         Integer threadId = telegramMessage.threadId();
