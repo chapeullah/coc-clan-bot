@@ -45,7 +45,6 @@ public class Scheduler {
     @Value("${coc.clan-tag}")
     private String clanTag;
 
-    /*
     @Scheduled(cron = "0 * * * * *")
     public void synchronizeClanAndRaids() {
         runWithTimeout(startedAt -> {
@@ -181,8 +180,6 @@ public class Scheduler {
             telegramNotificationService.sendError("Синхронизация сезона рейдов", e);
         }
     }
-
-     */
 
     @Scheduled(cron = "0 * * * * *")
     public void test() {

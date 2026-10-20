@@ -13,17 +13,20 @@ public class EnvironmentVariablesValidator {
 
     private final Environment environment;
 
-    List<String> environmentVariables = List.of(
+    private static final List<String> ENVIRONMENT_VARIABLES = List.of(
             "COC_API_BASE_URL",
             "COC_API_TOKEN",
             "COC_CLAN_TAG",
             "TELEGRAM_BOT_TOKEN",
             "TELEGRAM_ADMIN_CHAT_ID",
-            "TELEGRAM_CLAN_CHAT_LINK");
+            "TELEGRAM_CLAN_CHAT_LINK",
+            "TELEGRAM_GROUP_CHAT_ID",
+            "TELEGRAM_WAR_THREAD_ID",
+            "TELEGRAM_RAID_THREAD_ID");
 
     @PostConstruct
     public void validate() {
-        environmentVariables.forEach(this::requireValue);
+        ENVIRONMENT_VARIABLES.forEach(this::requireValue);
     }
 
     private void requireValue(String name) {
