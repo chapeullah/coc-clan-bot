@@ -3,20 +3,6 @@ coc:
   api-token: ${COC_API_TOKEN}
   clan-tag: ${COC_CLAN_TAG}
 
-telegram:
-  admin:
-    chat-id: ${TELEGRAM_ADMIN_CHAT_ID}
-    user-id: ${TELEGRAM_ADMIN_USER_ID}
-  bot:
-    token: ${TELEGRAM_BOT_TOKEN}
-    poll-delay-ms: 1000
-  clan:
-    chat-link: ${TELEGRAM_CLAN_CHAT_LINK}
-    chat-id: ${TELEGRAM_CHAT_ID}
-    threads:
-      war: ${TELEGRAM_WAR_THREAD_ID}
-      raid: ${TELEGRAM_RAID_THREAD_ID}
-
 spring:
   task:
     scheduling:

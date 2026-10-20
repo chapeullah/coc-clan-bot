@@ -64,15 +64,13 @@ public class TelegramCommandService {
     private final PlayerService playerService;
 
     private final TelegramChatSettingRepository telegramChatSettingRepository;
+    private final TelegramAccessService telegramAccessService;
 
     @Value("${coc.clan-tag}")
     private String clanTag;
 
-    @Value("${telegram.clan.chat-link}")
+    @Value("${TELEGRAM_CLAN_CHAT_LINK}")
     private String telegramClanChatLink;
-
-    @Value("${telegram.admin.user-id}")
-    private long adminUserId;
 
     @Value("${TELEGRAM_GROUP_CHAT_ID}")
     private long groupChatId;
@@ -83,7 +81,7 @@ public class TelegramCommandService {
 
     @Transactional
     public String setWarThread(long chatId, Long userId, Integer threadId) {
-        if (userId == null || userId.longValue() != adminUserId) {
+        if (userId == null || !telegramAccessService.isAdmin(userId)) {
             return "Нет доступа";
         }
 
@@ -142,7 +140,7 @@ public class TelegramCommandService {
                 /raids — История рейдов
                 
                 /chat_id — ID текущего чата
-                /war_thread — Назначить текущую тему для уведомлений о КВ (владелец бота)
+                /war_thread — Назначить текущую тему для уведомлений о КВ (администраторы бота)
                 """.strip();
     }
 

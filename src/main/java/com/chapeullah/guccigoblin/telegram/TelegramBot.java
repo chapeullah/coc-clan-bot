@@ -21,7 +21,7 @@ public class TelegramBot {
 
     private long nextOffset;
 
-    @Scheduled(fixedDelayString = "${telegram.bot.poll-delay-ms:1000}")
+    @Scheduled(fixedDelayString = "${TELEGRAM_BOT_POLL_DELAY_MS:1000}")
     public void poll() {
         log.debug("Telegram polling...");
         try {
@@ -46,7 +46,6 @@ public class TelegramBot {
 
     private void handle(TelegramUpdate telegramUpdate) {
         TelegramMessage telegramMessage = telegramUpdate.telegramMessage();
-
         if (telegramMessage == null || telegramMessage.telegramChat() == null || telegramMessage.text() == null) {
             return;
         }

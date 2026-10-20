@@ -28,7 +28,7 @@ public class TelegramClient {
 
     private String username;
 
-    public TelegramClient(@Value("${telegram.bot.token}") String token) {
+    public TelegramClient(@Value("${TELEGRAM_BOT_TOKEN}") String token) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
