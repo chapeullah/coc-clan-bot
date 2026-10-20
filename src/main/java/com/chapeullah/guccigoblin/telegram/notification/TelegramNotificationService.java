@@ -18,7 +18,6 @@ public class TelegramNotificationService {
     @Value("${TELEGRAM_ADMIN_CHAT_ID}")
     private long adminChatId;
 
-    /*
     @Value("${TELEGRAM_GROUP_CHAT_ID}")
     private long groupChatId;
 
@@ -36,8 +35,6 @@ public class TelegramNotificationService {
     public void sendThreadMessage(@NonNull Integer threadId, @NonNull String text) {
         telegramClient.sendMessage(groupChatId, threadId, text);
     }
-
-     */
 
     public void sendError(String operation, Exception exception) {
         try {
