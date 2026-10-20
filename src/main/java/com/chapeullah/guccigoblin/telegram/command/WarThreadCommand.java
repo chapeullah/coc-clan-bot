@@ -12,7 +12,7 @@ public class WarThreadCommand implements BotCommand {
     private final TelegramCommandService telegramCommandService;
 
     private static final String NAME = "/war_thread";
-    private static final String DESCRIPTION = "Назначить текущую тему для уведомлений о КВ";
+    private static final String DESCRIPTION = "Назначить текущую тему для уведомлений";
 
     @Override
     public String getName() {

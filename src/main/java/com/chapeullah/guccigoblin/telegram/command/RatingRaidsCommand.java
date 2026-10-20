@@ -12,7 +12,7 @@ public class RatingRaidsCommand implements BotCommand {
     private final TelegramCommandService telegramCommandService;
 
     private static final String NAME = "/rating_raids";
-    private static final String DESCRIPTION = "Рейтинг и статистика рейдов";
+    private static final String DESCRIPTION = "Рейтинг участников рейдов";
 
     @Override
     public String getName() {

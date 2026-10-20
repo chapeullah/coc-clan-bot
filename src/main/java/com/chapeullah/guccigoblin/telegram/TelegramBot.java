@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientResponseException;
+import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
 @Component
@@ -18,6 +19,8 @@ public class TelegramBot {
 
     private final TelegramClient telegramClient;
     private final TelegramCommandDispatcher telegramCommandDispatcher;
+    private final TelegramMessageService telegramMessageService;
+    private final JsonMapper jsonMapper;
 
     private long nextOffset;
 
@@ -26,6 +29,8 @@ public class TelegramBot {
         log.debug("Telegram polling...");
         try {
             for (var update : telegramClient.getUpdates(nextOffset)) {
+                telegramMessageService.save(update, jsonMapper.writeValueAsString(update));
+
                 try {
                     handle(update);
                 } catch (RestClientResponseException exception) {

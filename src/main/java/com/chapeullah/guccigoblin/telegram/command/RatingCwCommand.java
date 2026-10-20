@@ -12,7 +12,7 @@ public class RatingCwCommand implements BotCommand {
     private final TelegramCommandService telegramCommandService;
 
     private static final String NAME = "/rating_cw";
-    private static final String DESCRIPTION = "Рейтинг и статистика клановых войн";
+    private static final String DESCRIPTION = "Рейтинг участников клановых войн";
 
     @Override
     public String getName() {

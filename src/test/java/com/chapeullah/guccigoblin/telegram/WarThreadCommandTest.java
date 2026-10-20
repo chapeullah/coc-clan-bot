@@ -25,8 +25,12 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +48,9 @@ class WarThreadCommandTest {
     @Mock
     private TelegramClient telegramClient;
 
+    @Mock
+    private TelegramMessageService telegramMessageService;
+
     @Spy
     private TelegramAccessService telegramAccessService = new TelegramAccessService();
 
@@ -51,6 +58,7 @@ class WarThreadCommandTest {
     private TelegramCommandService telegramCommandService;
 
     private TelegramCommandDispatcher dispatcher;
+    private final JsonMapper jsonMapper = JsonMapper.builder().build();
 
     @BeforeEach
     void setUp() {
@@ -64,11 +72,12 @@ class WarThreadCommandTest {
 
     @Test
     void bindsTheTopicFromAnIncomingCommandAndRepliesInTheSameTopic() {
-        TelegramUpdate update = JsonMapper.builder().build().readValue("""
+        TelegramUpdate update = jsonMapper.readValue("""
                 {
                   "update_id": 41,
                   "message": {
                     "message_id": 100,
+                    "date": 1790000000,
                     "from": {"id": 12345, "is_bot": false, "first_name": "Admin"},
                     "chat": {"id": -1001234567890, "type": "supergroup"},
                     "message_thread_id": 72,
@@ -80,13 +89,48 @@ class WarThreadCommandTest {
         when(telegramClient.getUsername()).thenReturn("gucci_test_bot");
         when(telegramChatSettingRepository.findById(GROUP_CHAT_ID)).thenReturn(Optional.empty());
 
-        new TelegramBot(telegramClient, dispatcher).poll();
+        new TelegramBot(telegramClient, dispatcher, telegramMessageService, jsonMapper).poll();
 
         ArgumentCaptor<TelegramChatSetting> setting = ArgumentCaptor.forClass(TelegramChatSetting.class);
-        verify(telegramChatSettingRepository).save(setting.capture());
+        var order = inOrder(telegramMessageService, telegramChatSettingRepository);
+        order.verify(telegramMessageService).save(update, jsonMapper.writeValueAsString(update));
+        order.verify(telegramChatSettingRepository).save(setting.capture());
         assertEquals(GROUP_CHAT_ID, setting.getValue().getChatId());
         assertEquals(THREAD_ID, setting.getValue().getWarThreadId());
         verify(telegramClient).sendMessage(GROUP_CHAT_ID, THREAD_ID, SUCCESS_MESSAGE);
+    }
+
+    @Test
+    void savesMessagesWithoutTextBeforeSkippingCommandHandling() {
+        TelegramMessage message = new TelegramMessage(
+                100L, 1790000000L, new TelegramChat(GROUP_CHAT_ID), null, THREAD_ID, null);
+        TelegramUpdate update = new TelegramUpdate(41L, message);
+        when(telegramClient.getUpdates(0L)).thenReturn(List.of(update));
+
+        new TelegramBot(telegramClient, dispatcher, telegramMessageService, jsonMapper).poll();
+
+        verify(telegramMessageService).save(update, jsonMapper.writeValueAsString(update));
+        verify(telegramClient).getUpdates(0L);
+        verifyNoMoreInteractions(telegramClient);
+        verifyNoInteractions(telegramChatSettingRepository);
+    }
+
+    @Test
+    void retriesTheSameUpdateWithoutHandlingItWhenSavingFails() {
+        TelegramUpdate update = new TelegramUpdate(
+                41L, message(GROUP_CHAT_ID, FIRST_ADMIN_USER_ID, THREAD_ID));
+        when(telegramClient.getUpdates(0L)).thenReturn(List.of(update));
+        doThrow(new IllegalStateException("Message history unavailable"))
+                .when(telegramMessageService).save(update, jsonMapper.writeValueAsString(update));
+        TelegramBot bot = new TelegramBot(telegramClient, dispatcher, telegramMessageService, jsonMapper);
+
+        bot.poll();
+        bot.poll();
+
+        verify(telegramMessageService, times(2)).save(update, jsonMapper.writeValueAsString(update));
+        verify(telegramClient, times(2)).getUpdates(0L);
+        verifyNoMoreInteractions(telegramClient);
+        verifyNoInteractions(telegramChatSettingRepository);
     }
 
     @Test
@@ -141,7 +185,7 @@ class WarThreadCommandTest {
     }
 
     private TelegramMessage message(long chatId, Long userId, Integer threadId) {
-        TelegramUser user = userId == null ? null : new TelegramUser(userId, "admin");
-        return new TelegramMessage(new TelegramChat(chatId), user, threadId, "/war_thread");
+        TelegramUser user = userId == null ? null : new TelegramUser(userId, "admin", "Admin", null);
+        return new TelegramMessage(100L, 1790000000L, new TelegramChat(chatId), user, threadId, "/war_thread");
     }
 }
