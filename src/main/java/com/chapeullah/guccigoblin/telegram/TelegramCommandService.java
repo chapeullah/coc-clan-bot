@@ -84,11 +84,9 @@ public class TelegramCommandService {
         if (userId == null || !telegramAccessService.isAdmin(userId)) {
             return "Нет доступа";
         }
-
         if (chatId >= 0) {
             return "Вызови команду в нужной группе";
         }
-
         telegramGroupSettingRepository.save(new TelegramGroupSetting(chatId));
         return "Эта группа назначена группой клана";
     }
@@ -98,32 +96,25 @@ public class TelegramCommandService {
         if (userId == null || !telegramAccessService.isAdmin(userId)) {
             return "Нет доступа";
         }
-
         long configuredGroupChatId = telegramGroupSettingRepository
                 .findById(TelegramGroupSetting.SETTINGS_ID)
                 .map(TelegramGroupSetting::getChatId)
                 .orElse(groupChatId);
-
         if (chatId != configuredGroupChatId) {
             return "Команда доступна только в группе клана";
         }
-
         if (threadId == null || threadId <= 0) {
             return "Отправь команду внутри нужной темы";
         }
-
         TelegramChatSetting settings = telegramChatSettingRepository
                 .findById(chatId)
                 .orElse(null);
-
         if (settings == null) {
             settings = new TelegramChatSetting(chatId, threadId);
         } else {
             settings.changeWarThread(threadId);
         }
-
         telegramChatSettingRepository.save(settings);
-
         return "Эта тема назначена для уведомлений о КВ";
     }
 
@@ -238,8 +229,8 @@ public class TelegramCommandService {
 
         StringBuilder message = new StringBuilder("""
                 <b>Рейтинг КВ</b>
-                Рейтинг учитывает разницу ТХ; средние звёзды и разрушение.
-                АТ — среднее число атак за КВ.
+                Средние значения за атаку в КВ.
+                АТ — атаки.
 
                 """);
         int number = 1;
@@ -271,7 +262,8 @@ public class TelegramCommandService {
 
         StringBuilder message = new StringBuilder("""
                 <b>Рейтинг рейдов</b>
-                Среднее золото за атаку; АТ — среднее число атак за рейд.
+                Средние значения за атаку в рейде.
+                АТ — атаки.
 
                 """);
         int number = 1;
