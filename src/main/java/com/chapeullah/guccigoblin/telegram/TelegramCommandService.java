@@ -74,7 +74,7 @@ public class TelegramCommandService {
     public String start() {
         return """
             Телеграм-бот клана <a href="https://t.me/gussicoc">GUCCИ</a> (<code>#2C020L9P0</code>) в Clash of Clans.
-            Работает только с этим кланом.
+            Не работает с другими кланами.
             
             Используй /help, чтобы посмотреть доступные команды.
             """.strip();
@@ -90,7 +90,7 @@ public class TelegramCommandService {
 
                 /clan — Информация о клане
                 /members — Текущий состав клана
-                /rating — Рейтинг и краткая статистика участников
+                /rating — Рейтинг участников клана
                 /member #TAG — Информация об участнике клана
                 /player #TAG — Информация об игроке
                 /war — Текущая война клана
@@ -153,11 +153,8 @@ public class TelegramCommandService {
 
         StringBuilder message = new StringBuilder("""
                 <b>Рейтинг участников</b>
-                КВ — клановые войны; в скобках — число учтённых событий.
-                КВ учитывает разницу ратуш; звёзды и разрушение показаны без поправок.
-                ТХ — средняя ратуша целей; ↑/↓ — разница со своей.
-                Позиция: ↑ выше своей, ↓ ниже.
-                Ат.: КВ — выполнено/доступно, рейды — среднее за рейд.
+                ОБЩ — общий, КВ — клановые войны, РД — рейды, ПОЗ — позиция, АТ - атака, ТХ — ↑/↓ разница со своей.
+                Представлены средние значения игрока за последние войны/рейды.
 
                 """);
 
@@ -167,15 +164,13 @@ public class TelegramCommandService {
                     TelegramUtils.replaceEmojisWithSquares(statistic.name())
                             .replaceAll("(?U)\\s+", " ")
                             .strip());
-            message.append("<b>%02d. %s</b> — %s | КВ %s (%d) | Рейды %s (%d)\n"
+            message.append("<b>%02d. %s</b> — ОБЩ %s | КВ %s | РЕЙДЫ %s\n"
                     .formatted(
                             number++,
                             name,
                             formatStatisticValue(statistic.totalRating(), "%.2f"),
                             formatStatisticValue(statistic.warRating(), "%.2f"),
-                            statistic.warCount(),
-                            formatStatisticValue(statistic.raidRating(), "%.2f"),
-                            statistic.raidSeasonCount()));
+                            formatStatisticValue(statistic.raidRating(), "%.2f")));
             message.append(formatAverageAttackStatistics(statistic)).append("\n\n");
         }
         return message.toString().strip();
@@ -190,7 +185,7 @@ public class TelegramCommandService {
         }
 
         String warStatistics = hasWarAttackData
-                ? "%s | %s | ТХ %s %s | pos %s | ат. %s".formatted(
+                ? "%s | %s | ТХ %s %s | ПОЗ %s | АТ %s".formatted(
                         formatStatisticValue(statistic.averageStarsPerAttack(), "%.2f★"),
                         formatStatisticValue(statistic.averageDestructionPercentagePerAttack(), "%.1f%%"),
                         formatStatisticValue(statistic.averageDefenderTownHallLevelPerAttack(), "%.1f"),
@@ -203,7 +198,7 @@ public class TelegramCommandService {
                         formatStatisticValue(statistic.averageRaidLootPerAttack(), "%.0f/ат."),
                         formatStatisticValue(statistic.averageRaidAttacksPerSeason(), "%.2f"))
                 : "Нет данных";
-        return "Ср: КВ %s | Рейды %s".formatted(warStatistics, raidStatistics);
+        return "КВ %s | РЕЙДЫ %s".formatted(warStatistics, raidStatistics);
     }
 
     private static String formatStatisticValue(Optional<Double> value, String format) {
