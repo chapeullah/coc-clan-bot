@@ -195,6 +195,7 @@ public class TelegramCommandService {
         int number = 1;
         for (MemberStatistic statistic : statistics) {
             appendRatingMember(message, number++, statistic.name(), statistic.totalRating());
+            message.append("\n");
         }
         return message.toString().strip();
     }
@@ -224,7 +225,10 @@ public class TelegramCommandService {
         int number = 1;
         for (MemberWarStatistic statistic : statistics) {
             appendRatingMember(message, number++, statistic.name(), statistic.warRating());
-            message.append(formatWarAttackStatistics(statistic)).append("\n");
+            if (statistic.warRating().isPresent()) {
+                message.append(" | ").append(formatWarAttackStatistics(statistic));
+            }
+            message.append("\n");
         }
         return message.toString().strip();
     }
@@ -253,7 +257,10 @@ public class TelegramCommandService {
         int number = 1;
         for (MemberRaidStatistic statistic : statistics) {
             appendRatingMember(message, number++, statistic.name(), statistic.raidRating());
-            message.append(formatRaidAttackStatistics(statistic)).append("\n");
+            if (statistic.raidRating().isPresent()) {
+                message.append(" | ").append(formatRaidAttackStatistics(statistic));
+            }
+            message.append("\n");
         }
         return message.toString().strip();
     }
@@ -264,7 +271,10 @@ public class TelegramCommandService {
                 TelegramUtils.replaceEmojisWithSquares(memberName)
                         .replaceAll("(?U)\\s+", " ")
                         .strip());
-        message.append("<b>%02d. %s</b> — %s | ".formatted(number, name, formatStatisticValue(rating, "%.2f")));
+        String ratingText = rating
+                .map(value -> String.format(Locale.ROOT, "%.2f", value))
+                .orElse("Нет данных");
+        message.append("<b>%02d. %s</b> — %s".formatted(number, name, ratingText));
     }
 
     private static String formatWarAttackStatistics(MemberWarStatistic statistic) {
