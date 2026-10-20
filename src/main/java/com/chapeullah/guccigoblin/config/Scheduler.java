@@ -72,16 +72,15 @@ public class Scheduler {
             synchronization.accept(startedAt);
             checkSynchronization(startedAt);
         }, null);
-        ScheduledFuture<?> timeout = timeoutExecutor.schedule(
-                () -> task.cancel(true), SYNCHRONIZATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        ScheduledFuture<?> timeout = timeoutExecutor.schedule(() ->
+                task.cancel(true), SYNCHRONIZATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
         try {
             task.run();
             task.get();
         } catch (CancellationException e) {
             Thread.interrupted();
-            throw new IllegalStateException(
-                    "Synchronization exceeded time limit: timeoutMs=" + SYNCHRONIZATION_TIMEOUT_MS, e);
+            throw new IllegalStateException("Synchronization exceeded time limit: timeoutMs=" + SYNCHRONIZATION_TIMEOUT_MS, e);
         } catch (ExecutionException e) {
             throw new IllegalStateException("Synchronization failed", e.getCause());
         } catch (InterruptedException e) {
@@ -109,16 +108,16 @@ public class Scheduler {
 
     private void finishEndedWars(long startedAt) {
         try {
-            log.debug("Finishing ended wars: clanTag=\"{}\"", clanTag);
+            log.debug("Finalizing ended wars: clanTag=\"{}\"", clanTag);
             List<War> finishedWars = warService.finishEndedWars();
             if (finishedWars.isEmpty()) {
-                log.debug("Ended wars finishing success: clanTag=\"{}\", finishedWarsCount={}", clanTag, finishedWars.size());
-            } else {
-                log.info("Ended wars finishing success: clanTag=\"{}\", finishedWarsCount={}", clanTag, finishedWars.size());
+                log.info("No ended wars to finalize: clanTag=\"{}\"", clanTag);
+                return;
             }
+            log.info("Ended wars finalization succeeded: clanTag=\"{}\", finishedWarsCount={}", clanTag, finishedWars.size());
         } catch (Exception e) {
             checkSynchronization(startedAt);
-            log.error("Ended wars finishing failed: clanTag=\"{}\"", clanTag, e);
+            log.error("Ended wars finalization failed: clanTag=\"{}\"", clanTag, e);
             telegramNotificationService.sendError("Завершение войн", e);
         }
     }
@@ -127,7 +126,7 @@ public class Scheduler {
         try {
             log.debug("Synchronizing clan: clanTag=\"{}\"", clanTag);
             Clan clan = clanService.syncClan(clanTag);
-            log.info("Clan synchronization success: clanTag=\"{}\", memberCount={}", clanTag, clan.getMemberCount());
+            log.info("Clan synchronization succeeded: clanTag=\"{}\", memberCount={}", clanTag, clan.getMemberCount());
         } catch (Exception e) {
             checkSynchronization(startedAt);
             log.error("Clan synchronization failed: clanTag=\"{}\"", clanTag, e);
@@ -140,14 +139,28 @@ public class Scheduler {
             log.debug("Synchronizing current war: clanTag=\"{}\"", clanTag);
             War war = warService.syncCurrentWar(clanTag).orElse(null);
             if (war == null) {
-                log.debug("Current war synchronization success: clanTag=\"{}\" - war not found", clanTag);
+                log.debug("No current war found: clanTag=\"{}\"", clanTag);
                 return;
             }
-            log.info("Current war synchronization success: clanTag=\"{}\", state=\"{}\"", clanTag, war.getState());
+            sendWarNotification(war, startedAt);
+            log.info("Current war synchronization succeeded: clanTag=\"{}\", state=\"{}\"", clanTag, war.getState());
         } catch (Exception e) {
             checkSynchronization(startedAt);
             log.error("Current war synchronization failed: clanTag=\"{}\"", clanTag, e);
             telegramNotificationService.sendError("Синхронизация текущей войны", e);
+        }
+    }
+
+    private void sendWarNotification(War war, long startedAt) {
+        checkSynchronization(startedAt);
+        try {
+            log.debug("Sending war notification: warId={}", war.getId());
+            telegramNotificationService.sendWarNotification(war);
+            log.info("War notification sent successfully: warId={}", war.getId());
+        } catch (Exception e) {
+            checkSynchronization(startedAt);
+            log.error("War notification sending failed: warId={}", war.getId(), e);
+            telegramNotificationService.sendError("Отправка уведомления о КВ", e);
         }
     }
 
@@ -157,7 +170,7 @@ public class Scheduler {
             warLogService.syncWarLog(clanTag);
             checkSynchronization(startedAt);
             warService.syncEndedWarsFromWarLog(clanTag);
-            log.info("War log synchronization success: clanTag=\"{}\"", clanTag);
+            log.info("War log synchronization succeeded: clanTag=\"{}\"", clanTag);
         } catch (Exception e) {
             checkSynchronization(startedAt);
             log.error("War log synchronization failed: clanTag=\"{}\"", clanTag, e);
@@ -170,10 +183,10 @@ public class Scheduler {
             log.debug("Synchronizing raid season: clanTag=\"{}\"", clanTag);
             RaidSeason raidSeason = raidSeasonService.syncRaidSeason(clanTag).orElse(null);
             if (raidSeason == null) {
-                log.info("Raid season synchronization success: clanTag=\"{}\" - raid season not found", clanTag);
+                log.debug("No raid season found: clanTag=\"{}\"", clanTag);
                 return;
             }
-            log.info("Raid season synchronization success: clanTag=\"{}\", state=\"{}\"", clanTag, raidSeason.getState());
+            log.info("Raid season synchronization succeeded: clanTag=\"{}\", state=\"{}\"", clanTag, raidSeason.getState());
         } catch (Exception e) {
             checkSynchronization(startedAt);
             log.error("Raid season synchronization failed: clanTag=\"{}\"", clanTag, e);
@@ -181,13 +194,11 @@ public class Scheduler {
         }
     }
 
-    @Scheduled(cron = "0 * * * * *")
     public void test() {
         try {
             telegramNotificationService.sendTestMessages();
         } catch (Exception e) {
-            log.error("Telegram test messages sending failed", e);
+            log.error("Failed to send Telegram test messages", e);
         }
     }
-
 }

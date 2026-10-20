@@ -77,7 +77,7 @@ public class TelegramBot {
 
         String response;
         try {
-            response = telegramCommandDispatcher.execute(command, args, chatId);
+            response = telegramCommandDispatcher.execute(command, args, telegramMessage);
         } catch (RuntimeException exception) {
             log.error("Telegram command failed: updateId={}, command={}",
                     telegramUpdate.updateId(), command, exception);

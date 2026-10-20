@@ -1,6 +1,7 @@
 package com.chapeullah.guccigoblin.telegram.command;
 
 import com.chapeullah.guccigoblin.telegram.TelegramCommandService;
+import com.chapeullah.guccigoblin.telegram.dto.TelegramMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -24,8 +25,8 @@ public class ChatIdCommand implements BotCommand {
     }
 
     @Override
-    public String execute(String args, long chatId) {
-        return telegramCommandService.getChatId(chatId);
+    public String execute(String args, TelegramMessage message) {
+        return telegramCommandService.getChatId(message.telegramChat().id());
     }
 
 }

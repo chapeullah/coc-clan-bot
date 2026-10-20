@@ -6,6 +6,7 @@ coc:
 telegram:
   admin:
     chat-id: ${TELEGRAM_ADMIN_CHAT_ID}
+    user-id: ${TELEGRAM_ADMIN_USER_ID}
   bot:
     token: ${TELEGRAM_BOT_TOKEN}
     poll-delay-ms: 1000

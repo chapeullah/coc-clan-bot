@@ -1,6 +1,6 @@
 package com.chapeullah.guccigoblin.telegram.notification;
 
-import com.chapeullah.guccigoblin.war.model.WarAttack;
+import com.chapeullah.guccigoblin.war.model.War;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -10,19 +10,27 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
-@Entity @Table(name = "telegram_war_attack_notification")
+@Entity @Table(
+        name = "telegram_war_notification",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_telegram_war_notification_war_id_type",
+                columnNames = {"war_id", "type"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TelegramWarAttackNotification {
+public class TelegramWarNotification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "war_attack_id", nullable = false)
-    private WarAttack warAttack;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "war_id", nullable = false)
+    private War war;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private WarNotificationType type;
 
     @Column(name = "chat_id", nullable = false)
     private Long chatId;
@@ -40,12 +48,14 @@ public class TelegramWarAttackNotification {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    public TelegramWarAttackNotification(
-            @NonNull WarAttack warAttack,
+    public TelegramWarNotification(
+            @NonNull War war,
+            @NonNull WarNotificationType type,
             @NonNull Long chatId,
             Integer threadId,
             @NonNull String text) {
-        this.warAttack = warAttack;
+        this.war = war;
+        this.type = type;
         this.chatId = chatId;
         this.threadId = threadId;
         this.text = text;
@@ -53,6 +63,13 @@ public class TelegramWarAttackNotification {
 
     public void markSent() {
         this.sentAt = Instant.now();
+    }
+
+    public void setThreadId(@NonNull Integer threadId) {
+        if (sentAt != null) {
+            throw new IllegalStateException("Cannot change the thread of a sent notification");
+        }
+        this.threadId = threadId;
     }
 
 }

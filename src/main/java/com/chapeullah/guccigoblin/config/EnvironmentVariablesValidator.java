@@ -19,6 +19,7 @@ public class EnvironmentVariablesValidator {
             "COC_CLAN_TAG",
             "TELEGRAM_BOT_TOKEN",
             "TELEGRAM_ADMIN_CHAT_ID",
+            "TELEGRAM_ADMIN_USER_ID",
             "TELEGRAM_CLAN_CHAT_LINK",
             "TELEGRAM_GROUP_CHAT_ID",
             "TELEGRAM_WAR_THREAD_ID",

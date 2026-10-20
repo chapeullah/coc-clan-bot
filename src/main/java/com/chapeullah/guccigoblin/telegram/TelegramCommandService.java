@@ -63,15 +63,52 @@ public class TelegramCommandService {
     private final ClanService clanService;
     private final PlayerService playerService;
 
+    private final TelegramChatSettingRepository telegramChatSettingRepository;
+
     @Value("${coc.clan-tag}")
     private String clanTag;
 
     @Value("${telegram.clan.chat-link}")
     private String telegramClanChatLink;
 
+    @Value("${telegram.admin.user-id}")
+    private long adminUserId;
+
+    @Value("${TELEGRAM_GROUP_CHAT_ID}")
+    private long groupChatId;
+
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
                     .withZone(ZoneId.of("Europe/Moscow"));
+
+    @Transactional
+    public String setWarThread(long chatId, Long userId, Integer threadId) {
+        if (userId == null || userId.longValue() != adminUserId) {
+            return "Нет доступа";
+        }
+
+        if (chatId != groupChatId) {
+            return "Команда доступна только в группе клана";
+        }
+
+        if (threadId == null || threadId <= 0) {
+            return "Отправь команду внутри нужной темы";
+        }
+
+        TelegramChatSetting settings = telegramChatSettingRepository
+                .findById(chatId)
+                .orElse(null);
+
+        if (settings == null) {
+            settings = new TelegramChatSetting(chatId, threadId);
+        } else {
+            settings.changeWarThread(threadId);
+        }
+
+        telegramChatSettingRepository.save(settings);
+
+        return "Эта тема назначена для уведомлений о КВ";
+    }
 
     public String start() {
         return """
@@ -104,7 +141,8 @@ public class TelegramCommandService {
                 /raidmissed — Участники без атак в рейдах
                 /raids — История рейдов
                 
-                /chatid — ID текущего чата
+                /chat_id — ID текущего чата
+                /war_thread — Назначить текущую тему для уведомлений о КВ (владелец бота)
                 """.strip();
     }
 
