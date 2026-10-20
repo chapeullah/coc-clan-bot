@@ -153,11 +153,10 @@ public class TelegramCommandService {
 
         StringBuilder message = new StringBuilder("""
                 <b>Рейтинг участников</b>
-                Р — общий, КВ — войны, РД — рейды.
+                КВ — клановые войны; в скобках — число учтённых событий.
                 КВ учитывает разницу ратуш; звёзды и разрушение показаны без поправок.
-                Во второй строке: КВ — средние звёзды и разрушение за атаку; РД — золото за атаку.
-                Цели КВ: средние по атакам; разница ТХ и позиция — относительно своих в каждой войне.
-                Атаки: выполнено/доступно. — нет данных.
+                ТХ — средняя ратуша целей; ↑/↓ — разница со своей.
+                Позиция: + выше своей, − ниже. Ат.: выполнено/доступно.
 
                 """);
 
@@ -167,29 +166,43 @@ public class TelegramCommandService {
                     TelegramUtils.replaceEmojisWithSquares(statistic.name())
                             .replaceAll("(?U)\\s+", " ")
                             .strip());
-            message.append("<b>%02d. %s</b> | Р %s · КВ %s · РД %s\n"
+            message.append("<b>%02d. %s</b> — %s | КВ %s (%d) · Рейды %s (%d)\n"
                     .formatted(
                             number++,
                             name,
                             formatStatisticValue(statistic.totalRating(), "%.2f"),
                             formatStatisticValue(statistic.warRating(), "%.2f"),
-                            formatStatisticValue(statistic.raidRating(), "%.2f")));
-            message.append("КВ %s · %s · ат. %s | РД %s · ат. %s\n"
-                    .formatted(
-                            formatStatisticValue(statistic.averageStarsPerAttack(), "%.2f★"),
-                            formatStatisticValue(statistic.averageDestructionPercentagePerAttack(), "%.1f%%"),
-                            formatAttackUsage(statistic.warAttackCount(), statistic.missedWarAttackCount()),
-                            formatStatisticValue(statistic.averageRaidLootPerAttack(), "%.0f/ат."),
-                            formatAttackUsage(statistic.raidAttackCount(), statistic.missedRaidAttackCount())));
-            message.append("Цели КВ: ТХ %s · разница ТХ %s · позиция %s\n"
-                    .formatted(
-                            formatStatisticValue(statistic.averageDefenderTownHallLevelPerAttack(), "%.2f"),
-                            formatAverageDifference(statistic.averageTownHallLevelDifferencePerAttack()),
-                            formatAverageDifference(statistic.averageMapPositionDifferencePerAttack())));
-            message.append("Учтено: КВ %d · РД %d\n\n"
-                    .formatted(statistic.warCount(), statistic.raidSeasonCount()));
+                            statistic.warCount(),
+                            formatStatisticValue(statistic.raidRating(), "%.2f"),
+                            statistic.raidSeasonCount()));
+            message.append(formatAverageAttackStatistics(statistic)).append("\n\n");
         }
         return message.toString().strip();
+    }
+
+    private static String formatAverageAttackStatistics(MemberStatistic statistic) {
+        boolean hasWarAttackData = statistic.averageStarsPerAttack().isPresent()
+                || statistic.averageDestructionPercentagePerAttack().isPresent();
+        boolean hasRaidAttackData = statistic.averageRaidLootPerAttack().isPresent();
+        if (!hasWarAttackData && !hasRaidAttackData) {
+            return "Нет данных";
+        }
+
+        String warStatistics = hasWarAttackData
+                ? "%s · %s · ТХ %s %s · позиция %s · ат. %s".formatted(
+                        formatStatisticValue(statistic.averageStarsPerAttack(), "%.2f★"),
+                        formatStatisticValue(statistic.averageDestructionPercentagePerAttack(), "%.1f%%"),
+                        formatStatisticValue(statistic.averageDefenderTownHallLevelPerAttack(), "%.1f"),
+                        formatTownHallDifference(statistic.averageTownHallLevelDifferencePerAttack()),
+                        formatAverageDifference(statistic.averageMapPositionDifferencePerAttack()),
+                        formatAttackUsage(statistic.warAttackCount(), statistic.missedWarAttackCount()))
+                : "Нет данных";
+        String raidStatistics = hasRaidAttackData
+                ? "%s · ат. %s".formatted(
+                        formatStatisticValue(statistic.averageRaidLootPerAttack(), "%.0f/ат."),
+                        formatAttackUsage(statistic.raidAttackCount(), statistic.missedRaidAttackCount()))
+                : "Нет данных";
+        return "Ср. знач. атак: КВ %s | Рейды %s".formatted(warStatistics, raidStatistics);
     }
 
     private static String formatStatisticValue(Optional<Double> value, String format) {
@@ -199,12 +212,15 @@ public class TelegramCommandService {
 
     private static String formatAverageDifference(Optional<Double> value) {
         return value.map(number -> {
-            if (Math.round(Math.abs(number) * 100.0) == 0) {
-                return "0.00";
+            if (Math.round(Math.abs(number) * 10.0) == 0) {
+                return "0.0";
             }
-            return String.format(Locale.ROOT, "%s на %.2f",
-                    number > 0.0 ? "выше" : "ниже", Math.abs(number));
+            return String.format(Locale.ROOT, "%+.1f", number);
         }).orElse("—");
+    }
+
+    private static String formatTownHallDifference(Optional<Double> value) {
+        return formatAverageDifference(value).replace('+', '↑').replace('-', '↓');
     }
 
     private static String formatAttackUsage(int attackCount, int missedAttackCount) {
