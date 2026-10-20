@@ -14,10 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class RaidSeasonClanMemberSnapshotService {
+
+    private static final int MIN_TOWN_HALL_LEVEL = 6;
+    private static final int MAX_RAID_PARTICIPANTS = 50;
 
     private final ClanService clanService;
     private final MemberService memberService;
@@ -47,6 +52,12 @@ public class RaidSeasonClanMemberSnapshotService {
         List<RaidSeasonClanMemberSnapshot> snapshots =
                 snapshotRepository.findAllByRaidSeason(raidSeason);
 
+        Set<String> attackingTags = raidSeason.getParticipants().stream()
+                .filter(participant -> participant.getAttackCount() != null
+                        && participant.getAttackCount() > 0)
+                .map(participant -> participant.getTag())
+                .collect(Collectors.toSet());
+
         for (Member member : members) {
             RaidSeasonClanMemberSnapshot snapshot = snapshots.stream()
                     .filter(existing -> existing.getTag().equals(member.getTag()))
@@ -54,12 +65,12 @@ public class RaidSeasonClanMemberSnapshotService {
                     .orElse(null);
 
             if (snapshot == null) {
-                snapshots.add(createSnapshot(raidSeason, member, clan.getType()));
+                snapshots.add(createSnapshot(raidSeason, member, clan.getType(), attackingTags));
             } else {
                 snapshot.updateParticipation(
                         member.getRole(),
                         clan.getType(),
-                        getParticipationEligible(raidSeason, snapshot, member, clan.getType()));
+                        getParticipationEligible(raidSeason, snapshot, member, clan.getType(), attackingTags));
                 snapshotRepository.save(snapshot);
             }
         }
@@ -68,7 +79,8 @@ public class RaidSeasonClanMemberSnapshotService {
     private RaidSeasonClanMemberSnapshot createSnapshot(
             @NonNull RaidSeason raidSeason,
             @NonNull Member member,
-            @NonNull String clanType) {
+            @NonNull String clanType,
+            @NonNull Set<String> attackingTags) {
         RaidSeasonClanMemberSnapshot snapshot = new RaidSeasonClanMemberSnapshot(
                 raidSeason,
                 member.getTag(),
@@ -82,7 +94,7 @@ public class RaidSeasonClanMemberSnapshotService {
         snapshot.updateParticipation(
                 member.getRole(),
                 clanType,
-                getParticipationEligible(raidSeason, snapshot, member, clanType));
+                getParticipationEligible(raidSeason, snapshot, member, clanType, attackingTags));
 
         return snapshotRepository.save(snapshot);
     }
@@ -91,13 +103,23 @@ public class RaidSeasonClanMemberSnapshotService {
             @NonNull RaidSeason raidSeason,
             @NonNull RaidSeasonClanMemberSnapshot snapshot,
             @NonNull Member member,
-            @NonNull String clanType) {
-        boolean hasAttacks = raidSeason.getParticipants().stream()
-                .anyMatch(participant -> participant.getTag().equals(member.getTag())
-                        && participant.getAttackCount() != null
-                        && participant.getAttackCount() > 0);
-        if (hasAttacks
-                || "admin".equals(member.getRole())
+            @NonNull String clanType,
+            @NonNull Set<String> attackingTags) {
+        if (attackingTags.contains(member.getTag())) {
+            return true;
+        }
+
+        if (member.getTownHallLevel() != null && member.getTownHallLevel() < MIN_TOWN_HALL_LEVEL) {
+            return false;
+        }
+
+        // Filling the last slot must not erase an earlier observed opportunity to attack.
+        if (attackingTags.size() >= MAX_RAID_PARTICIPANTS
+                && !Boolean.TRUE.equals(snapshot.getParticipationOpportunityObserved())) {
+            return false;
+        }
+
+        if ("admin".equals(member.getRole())
                 || "coLeader".equals(member.getRole())
                 || "leader".equals(member.getRole())
                 || "inviteOnly".equals(clanType)
@@ -109,11 +131,11 @@ public class RaidSeasonClanMemberSnapshotService {
             return null;
         }
 
-        if (snapshot.getJoinedAt() != null && !snapshot.getJoinedAt().isAfter(raidSeason.getStartTime())) {
+        if (member.getJoinedAt() != null && !member.getJoinedAt().isAfter(raidSeason.getStartTime())) {
             return true;
         }
 
-        if (snapshot.getJoinedAfter() != null && !snapshot.getJoinedAfter().isBefore(raidSeason.getStartTime())) {
+        if (member.getJoinedAfter() != null && !member.getJoinedAfter().isBefore(raidSeason.getStartTime())) {
             return false;
         }
 

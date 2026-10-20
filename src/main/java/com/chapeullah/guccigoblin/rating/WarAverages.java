@@ -5,4 +5,5 @@ import java.util.Optional;
 public record WarAverages(
         double stars,
         double destructionPercentage,
-        Optional<Double> durationSeconds) {}
+        Optional<Double> durationSeconds,
+        double attackScore) {}

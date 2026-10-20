@@ -66,6 +66,9 @@ public class RaidSeasonClanMemberSnapshot {
     @Column(name = "participation_eligible", nullable = true)
     private Boolean participationEligible;
 
+    @Column(name = "participation_opportunity_observed", nullable = true)
+    private Boolean participationOpportunityObserved;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -87,6 +90,7 @@ public class RaidSeasonClanMemberSnapshot {
         this.role = role;
         this.clanType = clanType;
         this.participationEligible = participationEligible;
+        this.participationOpportunityObserved = Boolean.TRUE.equals(participationEligible);
     }
 
     public void updateParticipation(
@@ -96,8 +100,9 @@ public class RaidSeasonClanMemberSnapshot {
         this.role = role;
         this.clanType = clanType;
 
-        if (!Boolean.TRUE.equals(this.participationEligible)) {
-            this.participationEligible = participationEligible;
+        this.participationEligible = participationEligible;
+        if (Boolean.TRUE.equals(participationEligible)) {
+            this.participationOpportunityObserved = true;
         }
     }
 

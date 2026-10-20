@@ -13,6 +13,9 @@ import org.springframework.web.client.RestClientResponseException;
 @RequiredArgsConstructor
 public class TelegramBot {
 
+    private static final String COMMAND_ERROR_MESSAGE =
+            "Не удалось выполнить команду. Попробуйте позже.";
+
     private final TelegramClient telegramClient;
     private final TelegramCommandDispatcher telegramCommandDispatcher;
 
@@ -59,9 +62,31 @@ public class TelegramBot {
         String command = messageParts[0];
         String args = messageParts.length == 2 ? messageParts[1] : "";
 
-        telegramClient.sendMessage(
-                chatId,
-                telegramCommandDispatcher.execute(command, args, chatId));
+        int usernameSeparator = command.indexOf('@');
+        if (command.startsWith("/") && usernameSeparator > 0) {
+            String username = command.substring(usernameSeparator + 1);
+            if (!username.equalsIgnoreCase(telegramClient.getUsername())) {
+                return;
+            }
+            command = command.substring(0, usernameSeparator);
+        }
+
+        String response;
+        try {
+            response = telegramCommandDispatcher.execute(command, args, chatId);
+        } catch (RuntimeException exception) {
+            log.error("Telegram command failed: updateId={}, command={}",
+                    telegramUpdate.updateId(), command, exception);
+            response = COMMAND_ERROR_MESSAGE;
+        }
+
+        try {
+            telegramClient.sendMessage(chatId, response);
+        } catch (IllegalArgumentException exception) {
+            log.error("Telegram command response could not be formatted: updateId={}, command={}",
+                    telegramUpdate.updateId(), command, exception);
+            telegramClient.sendMessage(chatId, COMMAND_ERROR_MESSAGE);
+        }
     }
 
 }

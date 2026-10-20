@@ -21,4 +21,7 @@ ALTER TABLE public.raid_season_clan_member_snapshots
 ALTER TABLE public.raid_season_clan_member_snapshots
     ADD COLUMN IF NOT EXISTS participation_eligible boolean;
 
+ALTER TABLE public.raid_season_clan_member_snapshots
+    ADD COLUMN IF NOT EXISTS participation_opportunity_observed boolean;
+
 COMMIT;

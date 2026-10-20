@@ -5,27 +5,32 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 @Component
 public class TelegramCommandDispatcher {
 
-    private final Map<String, BotCommand> commands;
+    private final Map<String, BiFunction<String, Long, String>> commands;
 
-    public TelegramCommandDispatcher(List<BotCommand> commands) {
-         this.commands = commands.stream()
-                 .collect(Collectors.toMap(
-                         BotCommand::getName,
-                         Function.identity()));
+    public TelegramCommandDispatcher(
+            List<BotCommand> commands,
+            TelegramCommandService telegramCommandService) {
+        this.commands = commands.stream()
+                .collect(Collectors.toMap(
+                        BotCommand::getName,
+                        command -> (BiFunction<String, Long, String>) command::execute));
+        this.commands.put(
+                "/rating",
+                (args, chatId) -> telegramCommandService.getRatingMessage());
     }
 
     public String execute(String commandName, String args, long chatId) {
-        BotCommand command = commands.get(commandName);
+        BiFunction<String, Long, String> command = commands.get(commandName);
         if (command == null) {
             return "Команда не найдена";
         }
-        return command.execute(args, chatId);
+        return command.apply(args, chatId);
     }
 
 }

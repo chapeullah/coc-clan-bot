@@ -14,6 +14,7 @@ import com.chapeullah.guccigoblin.raidseason.model.RaidSeasonParticipant;
 import com.chapeullah.guccigoblin.raidseason.service.RaidSeasonParticipantService;
 import com.chapeullah.guccigoblin.raidseason.service.RaidSeasonClanMemberSnapshotService;
 import com.chapeullah.guccigoblin.raidseason.service.RaidSeasonService;
+import com.chapeullah.guccigoblin.rating.MemberStatistic;
 import com.chapeullah.guccigoblin.rating.RatingService;
 import com.chapeullah.guccigoblin.war.model.War;
 import com.chapeullah.guccigoblin.war.model.WarAttack;
@@ -41,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -88,6 +90,7 @@ public class TelegramCommandService {
 
                 /clan — Информация о клане
                 /members — Текущий состав клана
+                /rating — Рейтинг и краткая статистика участников
                 /member #TAG — Информация об участнике клана
                 /player #TAG — Информация об игроке
                 /war — Текущая война клана
@@ -109,16 +112,19 @@ public class TelegramCommandService {
             return "Список участников клана пуст";
         }
 
-        Map<String, Double> ratingsByTag = ratingService.calculateClanMemberRatings(clanTag);
+        Map<String, MemberStatistic> statisticsByTag =
+                ratingService.calculateClanMemberStatistics(clanTag);
 
         StringBuilder message = new StringBuilder("<b>Участники клана</b>\n\n");
         for (Member member : members) {
             String name = TelegramUtils.escapeHtml(
                     TelegramUtils.replaceEmojisWithSquares(member.getName()));
-            Double rating = ratingsByTag.get(member.getTag());
-            String ratingText = rating == null
+            MemberStatistic statistic = statisticsByTag.get(member.getTag());
+            String ratingText = statistic == null
                     ? "Нет данных"
-                    : String.format(Locale.ROOT, "%.2f", rating);
+                    : statistic.totalRating()
+                            .map(rating -> String.format(Locale.ROOT, "%.2f", rating))
+                            .orElse("Нет данных");
             message.append("<b>%02d. %s</b> | <code>%s</code> | %s\n"
                     .formatted(
                             member.getClanRank(),
@@ -127,6 +133,85 @@ public class TelegramCommandService {
                             ratingText));
         }
         return message.toString().strip();
+    }
+
+    @Transactional(readOnly = true)
+    public String getRatingMessage() {
+        List<MemberStatistic> statistics = ratingService
+                .calculateClanMemberStatistics(clanTag)
+                .values().stream()
+                .sorted(Comparator
+                        .comparingDouble((MemberStatistic statistic) ->
+                                statistic.totalRating().orElse(Double.NEGATIVE_INFINITY))
+                        .reversed()
+                        .thenComparing(MemberStatistic::name, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(MemberStatistic::tag))
+                .toList();
+        if (statistics.isEmpty()) {
+            return "Список участников клана пуст";
+        }
+
+        StringBuilder message = new StringBuilder("""
+                <b>Рейтинг участников</b>
+                Р — общий, КВ — войны, РД — рейды.
+                КВ учитывает разницу ратуш; звёзды и разрушение показаны без поправок.
+                Во второй строке: КВ — средние звёзды и разрушение за атаку; РД — золото за атаку.
+                Цели КВ: средние по атакам; разница ТХ и позиция — относительно своих в каждой войне.
+                Атаки: выполнено/доступно. — нет данных.
+
+                """);
+
+        int number = 1;
+        for (MemberStatistic statistic : statistics) {
+            String name = TelegramUtils.escapeHtml(
+                    TelegramUtils.replaceEmojisWithSquares(statistic.name())
+                            .replaceAll("(?U)\\s+", " ")
+                            .strip());
+            message.append("<b>%02d. %s</b> | Р %s · КВ %s · РД %s\n"
+                    .formatted(
+                            number++,
+                            name,
+                            formatStatisticValue(statistic.totalRating(), "%.2f"),
+                            formatStatisticValue(statistic.warRating(), "%.2f"),
+                            formatStatisticValue(statistic.raidRating(), "%.2f")));
+            message.append("КВ %s · %s · ат. %s | РД %s · ат. %s\n"
+                    .formatted(
+                            formatStatisticValue(statistic.averageStarsPerAttack(), "%.2f★"),
+                            formatStatisticValue(statistic.averageDestructionPercentagePerAttack(), "%.1f%%"),
+                            formatAttackUsage(statistic.warAttackCount(), statistic.missedWarAttackCount()),
+                            formatStatisticValue(statistic.averageRaidLootPerAttack(), "%.0f/ат."),
+                            formatAttackUsage(statistic.raidAttackCount(), statistic.missedRaidAttackCount())));
+            message.append("Цели КВ: ТХ %s · разница ТХ %s · позиция %s\n"
+                    .formatted(
+                            formatStatisticValue(statistic.averageDefenderTownHallLevelPerAttack(), "%.2f"),
+                            formatAverageDifference(statistic.averageTownHallLevelDifferencePerAttack()),
+                            formatAverageDifference(statistic.averageMapPositionDifferencePerAttack())));
+            message.append("Учтено: КВ %d · РД %d\n\n"
+                    .formatted(statistic.warCount(), statistic.raidSeasonCount()));
+        }
+        return message.toString().strip();
+    }
+
+    private static String formatStatisticValue(Optional<Double> value, String format) {
+        return value.map(number -> String.format(Locale.ROOT, format, number))
+                .orElse("—");
+    }
+
+    private static String formatAverageDifference(Optional<Double> value) {
+        return value.map(number -> {
+            if (Math.round(Math.abs(number) * 100.0) == 0) {
+                return "0.00";
+            }
+            return String.format(Locale.ROOT, "%s на %.2f",
+                    number > 0.0 ? "выше" : "ниже", Math.abs(number));
+        }).orElse("—");
+    }
+
+    private static String formatAttackUsage(int attackCount, int missedAttackCount) {
+        int availableAttackCount = attackCount + missedAttackCount;
+        return availableAttackCount == 0
+                ? "—"
+                : attackCount + "/" + availableAttackCount;
     }
 
     @Transactional(readOnly = true)
