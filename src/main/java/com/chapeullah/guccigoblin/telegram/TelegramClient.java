@@ -14,6 +14,7 @@ import org.springframework.web.client.RestClient;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -79,9 +80,29 @@ public class TelegramClient {
     }
 
     public void sendMessage(long chatId, String text) {
+        sendMessage(chatId, null, text);
+    }
+
+    public void sendMessage(long chatId, Integer threadId, String text) {
         for (String part : splitMessage(text)) {
-            sendMessagePart(chatId, part);
+            sendMessagePart(chatId, threadId, part);
         }
+    }
+
+    private void sendMessagePart(long chatId, Integer threadId, String text) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("chat_id", chatId);
+        body.put("text", text);
+        body.put("parse_mode", "HTML");
+        if (threadId != null) {
+            body.put("message_thread_id", threadId);
+        }
+        restClient.post()
+                .uri("/sendMessage")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .retrieve()
+                .toBodilessEntity();
     }
 
     private List<String> splitMessage(String text) {
@@ -109,18 +130,6 @@ public class TelegramClient {
             parts.add(remaining);
         }
         return parts;
-    }
-
-    private void sendMessagePart(long chatId, String text) {
-        restClient.post()
-                .uri("/sendMessage")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of(
-                        "chat_id", chatId,
-                        "text", text,
-                        "parse_mode", "HTML"))
-                .retrieve()
-                .toBodilessEntity();
     }
 
 }

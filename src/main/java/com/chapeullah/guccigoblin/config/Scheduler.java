@@ -4,7 +4,7 @@ import com.chapeullah.guccigoblin.clan.service.ClanService;
 import com.chapeullah.guccigoblin.clan.model.Clan;
 import com.chapeullah.guccigoblin.raidseason.model.RaidSeason;
 import com.chapeullah.guccigoblin.raidseason.service.RaidSeasonService;
-import com.chapeullah.guccigoblin.telegram.TelegramNotificationService;
+import com.chapeullah.guccigoblin.telegram.notification.TelegramNotificationService;
 import com.chapeullah.guccigoblin.war.model.War;
 import com.chapeullah.guccigoblin.war.service.WarService;
 import com.chapeullah.guccigoblin.war.service.WarLogService;
@@ -45,6 +45,7 @@ public class Scheduler {
     @Value("${coc.clan-tag}")
     private String clanTag;
 
+    /*
     @Scheduled(cron = "0 * * * * *")
     public void synchronizeClanAndRaids() {
         runWithTimeout(startedAt -> {
@@ -178,6 +179,17 @@ public class Scheduler {
             checkSynchronization(startedAt);
             log.error("Raid season synchronization failed: clanTag=\"{}\"", clanTag, e);
             telegramNotificationService.sendError("Синхронизация сезона рейдов", e);
+        }
+    }
+
+     */
+
+    @Scheduled(cron = "0 * * * * *")
+    public void test() {
+        try {
+            telegramNotificationService.sendTestMessages();
+        } catch (Exception e) {
+            log.error("Telegram test messages sending failed", e);
         }
     }
 
