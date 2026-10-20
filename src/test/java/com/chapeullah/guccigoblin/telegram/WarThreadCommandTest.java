@@ -46,6 +46,9 @@ class WarThreadCommandTest {
     private TelegramChatSettingRepository telegramChatSettingRepository;
 
     @Mock
+    private TelegramGroupSettingRepository telegramGroupSettingRepository;
+
+    @Mock
     private TelegramClient telegramClient;
 
     @Mock
@@ -143,6 +146,34 @@ class WarThreadCommandTest {
         assertEquals(SUCCESS_MESSAGE, response);
         assertEquals(THREAD_ID, setting.getWarThreadId());
         verify(telegramChatSettingRepository).save(setting);
+    }
+
+    @Test
+    void bindsTheTopicInTheSavedGroupInsteadOfTheEnvironmentGroup() {
+        long savedGroupChatId = GROUP_CHAT_ID - 1;
+        when(telegramGroupSettingRepository.findById(TelegramGroupSetting.SETTINGS_ID))
+                .thenReturn(Optional.of(new TelegramGroupSetting(savedGroupChatId)));
+
+        String response = dispatcher.execute("/war_thread", "",
+                message(savedGroupChatId, FIRST_ADMIN_USER_ID, THREAD_ID));
+
+        assertEquals(SUCCESS_MESSAGE, response);
+        ArgumentCaptor<TelegramChatSetting> setting = ArgumentCaptor.forClass(TelegramChatSetting.class);
+        verify(telegramChatSettingRepository).save(setting.capture());
+        assertEquals(savedGroupChatId, setting.getValue().getChatId());
+        assertEquals(THREAD_ID, setting.getValue().getWarThreadId());
+    }
+
+    @Test
+    void rejectsTheOldGroupAfterAnotherGroupHasBeenSaved() {
+        when(telegramGroupSettingRepository.findById(TelegramGroupSetting.SETTINGS_ID))
+                .thenReturn(Optional.of(new TelegramGroupSetting(GROUP_CHAT_ID - 1)));
+
+        String response = dispatcher.execute("/war_thread", "",
+                message(GROUP_CHAT_ID, FIRST_ADMIN_USER_ID, THREAD_ID));
+
+        assertEquals("Команда доступна только в группе клана", response);
+        verifyNoInteractions(telegramChatSettingRepository);
     }
 
     @ParameterizedTest

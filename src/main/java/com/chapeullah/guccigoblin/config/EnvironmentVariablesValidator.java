@@ -21,7 +21,6 @@ public class EnvironmentVariablesValidator {
             "TELEGRAM_ADMIN_CHAT_ID",
             "TELEGRAM_ADMIN_USER_IDS",
             "TELEGRAM_CLAN_CHAT_LINK",
-            "TELEGRAM_GROUP_CHAT_ID",
             "TELEGRAM_WAR_THREAD_ID",
             "TELEGRAM_RAID_THREAD_ID");
 

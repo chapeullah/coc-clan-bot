@@ -66,9 +66,14 @@ public class TelegramWarNotification {
     }
 
     public void setThreadId(@NonNull Integer threadId) {
+        changeDestination(this.chatId, threadId);
+    }
+
+    public void changeDestination(@NonNull Long chatId, Integer threadId) {
         if (sentAt != null) {
-            throw new IllegalStateException("Cannot change the thread of a sent notification");
+            throw new IllegalStateException("Cannot change the destination of a sent notification");
         }
+        this.chatId = chatId;
         this.threadId = threadId;
     }
 

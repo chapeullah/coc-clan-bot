@@ -3,6 +3,8 @@ package com.chapeullah.guccigoblin.telegram.notification;
 import com.chapeullah.guccigoblin.telegram.TelegramChatSetting;
 import com.chapeullah.guccigoblin.telegram.TelegramChatSettingRepository;
 import com.chapeullah.guccigoblin.telegram.TelegramClient;
+import com.chapeullah.guccigoblin.telegram.TelegramGroupSetting;
+import com.chapeullah.guccigoblin.telegram.TelegramGroupSettingRepository;
 import com.chapeullah.guccigoblin.telegram.TelegramUtils;
 import com.chapeullah.guccigoblin.war.model.War;
 import lombok.NonNull;
@@ -28,7 +30,7 @@ public class TelegramNotificationService {
     @Value("${TELEGRAM_ADMIN_CHAT_ID}")
     private long adminChatId;
 
-    @Value("${TELEGRAM_GROUP_CHAT_ID}")
+    @Value("${TELEGRAM_GROUP_CHAT_ID:0}")
     private long groupChatId;
 
     @Value("${TELEGRAM_WAR_THREAD_ID}")
@@ -38,20 +40,41 @@ public class TelegramNotificationService {
     private Integer raidThreadId;
 
     private final TelegramChatSettingRepository telegramChatSettingRepository;
+    private final TelegramGroupSettingRepository telegramGroupSettingRepository;
 
-    private Integer resolveWarThreadId() {
-        return telegramChatSettingRepository.findById(groupChatId)
+    private long resolveGroupChatId() {
+        return telegramGroupSettingRepository.findById(TelegramGroupSetting.SETTINGS_ID)
+                .map(TelegramGroupSetting::getChatId)
+                .orElse(groupChatId);
+    }
+
+    private Integer resolveWarThreadId(long targetChatId) {
+        return telegramChatSettingRepository.findById(targetChatId)
                 .map(TelegramChatSetting::getWarThreadId)
-                .orElse(warThreadId);
+                .orElse(targetChatId == groupChatId && warThreadId != null && warThreadId > 0
+                        ? warThreadId
+                        : null);
     }
 
     public void sendTestMessages() {
-        sendThreadMessage(resolveWarThreadId(), "⚔️ Тестовое сообщение в теме КВ");
-        sendThreadMessage(raidThreadId, "🏰 Тестовое сообщение в теме рейдов");
+        long targetChatId = resolveGroupChatId();
+        if (targetChatId == 0) {
+            throw new IllegalStateException("Telegram group is not configured; use /set_group");
+        }
+        telegramClient.sendMessage(targetChatId, resolveWarThreadId(targetChatId),
+                "⚔️ Тестовое сообщение в теме КВ");
+        telegramClient.sendMessage(targetChatId,
+                targetChatId == groupChatId && raidThreadId != null && raidThreadId > 0
+                        ? raidThreadId : null,
+                "🏰 Тестовое сообщение в теме рейдов");
     }
 
     public void sendThreadMessage(@NonNull Integer threadId, @NonNull String text) {
-        telegramClient.sendMessage(groupChatId, threadId, text);
+        long targetChatId = resolveGroupChatId();
+        if (targetChatId == 0) {
+            throw new IllegalStateException("Telegram group is not configured; use /set_group");
+        }
+        telegramClient.sendMessage(targetChatId, threadId, text);
     }
 
     public void sendError(String operation, Exception exception) {
@@ -85,19 +108,24 @@ public class TelegramNotificationService {
             return;
         }
 
-        Integer targetThreadId = resolveWarThreadId();
+        long targetChatId = resolveGroupChatId();
+        if (targetChatId == 0) {
+            log.debug("Telegram group is not configured, skipping war notification: warId={}", war.getId());
+            return;
+        }
+        Integer targetThreadId = resolveWarThreadId(targetChatId);
 
         if (notification == null) {
             notification = telegramWarNotificationRepository.save(
                     new TelegramWarNotification(
                             war,
                             type,
-                            groupChatId,
+                            targetChatId,
                             targetThreadId,
                             getWarNotificationMessage(war, type)));
-        } else if (!Objects.equals(
-                notification.getThreadId(), targetThreadId)) {
-            notification.setThreadId(targetThreadId);
+        } else if (!Objects.equals(notification.getChatId(), targetChatId)
+                || !Objects.equals(notification.getThreadId(), targetThreadId)) {
+            notification.changeDestination(targetChatId, targetThreadId);
             notification = telegramWarNotificationRepository.save(notification);
         }
 

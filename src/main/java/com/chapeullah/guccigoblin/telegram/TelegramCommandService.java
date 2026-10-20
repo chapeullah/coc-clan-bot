@@ -64,6 +64,7 @@ public class TelegramCommandService {
     private final PlayerService playerService;
 
     private final TelegramChatSettingRepository telegramChatSettingRepository;
+    private final TelegramGroupSettingRepository telegramGroupSettingRepository;
     private final TelegramAccessService telegramAccessService;
 
     @Value("${coc.clan-tag}")
@@ -72,12 +73,25 @@ public class TelegramCommandService {
     @Value("${TELEGRAM_CLAN_CHAT_LINK}")
     private String telegramClanChatLink;
 
-    @Value("${TELEGRAM_GROUP_CHAT_ID}")
+    @Value("${TELEGRAM_GROUP_CHAT_ID:0}")
     private long groupChatId;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
-            DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
-                    .withZone(ZoneId.of("Europe/Moscow"));
+            DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.of("Europe/Moscow"));
+
+    @Transactional
+    public String setGroup(long chatId, Long userId) {
+        if (userId == null || !telegramAccessService.isAdmin(userId)) {
+            return "Нет доступа";
+        }
+
+        if (chatId >= 0) {
+            return "Вызови команду в нужной группе";
+        }
+
+        telegramGroupSettingRepository.save(new TelegramGroupSetting(chatId));
+        return "Эта группа назначена группой клана";
+    }
 
     @Transactional
     public String setWarThread(long chatId, Long userId, Integer threadId) {
@@ -85,7 +99,12 @@ public class TelegramCommandService {
             return "Нет доступа";
         }
 
-        if (chatId != groupChatId) {
+        long configuredGroupChatId = telegramGroupSettingRepository
+                .findById(TelegramGroupSetting.SETTINGS_ID)
+                .map(TelegramGroupSetting::getChatId)
+                .orElse(groupChatId);
+
+        if (chatId != configuredGroupChatId) {
             return "Команда доступна только в группе клана";
         }
 
@@ -139,6 +158,7 @@ public class TelegramCommandService {
                 /raid_missed — Участники без атак в рейдах
                 /raids — История рейдов
                 
+                /set_group — Назначить текущую группу группой клана
                 /war_thread — Назначить текущую тему для уведомлений
                 """.strip();
     }
