@@ -156,7 +156,8 @@ public class TelegramCommandService {
                 КВ — клановые войны; в скобках — число учтённых событий.
                 КВ учитывает разницу ратуш; звёзды и разрушение показаны без поправок.
                 ТХ — средняя ратуша целей; ↑/↓ — разница со своей.
-                Позиция: + выше своей, − ниже. Ат.: выполнено/доступно.
+                Позиция: ↑ выше своей, ↓ ниже.
+                Ат.: КВ — выполнено/доступно, рейды — среднее за рейд.
 
                 """);
 
@@ -193,21 +194,21 @@ public class TelegramCommandService {
                         formatStatisticValue(statistic.averageStarsPerAttack(), "%.2f★"),
                         formatStatisticValue(statistic.averageDestructionPercentagePerAttack(), "%.1f%%"),
                         formatStatisticValue(statistic.averageDefenderTownHallLevelPerAttack(), "%.1f"),
-                        formatTownHallDifference(statistic.averageTownHallLevelDifferencePerAttack()),
+                        formatAverageDifference(statistic.averageTownHallLevelDifferencePerAttack()),
                         formatAverageDifference(statistic.averageMapPositionDifferencePerAttack()),
                         formatAttackUsage(statistic.warAttackCount(), statistic.missedWarAttackCount()))
                 : "Нет данных";
         String raidStatistics = hasRaidAttackData
                 ? "%s | ат. %s".formatted(
                         formatStatisticValue(statistic.averageRaidLootPerAttack(), "%.0f/ат."),
-                        formatAttackUsage(statistic.raidAttackCount(), statistic.missedRaidAttackCount()))
+                        formatStatisticValue(statistic.averageRaidAttacksPerSeason(), "%.2f"))
                 : "Нет данных";
         return "Ср: КВ %s | Рейды %s".formatted(warStatistics, raidStatistics);
     }
 
     private static String formatStatisticValue(Optional<Double> value, String format) {
         return value.map(number -> String.format(Locale.ROOT, format, number))
-                .orElse("—");
+                .orElse("-");
     }
 
     private static String formatAverageDifference(Optional<Double> value) {
@@ -215,18 +216,14 @@ public class TelegramCommandService {
             if (Math.round(Math.abs(number) * 10.0) == 0) {
                 return "0.0";
             }
-            return String.format(Locale.ROOT, "%+.1f", number);
-        }).orElse("—");
-    }
-
-    private static String formatTownHallDifference(Optional<Double> value) {
-        return formatAverageDifference(value).replace('+', '↑').replace('-', '↓');
+            return String.format(Locale.ROOT, "%s%.1f", number > 0.0 ? "↑" : "↓", Math.abs(number));
+        }).orElse("-");
     }
 
     private static String formatAttackUsage(int attackCount, int missedAttackCount) {
         int availableAttackCount = attackCount + missedAttackCount;
         return availableAttackCount == 0
-                ? "—"
+                ? "-"
                 : attackCount + "/" + availableAttackCount;
     }
 
