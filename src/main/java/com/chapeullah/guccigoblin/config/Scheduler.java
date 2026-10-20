@@ -187,7 +187,6 @@ public class Scheduler {
     @Scheduled(cron = "0 * * * * *")
     public void test() {
         try {
-            telegramNotificationService.sendTestMessages();
         } catch (Exception e) {
             log.error("Telegram test messages sending failed", e);
         }
