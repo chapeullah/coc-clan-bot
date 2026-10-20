@@ -217,16 +217,14 @@ public class TelegramCommandService {
 
         StringBuilder message = new StringBuilder("""
                 <b>Рейтинг КВ</b>
-                Рейтинг учитывает разницу ТХ; средние звёзды и разрушение показаны без поправок.
-                ТХ — средняя ратуша целей; ↑/↓ — разница со своей.
-                ПОЗ — позиция целей относительно своей: ↑ выше, ↓ ниже.
-                АТ — выполнено/доступно.
+                Рейтинг учитывает разницу ТХ; средние звёзды и разрушение.
+                АТ — среднее число атак за КВ.
 
                 """);
         int number = 1;
         for (MemberWarStatistic statistic : statistics) {
             appendRatingMember(message, number++, statistic.name(), statistic.warRating());
-            message.append(formatWarAttackStatistics(statistic)).append("\n\n");
+            message.append(formatWarAttackStatistics(statistic)).append("\n");
         }
         return message.toString().strip();
     }
@@ -255,7 +253,7 @@ public class TelegramCommandService {
         int number = 1;
         for (MemberRaidStatistic statistic : statistics) {
             appendRatingMember(message, number++, statistic.name(), statistic.raidRating());
-            message.append(formatRaidAttackStatistics(statistic)).append("\n\n");
+            message.append(formatRaidAttackStatistics(statistic)).append("\n");
         }
         return message.toString().strip();
     }
@@ -266,20 +264,18 @@ public class TelegramCommandService {
                 TelegramUtils.replaceEmojisWithSquares(memberName)
                         .replaceAll("(?U)\\s+", " ")
                         .strip());
-        message.append("<b>%02d. %s</b> — %s\n"
-                .formatted(number, name, formatStatisticValue(rating, "%.2f")));
+        message.append("<b>%02d. %s</b> — %s | ".formatted(number, name, formatStatisticValue(rating, "%.2f")));
     }
 
     private static String formatWarAttackStatistics(MemberWarStatistic statistic) {
-        return statistic.averageStarsPerAttack().isPresent()
-                || statistic.averageDestructionPercentagePerAttack().isPresent()
-                ? "%s | %s | ТХ %s %s | ПОЗ %s | АТ %s".formatted(
+        return statistic.warCount() > 0
+                ? "%s | %s | АТ %s".formatted(
                         formatStatisticValue(statistic.averageStarsPerAttack(), "%.2f★"),
                         formatStatisticValue(statistic.averageDestructionPercentagePerAttack(), "%.1f%%"),
-                        formatStatisticValue(statistic.averageDefenderTownHallLevelPerAttack(), "%.1f"),
-                        formatAverageDifference(statistic.averageTownHallLevelDifferencePerAttack()),
-                        formatAverageDifference(statistic.averageMapPositionDifferencePerAttack()),
-                        formatAttackUsage(statistic.warAttackCount(), statistic.missedWarAttackCount()))
+                        String.format(
+                                Locale.ROOT,
+                                "%.2f",
+                                (double) statistic.warAttackCount() / statistic.warCount()))
                 : "Нет данных";
     }
 
@@ -303,13 +299,6 @@ public class TelegramCommandService {
             }
             return String.format(Locale.ROOT, "%s%.1f", number > 0.0 ? "↑" : "↓", Math.abs(number));
         }).orElse("-");
-    }
-
-    private static String formatAttackUsage(int attackCount, int missedAttackCount) {
-        int availableAttackCount = attackCount + missedAttackCount;
-        return availableAttackCount == 0
-                ? "-"
-                : attackCount + "/" + availableAttackCount;
     }
 
     @Transactional(readOnly = true)
