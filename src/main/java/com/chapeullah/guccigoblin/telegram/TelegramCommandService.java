@@ -166,7 +166,7 @@ public class TelegramCommandService {
                     TelegramUtils.replaceEmojisWithSquares(statistic.name())
                             .replaceAll("(?U)\\s+", " ")
                             .strip());
-            message.append("<b>%02d. %s</b> — %s | КВ %s (%d) · Рейды %s (%d)\n"
+            message.append("<b>%02d. %s</b> — %s | КВ %s (%d) | Рейды %s (%d)\n"
                     .formatted(
                             number++,
                             name,
@@ -189,7 +189,7 @@ public class TelegramCommandService {
         }
 
         String warStatistics = hasWarAttackData
-                ? "%s · %s · ТХ %s %s · позиция %s · ат. %s".formatted(
+                ? "%s | %s | ТХ %s %s | pos %s | ат. %s".formatted(
                         formatStatisticValue(statistic.averageStarsPerAttack(), "%.2f★"),
                         formatStatisticValue(statistic.averageDestructionPercentagePerAttack(), "%.1f%%"),
                         formatStatisticValue(statistic.averageDefenderTownHallLevelPerAttack(), "%.1f"),
@@ -198,11 +198,11 @@ public class TelegramCommandService {
                         formatAttackUsage(statistic.warAttackCount(), statistic.missedWarAttackCount()))
                 : "Нет данных";
         String raidStatistics = hasRaidAttackData
-                ? "%s · ат. %s".formatted(
+                ? "%s | ат. %s".formatted(
                         formatStatisticValue(statistic.averageRaidLootPerAttack(), "%.0f/ат."),
                         formatAttackUsage(statistic.raidAttackCount(), statistic.missedRaidAttackCount()))
                 : "Нет данных";
-        return "Ср. знач. атак: КВ %s | Рейды %s".formatted(warStatistics, raidStatistics);
+        return "Ср: КВ %s | Рейды %s".formatted(warStatistics, raidStatistics);
     }
 
     private static String formatStatisticValue(Optional<Double> value, String format) {
