@@ -174,8 +174,29 @@ public class TelegramClient {
     void sendReplyPart(TelegramMessage message, String text, TelegramOutgoingMessageContext context) {
         long chatId = message.telegramChat().id();
         Long receiverUserId = chatId < 0 ? message.telegramUser().id() : null;
-        sendMessagePart(chatId, message.threadId(), receiverUserId,
-                receiverUserId == null ? null : message.ephemeralMessageId(), text, context);
+        Integer ephemeralMessageId = receiverUserId == null ? null : message.ephemeralMessageId();
+        try {
+            sendMessagePart(chatId, message.threadId(), receiverUserId, ephemeralMessageId, text, context);
+        } catch (RestClientResponseException exception) {
+            if (ephemeralMessageId == null || !isInvalidReply(exception)) {
+                throw exception;
+            }
+            // Ephemeral reply targets expire after 15 seconds. Bots with group admin rights can send without one.
+            log.debug("Telegram reply target is unavailable, sending a private message without it: chatId={}", chatId);
+            sendMessagePart(chatId, message.threadId(), receiverUserId, null, text, context);
+        }
+    }
+
+    private boolean isInvalidReply(RestClientResponseException exception) {
+        if (exception.getStatusCode().value() != 400) {
+            return false;
+        }
+        try {
+            JsonNode response = jsonMapper.readTree(exception.getResponseBodyAsString());
+            return response != null && response.path("description").asText("").contains("REPLY_TO_INVALID");
+        } catch (RuntimeException ignored) {
+            return false;
+        }
     }
 
     private void sendMessagePart(long chatId, Integer threadId, Long receiverUserId, Integer ephemeralMessageId,
@@ -195,15 +216,15 @@ public class TelegramClient {
         }
         String requestJson = jsonMapper.writeValueAsString(body);
         executeRequest(() -> {
-            sendAndRecord(context, chatId, threadId, receiverUserId != null, text, requestJson);
+            sendAndRecord(context, chatId, threadId, receiverUserId != null, ephemeralMessageId, text, requestJson);
             return null;
         });
     }
 
     private void sendAndRecord(TelegramOutgoingMessageContext context, long chatId, Integer threadId,
-                               boolean ephemeral, String text, String requestJson) {
+                               boolean ephemeral, Integer ephemeralMessageId, String text, String requestJson) {
         Long attemptId = telegramOutgoingMessageService.startAttempt(context, chatId, threadId,
-                text, "HTML", ephemeral, null, requestJson);
+                text, "HTML", ephemeral, ephemeralMessageId, requestJson);
         ResponseEntity<String> response = null;
         try {
             response = restClient.post()

@@ -108,12 +108,16 @@ public class TelegramCommandService {
     }
 
     public String start(TelegramMessage message) {
-        return """
+        String start = """
             Телеграм-бот клана <a href="https://t.me/gussicoc">GUCCИ</a> (<code>#2C020L9P0</code>) в Clash of Clans.
             Не работает с другими кланами.
             
             Используй /help, чтобы посмотреть доступные команды.
-            """.strip() + "\n\n" + getUsageNotice(message);
+            """.strip();
+        if ("private".equals(message.telegramChat().type())) {
+            start += "\n\n" + getUsageNotice(message);
+        }
+        return start;
     }
 
     public String help(TelegramMessage message) {
@@ -149,7 +153,10 @@ public class TelegramCommandService {
                     /war_thread — Назначить текущую тему для уведомлений
                     """.strip();
         }
-        return help + "\n\n" + getUsageNotice(message);
+        if ("private".equals(message.telegramChat().type())) {
+            help += "\n\n" + getUsageNotice(message);
+        }
+        return help;
     }
 
     private boolean isLimitedPrivateChat(TelegramMessage message) {
@@ -158,10 +165,10 @@ public class TelegramCommandService {
     }
 
     private String getUsageNotice(TelegramMessage message) {
-        String privacyNotice = "В группе ваши команды боту и его ответы видны только вам.";
+        String privacyNotice = "<i>В группе ваши команды и ответы бота видны только вам.</i>";
         if (isLimitedPrivateChat(message)) {
-            return "Бот работает только в группе клана.\n"
-                    + "В личных сообщениях доступны только /start и /help.\n" + privacyNotice;
+            return "Бот работает только в группе <a href=\"https://t.me/gussicoc\">ГУССИ</a>.\n"
+                    + "В личных сообщениях доступны только /start и /help.\n\n" + privacyNotice;
         }
         return privacyNotice;
     }

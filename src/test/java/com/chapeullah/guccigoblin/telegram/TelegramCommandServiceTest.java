@@ -27,24 +27,28 @@ class TelegramCommandServiceTest {
     void privateHelpListsOnlyPublicCommandsAndExplainsGroupPrivacy() {
         String help = commandService.help(message("private", 7, 7));
 
-        assertThat(help).contains("/start —", "/help —", "Бот работает только в группе клана.",
+        assertThat(help).contains("/start —", "/help —", "Бот работает только в группе <a href=\"https://t.me/gussicoc\">ГУССИ</a>.",
                         "В личных сообщениях доступны только /start и /help.",
-                        "В группе ваши команды боту и его ответы видны только вам.")
+                        "<i>В группе ваши команды и ответы бота видны только вам.</i>")
                 .doesNotContain("/rating", "/set_group", "/war_thread");
     }
 
     @Test
     void privateStartExplainsWhereToUseCommands() {
         assertThat(commandService.start(message("private", 7, 7)))
-                .contains("Бот работает только в группе клана.", "/start и /help",
-                        "В группе ваши команды боту и его ответы видны только вам.");
+                .contains("Бот работает только в группе <a href=\"https://t.me/gussicoc\">ГУССИ</a>.", "/start и /help",
+                        "<i>В группе ваши команды и ответы бота видны только вам.</i>");
     }
 
     @Test
     void groupHelpListsUserCommandsWithoutAdministratorCommands() {
         assertThat(commandService.help(message("supergroup", -1001, 7)))
                 .contains("/rating —", "/player #TAG", "/war —")
-                .doesNotContain("/set_group", "/war_thread", "В личных сообщениях доступны только");
+                .doesNotContain("/set_group", "/war_thread", "В личных сообщениях доступны только", "видны только вам")
+                .doesNotEndWith("\n");
+        assertThat(commandService.start(message("supergroup", -1001, 7)))
+                .doesNotContain("видны только вам")
+                .doesNotEndWith("\n");
     }
 
     @Test

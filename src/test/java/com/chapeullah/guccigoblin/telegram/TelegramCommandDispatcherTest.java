@@ -52,6 +52,11 @@ class TelegramCommandDispatcherTest {
             verify(command).execute("args", message);
         } else {
             assertThat(response).contains("Бот работает только в группе клана", "/start", "/help");
+            if ("private".equals(chatType)) {
+                assertThat(response).contains("<i>В группе ваши команды и ответы бота видны только вам.</i>");
+            } else {
+                assertThat(response).doesNotContain("видны только вам");
+            }
             verify(command, never()).execute(anyString(), any());
         }
     }
