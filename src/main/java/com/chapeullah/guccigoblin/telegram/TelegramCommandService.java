@@ -127,9 +127,6 @@ public class TelegramCommandService {
                 /start — Начало работы с ботом
                 /help — Список команд
                 """.strip();
-        if (isLimitedPrivateChat(message)) {
-            return help + "\n\n" + getUsageNotice(message);
-        }
         help += "\n\n" + """
                 /rating — Общий рейтинг участников клана
                 /rating_cw — Рейтинг участников клановых войн
@@ -167,8 +164,8 @@ public class TelegramCommandService {
     private String getUsageNotice(TelegramMessage message) {
         String privacyNotice = "<i>В группе ваши команды и ответы бота видны только вам.</i>";
         if (isLimitedPrivateChat(message)) {
-            return "Бот работает только в группе <a href=\"https://t.me/gussicoc\">ГУССИ</a>.\n"
-                    + "В личных сообщениях доступны только /start и /help.\n\n" + privacyNotice;
+            return "В личных сообщениях работают только /start и /help.\n"
+                    + "Остальные команды используй в группе <a href=\"https://t.me/gussicoc\">ГУССИ</a>.\n\n" + privacyNotice;
         }
         return privacyNotice;
     }
