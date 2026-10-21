@@ -18,6 +18,8 @@ import com.chapeullah.guccigoblin.rating.MemberStatistic;
 import com.chapeullah.guccigoblin.rating.MemberWarStatistic;
 import com.chapeullah.guccigoblin.rating.MemberRaidStatistic;
 import com.chapeullah.guccigoblin.rating.RatingService;
+import com.chapeullah.guccigoblin.telegram.groupchatid.TelegramGroupChatIdService;
+import com.chapeullah.guccigoblin.telegram.groupchatthreads.TelegramGroupChatThreadsService;
 import com.chapeullah.guccigoblin.war.model.War;
 import com.chapeullah.guccigoblin.war.model.WarAttack;
 import com.chapeullah.guccigoblin.war.model.WarParticipant;
@@ -38,18 +40,11 @@ import static com.chapeullah.guccigoblin.telegram.ClashOfClansTranslations.WAR_L
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-@DependsOn("environmentVariablesValidator")
+@DependsOn("environmentVariablesService")
 public class TelegramCommandService {
 
     private final WarService warService;
@@ -63,58 +58,51 @@ public class TelegramCommandService {
     private final ClanService clanService;
     private final PlayerService playerService;
 
-    private final TelegramChatSettingRepository telegramChatSettingRepository;
-    private final TelegramGroupSettingRepository telegramGroupSettingRepository;
+    private final TelegramGroupChatThreadsService telegramGroupChatThreadsService;
+    private final TelegramGroupChatIdService telegramGroupChatIdService;
+
     private final TelegramAccessService telegramAccessService;
 
     @Value("${coc.clan-tag}")
     private String clanTag;
-
-    @Value("${TELEGRAM_CLAN_CHAT_LINK}")
-    private String telegramClanChatLink;
-
-    @Value("${TELEGRAM_GROUP_CHAT_ID:0}")
-    private long groupChatId;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.of("Europe/Moscow"));
 
     @Transactional
     public String setGroup(long chatId, Long userId) {
-        if (userId == null || !telegramAccessService.isAdmin(userId)) {
+        if (!telegramAccessService.isAdmin(userId)) {
             return "Нет доступа";
         }
         if (chatId >= 0) {
             return "Вызови команду в нужной группе";
         }
-        telegramGroupSettingRepository.save(new TelegramGroupSetting(chatId));
+        Long previousChatId = telegramGroupChatIdService.getChatId().orElse(null);
+        if (!Objects.equals(previousChatId, chatId)) {
+            telegramGroupChatIdService.upsertChatId(chatId);
+            telegramGroupChatThreadsService.resetThreadIds();
+        }
         return "Эта группа назначена группой клана";
     }
 
     @Transactional
-    public String setWarThread(long chatId, Long userId, Integer threadId) {
-        if (userId == null || !telegramAccessService.isAdmin(userId)) {
+    public String setWarThread(long chatId, Long userId, Integer warThreadId) {
+        if (!telegramAccessService.isAdmin(userId)) {
             return "Нет доступа";
         }
-        long configuredGroupChatId = telegramGroupSettingRepository
-                .findById(TelegramGroupSetting.SETTINGS_ID)
-                .map(TelegramGroupSetting::getChatId)
-                .orElse(groupChatId);
-        if (chatId != configuredGroupChatId) {
-            return "Команда доступна только в группе клана";
-        }
-        if (threadId == null || threadId <= 0) {
-            return "Отправь команду внутри нужной темы";
-        }
-        TelegramChatSetting settings = telegramChatSettingRepository
-                .findById(chatId)
+        Long groupChatId = telegramGroupChatIdService
+                .getChatId()
                 .orElse(null);
-        if (settings == null) {
-            settings = new TelegramChatSetting(chatId, threadId);
-        } else {
-            settings.changeWarThread(threadId);
+        if (groupChatId == null) {
+            return "Группа не задана: /set_group";
         }
-        telegramChatSettingRepository.save(settings);
+        if (chatId != groupChatId) {
+            return "Команда доступна только в заданной группе";
+        }
+        if (warThreadId == null || warThreadId <= 0) {
+            return "Отправь команду внутри правильной темы";
+        }
+        telegramGroupChatThreadsService.upsertWarThreadId(warThreadId);
         return "Эта тема назначена для уведомлений о КВ";
     }
 
@@ -157,6 +145,7 @@ public class TelegramCommandService {
     public String getChatId(long chatId) {
         return "ID чата: <code>" + chatId + "</code>";
     }
+
     public String getMembersMessage() {
         List<Member> members = memberService.getCurrentMembersByClanTag(clanTag);
         if (members.isEmpty()) {

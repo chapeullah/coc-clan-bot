@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@DependsOn("environmentVariablesValidator")
+@DependsOn("environmentVariablesService")
 public class ClashOfClansClient {
 
     private static final int MAX_RETRIES = 2;

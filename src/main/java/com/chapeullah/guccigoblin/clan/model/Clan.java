@@ -4,7 +4,6 @@ import com.chapeullah.guccigoblin.capitalleague.CapitalLeague;
 import com.chapeullah.guccigoblin.leaguetier.LeagueTier;
 import com.chapeullah.guccigoblin.location.Location;
 import com.chapeullah.guccigoblin.member.model.Member;
-import com.chapeullah.guccigoblin.player.model.PlayerLabelLink;
 import com.chapeullah.guccigoblin.warleague.WarLeague;
 import jakarta.persistence.*;
 import lombok.*;

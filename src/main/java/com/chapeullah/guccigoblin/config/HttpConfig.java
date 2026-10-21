@@ -14,7 +14,7 @@ import java.time.Duration;
 
 @Slf4j
 @Configuration
-@DependsOn("environmentVariablesValidator")
+@DependsOn("environmentVariablesService")
 public class HttpConfig {
 
     @Value("${coc.base-url}")

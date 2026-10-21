@@ -1,7 +1,6 @@
 package com.chapeullah.guccigoblin.label.player;
 
 import com.chapeullah.guccigoblin.label.IconUrls;
-import com.chapeullah.guccigoblin.label.clan.ClanLabel;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

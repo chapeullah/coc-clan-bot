@@ -10,4 +10,7 @@ public record TelegramMessage(
         @JsonProperty("chat") TelegramChat telegramChat,
         @JsonProperty("from") TelegramUser telegramUser,
         @JsonProperty("message_thread_id") Integer threadId,
-        String text) {}
+        String text,
+        @JsonProperty("ephemeral_message_id") Integer ephemeralMessageId,
+        @JsonProperty("receiver_user") TelegramUser receiverUser,
+        @JsonProperty("reply_to_message") TelegramMessage replyToMessage) {}

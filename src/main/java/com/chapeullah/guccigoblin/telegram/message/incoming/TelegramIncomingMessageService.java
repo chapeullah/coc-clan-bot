@@ -1,4 +1,4 @@
-package com.chapeullah.guccigoblin.telegram;
+package com.chapeullah.guccigoblin.telegram.message.incoming;
 
 import com.chapeullah.guccigoblin.telegram.dto.TelegramUpdate;
 import lombok.NonNull;
@@ -10,9 +10,9 @@ import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
-public class TelegramMessageService {
+public class TelegramIncomingMessageService {
 
-    private final TelegramMessageRepository telegramMessageRepository;
+    private final TelegramIncomingMessageRepository telegramIncomingMessageRepository;
 
     @Transactional
     public void save(@NonNull TelegramUpdate update, @NonNull String rawJson) {
@@ -22,13 +22,13 @@ public class TelegramMessageService {
             return;
         }
 
-        if (telegramMessageRepository.existsById(update.updateId())) {
+        if (telegramIncomingMessageRepository.existsById(update.updateId())) {
             return;
         }
 
         var user = message.telegramUser();
 
-        TelegramMessage telegramMessage = new TelegramMessage(
+        TelegramIncomingMessage telegramMessage = new TelegramIncomingMessage(
                 update.updateId(),
                 message.messageId(),
                 message.telegramChat().id(),
@@ -42,6 +42,7 @@ public class TelegramMessageService {
                 rawJson
         );
 
-        telegramMessageRepository.save(telegramMessage);
+        telegramMessage.captureDetails(message);
+        telegramIncomingMessageRepository.save(telegramMessage);
     }
 }

@@ -1,7 +1,6 @@
 package com.chapeullah.guccigoblin.raidseason.model;
 
 import com.chapeullah.guccigoblin.clan.model.Clan;
-import com.chapeullah.guccigoblin.label.player.PlayerLabel;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

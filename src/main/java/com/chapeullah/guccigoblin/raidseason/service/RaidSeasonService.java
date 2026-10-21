@@ -21,7 +21,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@DependsOn("environmentVariablesValidator")
+@DependsOn("environmentVariablesService")
 public class RaidSeasonService {
 
     private static final DateTimeFormatter RAID_TIME_FORMAT = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss.SSSX");

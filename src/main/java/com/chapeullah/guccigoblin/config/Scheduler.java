@@ -4,7 +4,7 @@ import com.chapeullah.guccigoblin.clan.service.ClanService;
 import com.chapeullah.guccigoblin.clan.model.Clan;
 import com.chapeullah.guccigoblin.raidseason.model.RaidSeason;
 import com.chapeullah.guccigoblin.raidseason.service.RaidSeasonService;
-import com.chapeullah.guccigoblin.telegram.notification.TelegramNotificationService;
+import com.chapeullah.guccigoblin.telegram.notification.TelegramWarNotificationService;
 import com.chapeullah.guccigoblin.war.model.War;
 import com.chapeullah.guccigoblin.war.service.WarService;
 import com.chapeullah.guccigoblin.war.service.WarLogService;
@@ -12,6 +12,7 @@ import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -28,14 +29,16 @@ import java.util.function.LongConsumer;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@DependsOn("environmentVariablesService")
 public class Scheduler {
 
-    private static final long SYNCHRONIZATION_TIMEOUT_MS = 55000;
+    @Value("${COC_API_RESPONSE_TIMEOUT_MS}")
+    private long cocApiResponseTimeoutMs;
 
     private final ScheduledExecutorService timeoutExecutor = Executors.newSingleThreadScheduledExecutor(
             Thread.ofPlatform().name("synchronization-timeout").daemon(true).factory());
 
-    private final TelegramNotificationService telegramNotificationService;
+    private final TelegramWarNotificationService telegramWarNotificationService;
 
     private final WarLogService warLogService;
     private final WarService warService;
@@ -47,7 +50,7 @@ public class Scheduler {
 
     @Scheduled(cron = "0 * * * * *")
     public void synchronizeClanAndRaids() {
-        runWithTimeout(startedAt -> {
+        runWithTimeout("Синхронизация клана и рейдов", startedAt -> {
             synchronizeClan(startedAt);
             checkSynchronization(startedAt);
             synchronizeRaidSeason(startedAt);
@@ -56,7 +59,7 @@ public class Scheduler {
 
     @Scheduled(cron = "0 * * * * *")
     public void synchronizeWars() {
-        runWithTimeout(startedAt -> {
+        runWithTimeout("Синхронизация войн", startedAt -> {
             finishEndedWars(startedAt);
             checkSynchronization(startedAt);
             synchronizeCurrentWar(startedAt);
@@ -65,7 +68,7 @@ public class Scheduler {
         });
     }
 
-    private void runWithTimeout(LongConsumer synchronization) {
+    private void runWithTimeout(String operation, LongConsumer synchronization) {
         long startedAt = System.nanoTime();
         FutureTask<Void> task = new FutureTask<>(() -> {
             checkSynchronization(startedAt);
@@ -73,15 +76,18 @@ public class Scheduler {
             checkSynchronization(startedAt);
         }, null);
         ScheduledFuture<?> timeout = timeoutExecutor.schedule(() ->
-                task.cancel(true), SYNCHRONIZATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                task.cancel(true), cocApiResponseTimeoutMs, TimeUnit.MILLISECONDS);
 
         try {
             task.run();
             task.get();
         } catch (CancellationException e) {
-            Thread.interrupted();
-            throw new IllegalStateException("Synchronization exceeded time limit: timeoutMs=" + SYNCHRONIZATION_TIMEOUT_MS, e);
+            throw reportSynchronizationTimeout(operation, e);
         } catch (ExecutionException e) {
+            if (e.getCause() instanceof CancellationException
+                    && System.nanoTime() - startedAt >= TimeUnit.MILLISECONDS.toNanos(cocApiResponseTimeoutMs)) {
+                throw reportSynchronizationTimeout(operation, e.getCause());
+            }
             throw new IllegalStateException("Synchronization failed", e.getCause());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -91,6 +97,16 @@ public class Scheduler {
         }
     }
 
+    private IllegalStateException reportSynchronizationTimeout(String operation, Throwable cause) {
+        Thread.interrupted();
+        IllegalStateException exception = new IllegalStateException(
+                "Synchronization exceeded time limit: timeoutMs=" + cocApiResponseTimeoutMs, cause);
+        log.error("Synchronization exceeded time limit: operation=\"{}\", timeoutMs={}",
+                operation, cocApiResponseTimeoutMs, exception);
+        telegramWarNotificationService.sendError(operation, exception);
+        return exception;
+    }
+
     @PreDestroy
     public void shutdown() {
         timeoutExecutor.shutdownNow();
@@ -98,7 +114,7 @@ public class Scheduler {
 
     private void checkSynchronization(long startedAt) {
         if (System.nanoTime() - startedAt
-                >= TimeUnit.MILLISECONDS.toNanos(SYNCHRONIZATION_TIMEOUT_MS)) {
+                >= TimeUnit.MILLISECONDS.toNanos(cocApiResponseTimeoutMs)) {
             throw new CancellationException("Synchronization exceeded time limit");
         }
         if (Thread.currentThread().isInterrupted()) {
@@ -118,7 +134,7 @@ public class Scheduler {
         } catch (Exception e) {
             checkSynchronization(startedAt);
             log.error("Ended wars finalization failed: clanTag=\"{}\"", clanTag, e);
-            telegramNotificationService.sendError("Завершение войн", e);
+            telegramWarNotificationService.sendError("Завершение войн", e);
         }
     }
 
@@ -130,7 +146,7 @@ public class Scheduler {
         } catch (Exception e) {
             checkSynchronization(startedAt);
             log.error("Clan synchronization failed: clanTag=\"{}\"", clanTag, e);
-            telegramNotificationService.sendError("Синхронизация клана", e);
+            telegramWarNotificationService.sendError("Синхронизация клана", e);
         }
     }
 
@@ -147,20 +163,18 @@ public class Scheduler {
         } catch (Exception e) {
             checkSynchronization(startedAt);
             log.error("Current war synchronization failed: clanTag=\"{}\"", clanTag, e);
-            telegramNotificationService.sendError("Синхронизация текущей войны", e);
+            telegramWarNotificationService.sendError("Синхронизация текущей войны", e);
         }
     }
 
     private void sendWarNotification(War war, long startedAt) {
         checkSynchronization(startedAt);
         try {
-            log.debug("Sending war notification: warId={}", war.getId());
-            telegramNotificationService.sendWarNotification(war);
-            log.info("War notification sent successfully: warId={}", war.getId());
+            telegramWarNotificationService.sendWarNotification(war);
         } catch (Exception e) {
             checkSynchronization(startedAt);
             log.error("War notification sending failed: warId={}", war.getId(), e);
-            telegramNotificationService.sendError("Отправка уведомления о КВ", e);
+            telegramWarNotificationService.sendError("Отправка уведомления о КВ", e);
         }
     }
 
@@ -174,7 +188,7 @@ public class Scheduler {
         } catch (Exception e) {
             checkSynchronization(startedAt);
             log.error("War log synchronization failed: clanTag=\"{}\"", clanTag, e);
-            telegramNotificationService.sendError("Синхронизация истории войн", e);
+            telegramWarNotificationService.sendError("Синхронизация истории войн", e);
         }
     }
 
@@ -190,15 +204,8 @@ public class Scheduler {
         } catch (Exception e) {
             checkSynchronization(startedAt);
             log.error("Raid season synchronization failed: clanTag=\"{}\"", clanTag, e);
-            telegramNotificationService.sendError("Синхронизация сезона рейдов", e);
+            telegramWarNotificationService.sendError("Синхронизация сезона рейдов", e);
         }
     }
 
-    public void test() {
-        try {
-            telegramNotificationService.sendTestMessages();
-        } catch (Exception e) {
-            log.error("Failed to send Telegram test messages", e);
-        }
-    }
 }

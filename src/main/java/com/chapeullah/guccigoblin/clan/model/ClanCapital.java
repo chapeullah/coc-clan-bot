@@ -1,6 +1,5 @@
 package com.chapeullah.guccigoblin.clan.model;
 
-import com.chapeullah.guccigoblin.player.model.PlayerLabelLink;
 import jakarta.persistence.*;
 import lombok.*;
 
