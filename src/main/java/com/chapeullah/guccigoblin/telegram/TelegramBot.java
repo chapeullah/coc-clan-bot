@@ -25,6 +25,7 @@ public class TelegramBot {
 
     private long nextOffset;
     private PendingReply pendingReply;
+    private boolean commandsConfigured;
 
     @Scheduled(fixedDelayString = "${TELEGRAM_BOT_POLL_DELAY_MS:1000}")
     public void poll() {
@@ -33,6 +34,10 @@ public class TelegramBot {
         }
         log.debug("Telegram polling...");
         try {
+            if (!commandsConfigured) {
+                telegramClient.configureCommands(telegramCommandDispatcher.getCommands());
+                commandsConfigured = true;
+            }
             sendPendingReply();
             for (var receivedUpdate : telegramClient.getUpdates(nextOffset)) {
                 TelegramUpdate update = receivedUpdate.update();

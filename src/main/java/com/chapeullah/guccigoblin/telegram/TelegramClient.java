@@ -1,5 +1,6 @@
 package com.chapeullah.guccigoblin.telegram;
 
+import com.chapeullah.guccigoblin.telegram.command.BotCommand;
 import com.chapeullah.guccigoblin.telegram.dto.TelegramApiResponse;
 import com.chapeullah.guccigoblin.telegram.dto.TelegramMessage;
 import com.chapeullah.guccigoblin.telegram.dto.TelegramReceivedUpdate;
@@ -9,6 +10,7 @@ import com.chapeullah.guccigoblin.telegram.message.outgoing.TelegramOutgoingMess
 import com.chapeullah.guccigoblin.telegram.message.outgoing.TelegramOutgoingMessageService;
 import com.chapeullah.guccigoblin.telegram.message.outgoing.TelegramOutgoingMessageStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.ParameterizedTypeReference;
@@ -47,10 +49,20 @@ public class TelegramClient {
     private String username;
     private volatile long retryAllowedAtNanos;
 
+    @Autowired
     public TelegramClient(@Value("${TELEGRAM_BOT_TOKEN}") String token, JsonMapper jsonMapper,
                           TelegramOutgoingMessageService telegramOutgoingMessageService) {
+        this(createRestClient(token), jsonMapper, telegramOutgoingMessageService);
+    }
+
+    TelegramClient(RestClient restClient, JsonMapper jsonMapper,
+                   TelegramOutgoingMessageService telegramOutgoingMessageService) {
+        this.restClient = restClient;
         this.jsonMapper = jsonMapper;
         this.telegramOutgoingMessageService = telegramOutgoingMessageService;
+    }
+
+    private static RestClient createRestClient(String token) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
@@ -58,7 +70,7 @@ public class TelegramClient {
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(Duration.ofSeconds(35));
 
-        this.restClient = RestClient.builder()
+        return RestClient.builder()
                 .baseUrl("https://api.telegram.org/bot" + token)
                 .requestFactory(requestFactory)
                 .build();
@@ -114,6 +126,36 @@ public class TelegramClient {
         return username;
     }
 
+    public void configureCommands(List<BotCommand> commands) {
+        List<Map<String, Object>> allCommands = commands.stream()
+                .map(command -> Map.<String, Object>of(
+                        "command", command.getName().substring(1),
+                        "description", command.getDescription(),
+                        "is_ephemeral", true))
+                .toList();
+        List<Map<String, Object>> privateCommands = allCommands.stream()
+                .filter(command -> TelegramAccessService.isPublicCommand("/" + command.get("command")))
+                .toList();
+        setCommands(allCommands, "default");
+        setCommands(allCommands, "all_group_chats");
+        setCommands(privateCommands, "all_private_chats");
+    }
+
+    private void setCommands(List<Map<String, Object>> commands, String scope) {
+        String requestJson = jsonMapper.writeValueAsString(Map.of(
+                "commands", commands,
+                "scope", Map.of("type", scope)));
+        TelegramApiResponse<Boolean> response = executeRequest(() -> restClient.post()
+                .uri("/setMyCommands")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestJson)
+                .retrieve()
+                .body(new ParameterizedTypeReference<TelegramApiResponse<Boolean>>() {}));
+        if (response == null || !response.ok() || !Boolean.TRUE.equals(response.result())) {
+            throw new IllegalStateException("Telegram did not configure bot commands: " + scope);
+        }
+    }
+
     public void sendMessage(long chatId, String text) {
         sendMessage(chatId, null, text);
     }
@@ -125,17 +167,18 @@ public class TelegramClient {
     public void sendMessage(long chatId, Integer threadId, String text, TelegramOutgoingMessageContext context) {
         List<String> parts = splitMessage(text);
         for (int index = 0; index < parts.size(); index++) {
-            sendMessagePart(chatId, threadId, null, parts.get(index), context.part(index + 1, parts.size()));
+            sendMessagePart(chatId, threadId, null, null, parts.get(index), context.part(index + 1, parts.size()));
         }
     }
 
     void sendReplyPart(TelegramMessage message, String text, TelegramOutgoingMessageContext context) {
         long chatId = message.telegramChat().id();
         Long receiverUserId = chatId < 0 ? message.telegramUser().id() : null;
-        sendMessagePart(chatId, message.threadId(), receiverUserId, text, context);
+        sendMessagePart(chatId, message.threadId(), receiverUserId,
+                receiverUserId == null ? null : message.ephemeralMessageId(), text, context);
     }
 
-    private void sendMessagePart(long chatId, Integer threadId, Long receiverUserId,
+    private void sendMessagePart(long chatId, Integer threadId, Long receiverUserId, Integer ephemeralMessageId,
                                  String text, TelegramOutgoingMessageContext context) {
         Map<String, Object> body = new HashMap<>();
         body.put("chat_id", chatId);
@@ -146,6 +189,9 @@ public class TelegramClient {
         }
         if (receiverUserId != null) {
             body.put("ephemeral_message_parameters", Map.of("receiver_user_id", receiverUserId));
+            if (ephemeralMessageId != null) {
+                body.put("reply_parameters", Map.of("ephemeral_message_id", ephemeralMessageId));
+            }
         }
         String requestJson = jsonMapper.writeValueAsString(body);
         executeRequest(() -> {

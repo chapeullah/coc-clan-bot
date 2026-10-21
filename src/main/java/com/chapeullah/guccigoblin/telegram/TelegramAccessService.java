@@ -1,5 +1,7 @@
 package com.chapeullah.guccigoblin.telegram;
 
+import com.chapeullah.guccigoblin.telegram.dto.TelegramMessage;
+import com.chapeullah.guccigoblin.telegram.groupchatid.TelegramGroupChatIdService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
@@ -13,10 +15,14 @@ import java.util.stream.Collectors;
 public class TelegramAccessService {
 
     private static final String ENVIRONMENT_VARIABLE = "TELEGRAM_ADMIN_USER_IDS";
+    private static final Set<String> PUBLIC_COMMANDS = Set.of("/start", "/help");
 
     private final Set<Long> adminUserIds;
+    private final TelegramGroupChatIdService telegramGroupChatIdService;
 
-    public TelegramAccessService(@Value("${TELEGRAM_ADMIN_USER_IDS}") String value) {
+    public TelegramAccessService(@Value("${TELEGRAM_ADMIN_USER_IDS}") String value,
+                                 TelegramGroupChatIdService telegramGroupChatIdService) {
+        this.telegramGroupChatIdService = telegramGroupChatIdService;
         if (value == null || value.isBlank()) {
             throw new IllegalStateException("Required environment variable is missing or blank: " + ENVIRONMENT_VARIABLE);
         }
@@ -38,6 +44,30 @@ public class TelegramAccessService {
 
     public boolean isAdmin(Long userId) {
         return userId != null && adminUserIds.contains(userId);
+    }
+
+    public static boolean isPublicCommand(String commandName) {
+        return commandName != null && PUBLIC_COMMANDS.contains(commandName);
+    }
+
+    public boolean canExecute(String commandName, TelegramMessage message) {
+        if (message == null || message.telegramChat() == null) {
+            return false;
+        }
+        Long userId = message.telegramUser() == null ? null : message.telegramUser().id();
+        if (isAdmin(userId)) {
+            return true;
+        }
+        String chatType = message.telegramChat().type();
+        if ("private".equals(chatType)) {
+            return isPublicCommand(commandName);
+        }
+        if (!"group".equals(chatType) && !"supergroup".equals(chatType)) {
+            return false;
+        }
+        return telegramGroupChatIdService.getChatId()
+                .filter(chatId -> chatId == message.telegramChat().id())
+                .isPresent();
     }
 
 }

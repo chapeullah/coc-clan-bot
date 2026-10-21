@@ -26,7 +26,7 @@ public class HelpCommand implements BotCommand {
 
     @Override
     public String execute(String args, TelegramMessage message) {
-        return telegramCommandService.help();
+        return telegramCommandService.help(message);
     }
 
 }

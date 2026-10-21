@@ -18,6 +18,7 @@ import com.chapeullah.guccigoblin.rating.MemberStatistic;
 import com.chapeullah.guccigoblin.rating.MemberWarStatistic;
 import com.chapeullah.guccigoblin.rating.MemberRaidStatistic;
 import com.chapeullah.guccigoblin.rating.RatingService;
+import com.chapeullah.guccigoblin.telegram.dto.TelegramMessage;
 import com.chapeullah.guccigoblin.telegram.groupchatid.TelegramGroupChatIdService;
 import com.chapeullah.guccigoblin.telegram.groupchatthreads.TelegramGroupChatThreadsService;
 import com.chapeullah.guccigoblin.war.model.War;
@@ -106,23 +107,26 @@ public class TelegramCommandService {
         return "Эта тема назначена для уведомлений о КВ";
     }
 
-    public String start() {
+    public String start(TelegramMessage message) {
         return """
             Телеграм-бот клана <a href="https://t.me/gussicoc">GUCCИ</a> (<code>#2C020L9P0</code>) в Clash of Clans.
             Не работает с другими кланами.
             
             Используй /help, чтобы посмотреть доступные команды.
-            """.strip();
+            """.strip() + "\n\n" + getUsageNotice(message);
     }
 
-    public String help() {
-        return """
+    public String help(TelegramMessage message) {
+        String help = """
                 <b>Доступные команды</b>
-                
-                
+
                 /start — Начало работы с ботом
                 /help — Список команд
-                
+                """.strip();
+        if (isLimitedPrivateChat(message)) {
+            return help + "\n\n" + getUsageNotice(message);
+        }
+        help += "\n\n" + """
                 /rating — Общий рейтинг участников клана
                 /rating_cw — Рейтинг участников клановых войн
                 /rating_raids — Рейтинг участников рейдов
@@ -136,10 +140,30 @@ public class TelegramCommandService {
                 /raid — Текущий сезон рейдов
                 /raid_missed — Участники без атак в рейдах
                 /raids — История рейдов
-                
-                /set_group — Назначить текущую группу группой клана
-                /war_thread — Назначить текущую тему для уведомлений
                 """.strip();
+        Long userId = message.telegramUser() == null ? null : message.telegramUser().id();
+        if (telegramAccessService.isAdmin(userId)) {
+            help += "\n\n" + """
+                    <b>Команды администратора</b>
+                    /set_group — Назначить текущую группу группой клана
+                    /war_thread — Назначить текущую тему для уведомлений
+                    """.strip();
+        }
+        return help + "\n\n" + getUsageNotice(message);
+    }
+
+    private boolean isLimitedPrivateChat(TelegramMessage message) {
+        Long userId = message.telegramUser() == null ? null : message.telegramUser().id();
+        return "private".equals(message.telegramChat().type()) && !telegramAccessService.isAdmin(userId);
+    }
+
+    private String getUsageNotice(TelegramMessage message) {
+        String privacyNotice = "В группе ваши команды боту и его ответы видны только вам.";
+        if (isLimitedPrivateChat(message)) {
+            return "Бот работает только в группе клана.\n"
+                    + "В личных сообщениях доступны только /start и /help.\n" + privacyNotice;
+        }
+        return privacyNotice;
     }
 
     public String getChatId(long chatId) {

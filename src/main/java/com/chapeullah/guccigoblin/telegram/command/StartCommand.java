@@ -26,7 +26,7 @@ public class StartCommand implements BotCommand {
 
     @Override
     public String execute(String args, TelegramMessage message) {
-        return telegramCommandService.start();
+        return telegramCommandService.start(message);
     }
 
 }
