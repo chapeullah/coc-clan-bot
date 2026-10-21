@@ -29,7 +29,7 @@ class TelegramCommandServiceTest {
 
         assertThat(help).contains("/start —", "/help —", "Бот работает только в группе <a href=\"https://t.me/gussicoc\">ГУССИ</a>.",
                         "В личных сообщениях доступны только /start и /help.",
-                        "В группе ваши команды и ответы бота видны только вам.")
+                        "<i>В группе ваши команды и ответы бота видны только вам.</i>")
                 .doesNotContain("/rating", "/set_group", "/war_thread");
     }
 
@@ -37,7 +37,7 @@ class TelegramCommandServiceTest {
     void privateStartExplainsWhereToUseCommands() {
         assertThat(commandService.start(message("private", 7, 7)))
                 .contains("Бот работает только в группе <a href=\"https://t.me/gussicoc\">ГУССИ</a>.", "/start и /help",
-                        "В группе ваши команды и ответы бота видны только вам.");
+                        "<i>В группе ваши команды и ответы бота видны только вам.</i>");
     }
 
     @Test

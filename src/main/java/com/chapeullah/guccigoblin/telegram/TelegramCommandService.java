@@ -165,7 +165,7 @@ public class TelegramCommandService {
     }
 
     private String getUsageNotice(TelegramMessage message) {
-        String privacyNotice = "В группе ваши команды и ответы бота видны только вам.";
+        String privacyNotice = "<i>В группе ваши команды и ответы бота видны только вам.</i>";
         if (isLimitedPrivateChat(message)) {
             return "Бот работает только в группе <a href=\"https://t.me/gussicoc\">ГУССИ</a>.\n"
                     + "В личных сообщениях доступны только /start и /help.\n\n" + privacyNotice;
