@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="com.chapeullah.guccigoblin.telegram.logging.TelegramTokenMaskingLayout">
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            </layout>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
     <springProperty scope="context" name="LOG_PATH" source="LOG_DIR" defaultValue="./logs"/>
     <property name="LOG_FILE" value="${LOG_PATH}/gucci.log"/>
     <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -13,8 +20,10 @@
             <totalSizeCap>250MB</totalSizeCap>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
-        <encoder>
-            <pattern>${FILE_LOG_PATTERN}</pattern>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="com.chapeullah.guccigoblin.telegram.logging.TelegramTokenMaskingLayout">
+                <pattern>${FILE_LOG_PATTERN}</pattern>
+            </layout>
             <charset>UTF-8</charset>
         </encoder>
     </appender>

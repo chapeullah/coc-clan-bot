@@ -43,7 +43,7 @@ public class TelegramWarNotificationService {
     public void sendError(String operation, Exception exception) {
         try {
             telegramClient.sendMessage(systemChatId, null,
-                    TelegramUtils.escapeHtml("❌ ERROR: " + operation + "\n\n" + exception),
+                    TelegramUtils.escapeHtml(TelegramUtils.maskBotToken("❌ ERROR: " + operation + "\n\n" + exception)),
                     TelegramOutgoingMessageContext.systemError(operation));
         } catch (Exception e) {
             log.warn("Failed to send Telegram error notification: operation=\"{}\"", operation, e);

@@ -125,18 +125,18 @@ public class TelegramClient {
     public void sendMessage(long chatId, Integer threadId, String text, TelegramOutgoingMessageContext context) {
         List<String> parts = splitMessage(text);
         for (int index = 0; index < parts.size(); index++) {
-            sendMessagePart(chatId, threadId, null, null, parts.get(index), context.part(index + 1, parts.size()));
+            sendMessagePart(chatId, threadId, null, parts.get(index), context.part(index + 1, parts.size()));
         }
     }
 
     void sendReplyPart(TelegramMessage message, String text, TelegramOutgoingMessageContext context) {
         long chatId = message.telegramChat().id();
         Long receiverUserId = chatId < 0 ? message.telegramUser().id() : null;
-        sendMessagePart(chatId, message.threadId(), receiverUserId, message.ephemeralMessageId(), text, context);
+        sendMessagePart(chatId, message.threadId(), receiverUserId, text, context);
     }
 
     private void sendMessagePart(long chatId, Integer threadId, Long receiverUserId,
-                                 Integer ephemeralMessageId, String text, TelegramOutgoingMessageContext context) {
+                                 String text, TelegramOutgoingMessageContext context) {
         Map<String, Object> body = new HashMap<>();
         body.put("chat_id", chatId);
         body.put("text", text);
@@ -146,21 +146,18 @@ public class TelegramClient {
         }
         if (receiverUserId != null) {
             body.put("ephemeral_message_parameters", Map.of("receiver_user_id", receiverUserId));
-            if (ephemeralMessageId != null) {
-                body.put("reply_parameters", Map.of("ephemeral_message_id", ephemeralMessageId));
-            }
         }
         String requestJson = jsonMapper.writeValueAsString(body);
         executeRequest(() -> {
-            sendAndRecord(context, chatId, threadId, receiverUserId != null, ephemeralMessageId, text, requestJson);
+            sendAndRecord(context, chatId, threadId, receiverUserId != null, text, requestJson);
             return null;
         });
     }
 
     private void sendAndRecord(TelegramOutgoingMessageContext context, long chatId, Integer threadId,
-                               boolean ephemeral, Integer replyToEphemeralMessageId, String text, String requestJson) {
+                               boolean ephemeral, String text, String requestJson) {
         Long attemptId = telegramOutgoingMessageService.startAttempt(context, chatId, threadId,
-                text, "HTML", ephemeral, ephemeral ? replyToEphemeralMessageId : null, requestJson);
+                text, "HTML", ephemeral, null, requestJson);
         ResponseEntity<String> response = null;
         try {
             response = restClient.post()
@@ -227,10 +224,7 @@ public class TelegramClient {
         while (cause.getCause() != null && cause.getCause() != cause) {
             cause = cause.getCause();
         }
-        String message = cause.getMessage();
-        if (message != null) {
-            message = message.replaceAll("(?i)(https?://api\\.telegram\\.org/bot)[^/\\s\"?]+", "$1<redacted>");
-        }
+        String message = TelegramUtils.maskBotToken(cause.getMessage());
         try {
             telegramOutgoingMessageService.markFailed(attemptId, status, httpStatus, rawJson,
                     headersJson, cause.getClass().getName(), message);
