@@ -50,6 +50,8 @@ This repository contains the source code for a Telegram bot created to process d
 
 ## Environment Variables
 
+Copy `.env.example` to `.env` in the project root and replace the example values with your own.
+
 | Variable | Description | Required |
 | --- | --- | --- |
 | `COC_API_BASE_URL` | Clash of Clans API base URL | Yes |
