@@ -25,7 +25,7 @@ This repository contains the source code for a Telegram bot created to process d
 - Lombok
 - Maven
 - Docker Compose
-- GitHub Actions
+- CI/CD — GitHub Actions
 
 ## Telegram Commands
 
@@ -61,4 +61,6 @@ This repository contains the source code for a Telegram bot created to process d
 | `TELEGRAM_ADMIN_USER_IDS` | Comma-separated administrator user IDs | Yes |
 | `TELEGRAM_BOT_POLL_DELAY_MS` | Polling delay in milliseconds; defaults to 1000 | No |
 
-## Running
+## Running with Docker Compose
+
+
