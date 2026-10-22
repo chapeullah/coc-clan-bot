@@ -48,8 +48,7 @@ public class Scheduler {
     @Value("${coc.clan-tag}")
     private String clanTag;
 
-    // Temporary deployment check; remove after confirming delivery in Telegram.
-    @Scheduled(cron = "0 * * * * *")
+    // Manual check of Telegram error notification delivery.
     public void sendTestExceptionNotification() {
         try {
             throw new IllegalStateException("Тестовое исключение после запуска приложения");
