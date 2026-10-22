@@ -119,3 +119,7 @@ docker compose stop
 ```bash
 docker compose start
 ```
+
+## CI/CD
+
+The repository includes a GitHub Actions workflow that deploys the application to a VPS on pushes to `main` or through a manual workflow run.
