@@ -63,29 +63,29 @@ This repository contains the source code for a Telegram bot created to process d
 
 ## Running
 
-1. **Clone the repository**
+**1. Clone the repository**
 
 ```bash
 git clone https://github.com/chapeullah/gucci-goblin.git
 ```
 
-2. **Go to the project directory**
+**2. Go to the project directory**
 
 ```bash
 cd gucci-goblin
 ```
 
-3. **Configure environment variables**
+**3. Configure environment variables**
 
 Create a .env file in the project root and fill in the variables listed in Environment Variables section.
 
-4. **Build and run**
+**4. Build and run**
 
 ```bash
 docker compose up -d --build
 ```
 
-5. **Configure the Telegram group**
+**5. Configure the Telegram group**
 
 Add the bot to your group. Using an account listed in TELEGRAM_ADMIN_USER_IDS:
 
