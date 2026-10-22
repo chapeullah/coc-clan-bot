@@ -48,4 +48,19 @@ This repository contains the source code for a Telegram bot created to process d
 | `/set_group` | Set the current group as the clan group — admin only |
 | `/war_thread` | Set the current topic for Clan War notifications — admin only |
 
+## Configuration
+
+## Environment Variables
+
+| Variable | Description | Required |
+| --- | --- | --- |
+| `COC_API_BASE_URL` | Clash of Clans API base URL | Yes |
+| `COC_API_TOKEN` | Clash of Clans API token | Yes |
+| `COC_CLAN_TAG` | Clan tag to monitor | Yes |
+| `COC_API_RESPONSE_TIMEOUT_MS` | Synchronization time limit in milliseconds | Yes |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token | Yes |
+| `TELEGRAM_SYSTEM_CHAT_ID` | Chat ID for system notifications | Yes |
+| `TELEGRAM_ADMIN_USER_IDS` | Comma-separated administrator user IDs | Yes |
+| `TELEGRAM_BOT_POLL_DELAY_MS` | Polling delay in milliseconds; defaults to 1000 | No |
+
 ## Running
