@@ -1,6 +1,5 @@
 package com.chapeullah.guccigoblin.player.model;
 
-
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

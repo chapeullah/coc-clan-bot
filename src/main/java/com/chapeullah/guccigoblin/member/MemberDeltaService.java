@@ -92,7 +92,7 @@ public class MemberDeltaService {
                         memberDelta.getBuilderBaseLeagueIdDelta());
                 logIfChange(memberDelta, memberName, "clanRank",
                         memberDelta.getClanRankDelta());
-                logIfChange(memberDelta, memberName,"previousClanRank",
+                logIfChange(memberDelta, memberName, "previousClanRank",
                         memberDelta.getPreviousClanRankDelta());
                 logIfChange(memberDelta, memberName, "donations",
                         memberDelta.getDonationsDelta());

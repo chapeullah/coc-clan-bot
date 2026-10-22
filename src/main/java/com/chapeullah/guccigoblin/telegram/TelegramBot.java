@@ -96,7 +96,7 @@ public class TelegramBot {
         try {
             response = telegramCommandDispatcher.execute(command, args, telegramMessage);
         } catch (RuntimeException exception) {
-            log.error("Telegram command failed: updateId={}, command={}",
+            log.error("Telegram command failed: updateId={}, command=\"{}\"",
                     telegramUpdate.updateId(), command, exception);
             response = COMMAND_ERROR_MESSAGE;
         }
@@ -105,7 +105,7 @@ public class TelegramBot {
         try {
             parts = telegramClient.splitMessage(response);
         } catch (IllegalArgumentException exception) {
-            log.error("Telegram command response could not be formatted: updateId={}, command={}",
+            log.error("Telegram command response could not be formatted: updateId={}, command=\"{}\"",
                     telegramUpdate.updateId(), command, exception);
             parts = List.of(COMMAND_ERROR_MESSAGE);
         }

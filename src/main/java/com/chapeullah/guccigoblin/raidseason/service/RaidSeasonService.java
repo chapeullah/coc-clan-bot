@@ -156,7 +156,6 @@ public class RaidSeasonService {
         return raidSeasonRepository.save(raidSeason);
     }
 
-
     private static Instant parseTime(String value) {
         return Instant.from(RAID_TIME_FORMAT.parse(value));
     }

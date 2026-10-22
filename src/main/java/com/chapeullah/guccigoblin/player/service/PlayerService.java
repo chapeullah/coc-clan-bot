@@ -18,6 +18,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.util.*;
@@ -199,8 +201,15 @@ public class PlayerService {
 
         Player savedPlayer = playerRepository.save(player);
 
-        log.info("Player synchronized: playerName=\"{}\", playerTag=\"{}\"",
-                savedPlayer.getName(), savedPlayer.getTag());
+        String savedPlayerName = savedPlayer.getName();
+        String savedPlayerTag = savedPlayer.getTag();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                log.info("Player synchronized: playerName=\"{}\", playerTag=\"{}\"",
+                        savedPlayerName, savedPlayerTag);
+            }
+        });
 
         return savedPlayer;
     }

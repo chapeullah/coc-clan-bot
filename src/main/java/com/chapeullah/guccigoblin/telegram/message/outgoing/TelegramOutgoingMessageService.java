@@ -67,6 +67,6 @@ public class TelegramOutgoingMessageService {
     }
 
     private static String string(JsonNode node, String field) {
-        return node != null && node.path(field).isString() ? node.path(field).asText() : null;
+        return node != null && node.path(field).isString() ? node.path(field).asString() : null;
     }
 }

@@ -193,7 +193,7 @@ public class TelegramClient {
         }
         try {
             JsonNode response = jsonMapper.readTree(exception.getResponseBodyAsString());
-            return response != null && response.path("description").asText("").contains("REPLY_TO_INVALID");
+            return response != null && response.path("description").asString("").contains("REPLY_TO_INVALID");
         } catch (RuntimeException ignored) {
             return false;
         }
@@ -271,7 +271,7 @@ public class TelegramClient {
             if (status < 400 || status > 599) {
                 status = 502;
             }
-            throw new RestClientResponseException(body.path("description").asText("Telegram rejected the message"),
+            throw new RestClientResponseException(body.path("description").asString("Telegram rejected the message"),
                     status, "Telegram API error", response.getHeaders(), rawJson.getBytes(StandardCharsets.UTF_8),
                     StandardCharsets.UTF_8);
         }

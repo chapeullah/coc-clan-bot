@@ -21,15 +21,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y sshpass rsync
 
-      - name: Upload, build and run
+      - name: Stop, upload, build and run
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
         run: |
           sshpass -e ssh \
             -o StrictHostKeyChecking=accept-new \
-            "root@$SSH_HOST" \
-            "mkdir -p /opt/gucci-goblin"
+            "root@$SSH_HOST" "
+              set -e
+              mkdir -p /opt/gucci-goblin
+              cd /opt/gucci-goblin
+
+              if [ -f docker-compose.yml ]; then
+                docker compose down
+              fi
+            "
 
           sshpass -e rsync -az --delete \
             --include='/src/***' \
@@ -43,7 +50,7 @@ jobs:
             set -e
             cd /opt/gucci-goblin
 
-            docker compose up -d --wait --wait-timeout 90 db
             docker compose build --no-cache --pull app
+            docker compose up -d --wait --wait-timeout 90 db
             docker compose up -d --force-recreate --no-deps app
           "

@@ -53,7 +53,7 @@ public class TelegramWarNotificationService {
     public void sendWarNotification(@NonNull War war) {
         TelegramWarNotificationType type = resolveNotificationType(war).orElse(null);
         if (type == null) {
-            log.debug("War has ended, skipping notification: warId={}, state={}", war.getId(), war.getState());
+            log.debug("War has ended, skipping notification: warId={}, state=\"{}\"", war.getId(), war.getState());
             return;
         }
 
@@ -61,7 +61,7 @@ public class TelegramWarNotificationService {
                 .findByWarAndType(war, type)
                 .orElse(null);
         if (notification != null && notification.getSentAt() != null) {
-            log.debug("War notification already sent, skipping: warId={}, type={}", war.getId(), type);
+            log.debug("War notification already sent, skipping: warId={}, type=\"{}\"", war.getId(), type);
             return;
         }
 
@@ -97,7 +97,7 @@ public class TelegramWarNotificationService {
 
         notification.markSent();
         telegramWarNotificationRepository.save(notification);
-        log.info("War notification sent successfully: warId={}, type={}", war.getId(), type);
+        log.info("War notification sent successfully: warId={}, type=\"{}\"", war.getId(), type);
     }
 
     private String getWarNotificationMessage(@NonNull War war, TelegramWarNotificationType type) {
@@ -111,7 +111,7 @@ public class TelegramWarNotificationService {
     public Optional<TelegramWarNotificationType> resolveNotificationType(War war) {
         Instant now = Instant.now();
         if (war == null
-                || Objects.equals("warEnded",war.getState())
+                || Objects.equals("warEnded", war.getState())
                 || !now.isBefore(war.getEndTime())) {
             return Optional.empty();
         }

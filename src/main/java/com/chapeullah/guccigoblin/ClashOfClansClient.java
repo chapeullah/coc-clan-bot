@@ -254,7 +254,7 @@ public class ClashOfClansClient {
                 if (retry >= MAX_RETRIES) {
                     throw e;
                 }
-                log.warn("HTTP request failed, retry={}, maxRetries={}, delayMs={}, reason=\"{}\"",
+                log.warn("HTTP request failed: retry={}, maxRetries={}, delayMs={}, reason=\"{}\"",
                         retry + 1, MAX_RETRIES, DELAY_MS, e.getMessage());
 
                 try {
