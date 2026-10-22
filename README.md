@@ -104,19 +104,7 @@ Add the bot to your group. Using an account listed in `TELEGRAM_ADMIN_USER_IDS`:
 - Send `/set_war_thread` inside the topic intended for Clan War notifications.
 - Send `/set_main_thread` in the main chat or topic used for conversation to disable bot commands there.
 
-The main chat setting is saved in the database. Commands there receive a short notice directing users to another topic, including when sent by administrators. Administrators can still use `/set_main_thread` to change the selection or `/reset_main_thread` to clear it. Selecting a different clan group with `/set_group` clears all topic settings.
-
-Use the reset commands in the configured clan group. `/reset_main_thread` restores commands in all topics. `/reset_war_thread` pauses Clan War notifications until a topic is set again. `/reset_group` clears the group and all its topic settings; configure the group again with `/set_group` before using clan commands. Repeating a reset when its setting is already empty returns a short notice.
-
 Use `/help` to view the available commands.
-
-### Updating an Existing Installation
-
-The PostgreSQL database, user, and connection settings remain unchanged. No database rename or data migration is required.
-
-Before moving the deployment directory, back up PostgreSQL and record the existing Docker Compose project name. Set `COMPOSE_PROJECT_NAME` to that name in the server's `.env`, then stop the existing installation with `docker compose down` without `-v`. Move the directory, including `.env`, to `/opt/coc-clan-bot` on the VPS before deploying.
-
-Keeping the same Compose project name lets the renamed directory continue using the existing `pgdata` and `applogs` volumes. Do not remove those volumes.
 
 ### Managing the Application
 
