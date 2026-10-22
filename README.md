@@ -48,9 +48,7 @@ This repository contains the source code for a Telegram bot created to process d
 | `/set_group` | Set the current group as the clan group — admin only |
 | `/war_thread` | Set the current topic for Clan War notifications — admin only |
 
-## Configuration
-
-Create a .env file in the repository root and configure the following variables:
+## Environment Variables
 
 | Variable | Description | Required |
 | --- | --- | --- |
