@@ -81,7 +81,7 @@ cd gucci-goblin
 
 **3. Configure environment variables**
 
-Create a `.env` file in the project root and fill in the variables listed in the **Environment Variables** section.
+See the [Environment Variables](#environment-variables) section for configuration instructions.
 
 **4. Build and run**
 
