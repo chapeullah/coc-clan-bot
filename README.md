@@ -97,3 +97,27 @@ Add the bot to your group. Using an account listed in `TELEGRAM_ADMIN_USER_IDS`:
 - Send `/war_thread` inside the topic intended for Clan War notifications.
 
 Use `/help` to view the available commands.
+
+### Managing the Application
+
+**View application logs**
+
+```bash
+docker compose logs -f app
+```
+
+Press `Ctrl+C` to stop viewing logs. The application will continue running.
+
+**Stop the application**
+
+```bash
+docker compose stop
+```
+
+Stored data is preserved.
+
+**Start the application**
+
+```bash
+docker compose start
+```
