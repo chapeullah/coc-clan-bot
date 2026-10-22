@@ -6,6 +6,6 @@ public enum EnvironmentVariable {
     COC_API_TOKEN,
     COC_CLAN_TAG,
     TELEGRAM_BOT_TOKEN,
-    TELEGRAM_SYSTEM_CHAT_ID,
+    TELEGRAM_SYSTEM_USER_ID,
     TELEGRAM_ADMIN_USER_IDS
 }

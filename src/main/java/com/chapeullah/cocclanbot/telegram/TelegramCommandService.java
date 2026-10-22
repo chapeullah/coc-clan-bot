@@ -107,6 +107,82 @@ public class TelegramCommandService {
         return "Эта тема назначена для уведомлений о КВ";
     }
 
+    @Transactional
+    public String setMainThread(long chatId, Long userId, Integer mainThreadId) {
+        if (!telegramAccessService.isAdmin(userId)) {
+            return "Нет доступа";
+        }
+        Long groupChatId = telegramGroupChatIdService
+                .getChatId()
+                .orElse(null);
+        if (groupChatId == null) {
+            return "Группа не задана: /set_group";
+        }
+        if (chatId != groupChatId) {
+            return "Команда доступна только в заданной группе";
+        }
+        if (mainThreadId != null && mainThreadId <= 0) {
+            return "Отправь команду внутри правильной темы";
+        }
+        telegramGroupChatThreadsService.upsertMainThreadId(mainThreadId);
+        return "Этот чат назначен основным. Команды бота здесь запрещены";
+    }
+
+    @Transactional
+    public String resetGroup(long chatId, Long userId) {
+        if (!telegramAccessService.isAdmin(userId)) {
+            return "Нет доступа";
+        }
+        Long groupChatId = telegramGroupChatIdService.getChatId().orElse(null);
+        if (groupChatId == null) {
+            return "Группа не задана";
+        }
+        if (chatId != groupChatId) {
+            return "Команда доступна только в заданной группе";
+        }
+        telegramGroupChatIdService.resetChatId();
+        telegramGroupChatThreadsService.resetThreadIds();
+        return "Группа клана и настройки тем сброшены";
+    }
+
+    @Transactional
+    public String resetWarThread(long chatId, Long userId) {
+        if (!telegramAccessService.isAdmin(userId)) {
+            return "Нет доступа";
+        }
+        Long groupChatId = telegramGroupChatIdService.getChatId().orElse(null);
+        if (groupChatId == null) {
+            return "Группа не задана: /set_group";
+        }
+        if (chatId != groupChatId) {
+            return "Команда доступна только в заданной группе";
+        }
+        if (telegramGroupChatThreadsService.getWarThreadId().isEmpty()) {
+            return "Тема уведомлений о КВ не задана";
+        }
+        telegramGroupChatThreadsService.resetWarThreadId();
+        return "Тема уведомлений о КВ сброшена";
+    }
+
+    @Transactional
+    public String resetMainThread(long chatId, Long userId) {
+        if (!telegramAccessService.isAdmin(userId)) {
+            return "Нет доступа";
+        }
+        Long groupChatId = telegramGroupChatIdService.getChatId().orElse(null);
+        if (groupChatId == null) {
+            return "Группа не задана: /set_group";
+        }
+        if (chatId != groupChatId) {
+            return "Команда доступна только в заданной группе";
+        }
+        if (telegramGroupChatThreadsService.getMainThreadId().isEmpty()) {
+            return "Основной чат не задан";
+        }
+        telegramGroupChatThreadsService.resetMainThreadId();
+        return "Основной чат сброшен. Команды доступны во всех темах группы";
+    }
+
     public String start(TelegramMessage message) {
         String start = """
             Телеграм-бот клана <a href="https://t.me/gussicoc">GUCCИ</a> (<code>#2C020L9P0</code>) в Clash of Clans.
@@ -147,7 +223,11 @@ public class TelegramCommandService {
             help += "\n\n" + """
                     <b>Команды администратора</b>
                     /set_group — Назначить текущую группу группой клана
-                    /war_thread — Назначить текущую тему для уведомлений
+                    /set_war_thread — Назначить текущую тему для уведомлений
+                    /set_main_thread — Назначить текущий чат основным и запретить в нём команды
+                    /reset_group — Сбросить группу клана и все настройки тем
+                    /reset_war_thread — Сбросить тему уведомлений о КВ
+                    /reset_main_thread — Сбросить основной чат и разрешить в нём команды
                     """.strip();
         }
         if ("private".equals(message.telegramChat().type())) {

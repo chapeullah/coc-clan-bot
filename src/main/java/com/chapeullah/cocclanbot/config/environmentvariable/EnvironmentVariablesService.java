@@ -21,7 +21,7 @@ public class EnvironmentVariablesService {
             COC_API_TOKEN, "COC_API_TOKEN",
             COC_CLAN_TAG, "COC_CLAN_TAG",
             TELEGRAM_BOT_TOKEN, "TELEGRAM_BOT_TOKEN",
-            TELEGRAM_SYSTEM_CHAT_ID, "TELEGRAM_SYSTEM_CHAT_ID",
+            TELEGRAM_SYSTEM_USER_ID, "TELEGRAM_SYSTEM_USER_ID",
             TELEGRAM_ADMIN_USER_IDS, "TELEGRAM_ADMIN_USER_IDS");
 
     @PostConstruct
@@ -31,6 +31,12 @@ public class EnvironmentVariablesService {
         Long timeoutMs = environment.getProperty(timeoutVariable, Long.class);
         if (timeoutMs == null || timeoutMs <= 0) {
             throw new IllegalStateException("Required environment variable must be greater than zero: " + timeoutVariable);
+        }
+        String systemUserIdVariable = ENVIRONMENT_VARIABLES.get(TELEGRAM_SYSTEM_USER_ID);
+        Long systemUserId = environment.getProperty(systemUserIdVariable, Long.class);
+        if (systemUserId == null || systemUserId <= 0) {
+            throw new IllegalStateException("Required environment variable must contain a positive user ID: "
+                    + systemUserIdVariable);
         }
     }
 

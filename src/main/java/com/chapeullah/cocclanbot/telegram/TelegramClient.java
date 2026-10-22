@@ -176,14 +176,14 @@ public class TelegramClient {
         Long receiverUserId = chatId < 0 ? message.telegramUser().id() : null;
         Integer ephemeralMessageId = receiverUserId == null ? null : message.ephemeralMessageId();
         try {
-            sendMessagePart(chatId, message.threadId(), receiverUserId, ephemeralMessageId, text, context);
+            sendMessagePart(chatId, message.forumThreadId(), receiverUserId, ephemeralMessageId, text, context);
         } catch (RestClientResponseException exception) {
             if (ephemeralMessageId == null || !isInvalidReply(exception)) {
                 throw exception;
             }
             // Ephemeral reply targets expire after 15 seconds. Bots with group admin rights can send without one.
             log.debug("Telegram reply target is unavailable, sending a private message without it: chatId={}", chatId);
-            sendMessagePart(chatId, message.threadId(), receiverUserId, null, text, context);
+            sendMessagePart(chatId, message.forumThreadId(), receiverUserId, null, text, context);
         }
     }
 

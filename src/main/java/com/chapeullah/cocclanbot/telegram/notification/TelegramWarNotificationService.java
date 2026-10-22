@@ -32,8 +32,8 @@ public class TelegramWarNotificationService {
     private final TelegramGroupChatIdService telegramGroupChatIdService;
     private final TelegramGroupChatThreadsService telegramGroupChatThreadsService;
 
-    @Value("${TELEGRAM_SYSTEM_CHAT_ID}")
-    private long systemChatId;
+    @Value("${TELEGRAM_SYSTEM_USER_ID}")
+    private long systemUserId;
 
     private static final Map<TelegramWarNotificationType, String> WAR_NOTIFICATION_TYPES = Map.of(
             TelegramWarNotificationType.PREPARATION, "⏳ Подготовка к войне",
@@ -42,7 +42,7 @@ public class TelegramWarNotificationService {
 
     public void sendError(String operation, Exception exception) {
         try {
-            telegramClient.sendMessage(systemChatId, null,
+            telegramClient.sendMessage(systemUserId, null,
                     TelegramUtils.escapeHtml(TelegramUtils.maskBotToken("❌ ERROR: " + operation + "\n\n" + exception)),
                     TelegramOutgoingMessageContext.systemError(operation));
         } catch (Exception e) {

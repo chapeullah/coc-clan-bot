@@ -15,6 +15,9 @@ public class TelegramGroupChatThreads {
 
     public static final Long SETTING_ID = 1L;
 
+    // Internal marker for General; null means that the main chat has not been configured.
+    public static final int GENERAL_THREAD_ID = 0;
+
     @Id
     @Column(name = "id", nullable = false)
     private Long id;
@@ -31,6 +34,12 @@ public class TelegramGroupChatThreads {
     @Column(name = "raid_thread_id_changed_at", nullable = true)
     private Instant raidThreadIdChangedAt;
 
+    @Column(name = "main_thread_id", nullable = true)
+    private Integer mainThreadId;
+
+    @Column(name = "main_thread_id_changed_at", nullable = true)
+    private Instant mainThreadIdChangedAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -40,9 +49,14 @@ public class TelegramGroupChatThreads {
     private Instant updatedAt;
 
     public TelegramGroupChatThreads(Integer warThreadId, Integer raidThreadId) {
+        this(warThreadId, raidThreadId, null);
+    }
+
+    public TelegramGroupChatThreads(Integer warThreadId, Integer raidThreadId, Integer mainThreadId) {
         this.id = SETTING_ID;
         this.warThreadId = warThreadId;
         this.raidThreadId = raidThreadId;
+        this.mainThreadId = mainThreadId;
     }
 
     public void update(Integer warThreadId, Integer raidThreadId) {
@@ -69,6 +83,13 @@ public class TelegramGroupChatThreads {
         if (!Objects.equals(this.raidThreadId, raidThreadId)) {
             this.raidThreadId = raidThreadId;
             this.raidThreadIdChangedAt = Instant.now();
+        }
+    }
+
+    public void setMainThreadId(Integer mainThreadId) {
+        if (!Objects.equals(this.mainThreadId, mainThreadId)) {
+            this.mainThreadId = mainThreadId;
+            this.mainThreadIdChangedAt = Instant.now();
         }
     }
 

@@ -14,6 +14,7 @@ This repository contains the source code for a Telegram bot created to process d
 - Clan War notifications and attack reminders
 - Rating: member performance relative to other clan members, with Overall, War, and Raid ratings
 - Administrator-controlled Telegram group and notification topic settings
+- Commands can be disabled in the main chat while remaining available in other topics
 - Private replies to commands in group chats
 
 ## Built With
@@ -46,7 +47,11 @@ This repository contains the source code for a Telegram bot created to process d
 | `/rating_cw` | Clan War ratings and statistics |
 | `/rating_raids` | Raid ratings and statistics |
 | `/set_group` | Set the current group as the clan group — admin only |
-| `/war_thread` | Set the current topic for Clan War notifications — admin only |
+| `/set_war_thread` | Set the current topic for Clan War notifications — admin only |
+| `/set_main_thread` | Set the current chat as the main chat and disable commands there — admin only |
+| `/reset_group` | Clear the clan group and all topic settings — admin only |
+| `/reset_war_thread` | Clear the Clan War notification topic — admin only |
+| `/reset_main_thread` | Clear the main chat and allow commands there again — admin only |
 
 ## Environment Variables
 
@@ -59,9 +64,11 @@ Copy `.env.example` to `.env` in the project root and replace the example values
 | `COC_CLAN_TAG` | Clan tag to monitor | Yes |
 | `COC_API_RESPONSE_TIMEOUT_MS` | Synchronization time limit in milliseconds | Yes |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token | Yes |
-| `TELEGRAM_SYSTEM_CHAT_ID` | Chat ID for system notifications | Yes |
+| `TELEGRAM_SYSTEM_USER_ID` | Positive Telegram user ID for system notifications in a private chat | Yes |
 | `TELEGRAM_ADMIN_USER_IDS` | Comma-separated administrator user IDs | Yes |
 | `TELEGRAM_BOT_POLL_DELAY_MS` | Polling delay in milliseconds; defaults to 1000 | No |
+
+For `TELEGRAM_SYSTEM_USER_ID`, enter the numeric user ID of the system notification recipient. The recipient should start a private chat with the bot by sending `/start` before receiving notifications.
 
 ## Running
 
@@ -94,7 +101,12 @@ docker compose up -d --build
 Add the bot to your group. Using an account listed in `TELEGRAM_ADMIN_USER_IDS`:
 
 - Send `/set_group` in the group.
-- Send `/war_thread` inside the topic intended for Clan War notifications.
+- Send `/set_war_thread` inside the topic intended for Clan War notifications.
+- Send `/set_main_thread` in the main chat or topic used for conversation to disable bot commands there.
+
+The main chat setting is saved in the database. Commands there receive a short notice directing users to another topic, including when sent by administrators. Administrators can still use `/set_main_thread` to change the selection or `/reset_main_thread` to clear it. Selecting a different clan group with `/set_group` clears all topic settings.
+
+Use the reset commands in the configured clan group. `/reset_main_thread` restores commands in all topics. `/reset_war_thread` pauses Clan War notifications until a topic is set again. `/reset_group` clears the group and all its topic settings; configure the group again with `/set_group` before using clan commands. Repeating a reset when its setting is already empty returns a short notice.
 
 Use `/help` to view the available commands.
 

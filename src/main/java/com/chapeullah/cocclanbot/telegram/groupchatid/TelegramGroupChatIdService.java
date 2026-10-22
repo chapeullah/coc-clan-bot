@@ -13,6 +13,13 @@ public class TelegramGroupChatIdService {
     private final TelegramGroupChatIdRepository telegramGroupChatIdRepository;
 
     @Transactional
+    public void resetChatId() {
+        telegramGroupChatIdRepository
+                .findById(TelegramGroupChatId.SETTING_ID)
+                .ifPresent(group -> group.setChatId(null));
+    }
+
+    @Transactional
     public void upsertChatId(Long chatId) {
         TelegramGroupChatId telegramGroupChatId = telegramGroupChatIdRepository
                 .findById(TelegramGroupChatId.SETTING_ID)

@@ -2,6 +2,7 @@ package com.chapeullah.cocclanbot.telegram;
 
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import com.chapeullah.cocclanbot.telegram.groupchatid.TelegramGroupChatIdService;
+import com.chapeullah.cocclanbot.telegram.groupchatthreads.TelegramGroupChatThreadsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
@@ -19,10 +20,13 @@ public class TelegramAccessService {
 
     private final Set<Long> adminUserIds;
     private final TelegramGroupChatIdService telegramGroupChatIdService;
+    private final TelegramGroupChatThreadsService telegramGroupChatThreadsService;
 
     public TelegramAccessService(@Value("${TELEGRAM_ADMIN_USER_IDS}") String value,
-                                 TelegramGroupChatIdService telegramGroupChatIdService) {
+                                 TelegramGroupChatIdService telegramGroupChatIdService,
+                                 TelegramGroupChatThreadsService telegramGroupChatThreadsService) {
         this.telegramGroupChatIdService = telegramGroupChatIdService;
+        this.telegramGroupChatThreadsService = telegramGroupChatThreadsService;
         if (value == null || value.isBlank()) {
             throw new IllegalStateException("Required environment variable is missing or blank: " + ENVIRONMENT_VARIABLE);
         }
@@ -48,6 +52,25 @@ public class TelegramAccessService {
 
     public static boolean isPublicCommand(String commandName) {
         return commandName != null && PUBLIC_COMMANDS.contains(commandName);
+    }
+
+    public boolean isCommandBlockedInMainThread(String commandName, TelegramMessage message) {
+        if (message == null || message.telegramChat() == null) {
+            return false;
+        }
+        String chatType = message.telegramChat().type();
+        if (!"group".equals(chatType) && !"supergroup".equals(chatType)) {
+            return false;
+        }
+        Long userId = message.telegramUser() == null ? null : message.telegramUser().id();
+        if (("/set_main_thread".equals(commandName) || "/reset_main_thread".equals(commandName))
+                && isAdmin(userId)) {
+            return false;
+        }
+        return telegramGroupChatIdService.getChatId()
+                .filter(chatId -> chatId == message.telegramChat().id())
+                .filter(chatId -> telegramGroupChatThreadsService.isMainThread(message.forumThreadId()))
+                .isPresent();
     }
 
     public boolean canExecute(String commandName, TelegramMessage message) {

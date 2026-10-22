@@ -13,4 +13,10 @@ public record TelegramMessage(
         String text,
         @JsonProperty("ephemeral_message_id") Integer ephemeralMessageId,
         @JsonProperty("receiver_user") TelegramUser receiverUser,
-        @JsonProperty("reply_to_message") TelegramMessage replyToMessage) {}
+        @JsonProperty("reply_to_message") TelegramMessage replyToMessage,
+        @JsonProperty("is_topic_message") Boolean topicMessage) {
+
+    public Integer forumThreadId() {
+        return Boolean.TRUE.equals(topicMessage) ? threadId : null;
+    }
+}

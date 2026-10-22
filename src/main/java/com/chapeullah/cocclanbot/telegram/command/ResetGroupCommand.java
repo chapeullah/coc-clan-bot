@@ -7,32 +7,23 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class WarThreadCommand implements BotCommand {
+public class ResetGroupCommand implements BotCommand {
 
     private final TelegramCommandService telegramCommandService;
 
-    private static final String NAME = "/war_thread";
-    private static final String DESCRIPTION = "Назначить текущую тему для уведомлений";
-
     @Override
     public String getName() {
-        return NAME;
+        return "/reset_group";
     }
 
     @Override
     public String getDescription() {
-        return DESCRIPTION;
+        return "Сбросить группу клана и все настройки тем";
     }
 
     @Override
     public String execute(String args, TelegramMessage message) {
-        Long userId = message.telegramUser() == null
-                ? null
-                : message.telegramUser().id();
-
-        return telegramCommandService.setWarThread(
-                message.telegramChat().id(),
-                userId,
-                message.threadId());
+        Long userId = message.telegramUser() == null ? null : message.telegramUser().id();
+        return telegramCommandService.resetGroup(message.telegramChat().id(), userId);
     }
 }
