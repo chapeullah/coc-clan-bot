@@ -26,7 +26,7 @@ public class TelegramCommandDispatcher {
 
     public String execute(String commandName, String args, TelegramMessage message) {
         if (!telegramAccessService.canExecute(commandName, message)) {
-            String response = "Бот работает только в группе клана.\n"
+            String response = "❌ Бот работает только в группе клана.\n"
                     + "В личных сообщениях доступны только /start и /help.";
             if (message != null && message.telegramChat() != null
                     && "private".equals(message.telegramChat().type())) {
