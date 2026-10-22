@@ -1,4 +1,4 @@
-# Gucci Goblin
+# CoC Clan Bot
 
 This repository contains the source code for a Telegram bot created to process data from the official [Clash of Clans API](https://developer.clashofclans.com/).
 
@@ -70,13 +70,13 @@ Requires **Git** and **Docker with Docker Compose**.
 **1. Clone the repository**
 
 ```bash
-git clone https://github.com/chapeullah/gucci-goblin.git
+git clone https://github.com/chapeullah/coc-clan-bot.git
 ```
 
 **2. Go to the project directory**
 
 ```bash
-cd gucci-goblin
+cd coc-clan-bot
 ```
 
 **3. Configure environment variables**
@@ -97,6 +97,14 @@ Add the bot to your group. Using an account listed in `TELEGRAM_ADMIN_USER_IDS`:
 - Send `/war_thread` inside the topic intended for Clan War notifications.
 
 Use `/help` to view the available commands.
+
+### Updating an Existing Installation
+
+The PostgreSQL database, user, and connection settings remain unchanged. No database rename or data migration is required.
+
+Before moving the deployment directory, back up PostgreSQL and record the existing Docker Compose project name. Set `COMPOSE_PROJECT_NAME` to that name in the server's `.env`, then stop the existing installation with `docker compose down` without `-v`. Move the directory, including `.env`, to `/opt/coc-clan-bot` on the VPS before deploying.
+
+Keeping the same Compose project name lets the renamed directory continue using the existing `pgdata` and `applogs` volumes. Do not remove those volumes.
 
 ### Managing the Application
 

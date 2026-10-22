@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: gucci-goblin-vps-deploy
+  group: coc-clan-bot-vps-deploy
   cancel-in-progress: false
 
 jobs:
@@ -34,8 +34,8 @@ jobs:
             -o StrictHostKeyChecking=accept-new \
             "root@$SSH_HOST" "
               set -e
-              mkdir -p /opt/gucci-goblin
-              cd /opt/gucci-goblin
+              mkdir -p /opt/coc-clan-bot
+              cd /opt/coc-clan-bot
 
               if [ -f docker-compose.yml ]; then
                 docker compose down
@@ -48,11 +48,11 @@ jobs:
             --include='/Dockerfile' \
             --include='/docker-compose.yml' \
             --exclude='*' \
-            ./ "root@$SSH_HOST:/opt/gucci-goblin/"
+            ./ "root@$SSH_HOST:/opt/coc-clan-bot/"
 
           sshpass -e ssh "root@$SSH_HOST" "
             set -e
-            cd /opt/gucci-goblin
+            cd /opt/coc-clan-bot
 
             docker compose build --no-cache --pull app
             docker compose up -d --wait --wait-timeout 90 db

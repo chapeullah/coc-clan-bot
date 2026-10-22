@@ -12,10 +12,10 @@
 	</parent>
 
 	<groupId>com.chapeullah</groupId>
-	<artifactId>gucci-goblin</artifactId>
+	<artifactId>coc-clan-bot</artifactId>
 	<version>1.2.0</version>
-	<name>gucci-goblin</name>
-	<description>Clash of Clans Gucci Goblin</description>
+	<name>CoC Clan Bot</name>
+	<description>Clash of Clans CoC Clan Bot</description>
 
 	<properties>
 		<java.version>21</java.version>

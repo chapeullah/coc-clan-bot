@@ -30,9 +30,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: gucci
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Moscow"
-      APP_READINESS_FILE: /tmp/gucci-goblin.ready
+      APP_READINESS_FILE: /tmp/coc-clan-bot.ready
       LOG_DIR: /logs
-      LOGGING_LEVEL_COM_CHAPEULLAH_GUCCIGOBLIN: INFO
+      LOGGING_LEVEL_COM_CHAPEULLAH_COCCLANBOT: INFO
 
       COC_API_TOKEN: ${COC_API_TOKEN}
       COC_CLAN_TAG: ${COC_CLAN_TAG}
@@ -47,7 +47,7 @@ services:
     volumes:
       - applogs:/logs
     healthcheck:
-      test: ["CMD-SHELL", "test -f /tmp/gucci-goblin.ready"]
+      test: ["CMD-SHELL", "test -f /tmp/coc-clan-bot.ready"]
       interval: 5s
       timeout: 3s
       retries: 12
