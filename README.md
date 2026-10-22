@@ -106,15 +106,13 @@ Use `/help` to view the available commands.
 docker compose logs -f app
 ```
 
-Press `Ctrl+C` to stop viewing logs. The application will continue running.
+Press `Ctrl+C` to stop viewing logs.
 
 **Stop the application**
 
 ```bash
 docker compose stop
 ```
-
-Stored data is preserved.
 
 **Start the application**
 
