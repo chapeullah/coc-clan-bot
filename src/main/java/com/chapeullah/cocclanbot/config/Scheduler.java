@@ -48,6 +48,16 @@ public class Scheduler {
     @Value("${coc.clan-tag}")
     private String clanTag;
 
+    // Temporary deployment check; remove after confirming delivery in Telegram.
+    @Scheduled(cron = "0 * * * * *")
+    public void sendTestExceptionNotification() {
+        try {
+            throw new IllegalStateException("Тестовое исключение после запуска приложения");
+        } catch (Exception e) {
+            telegramWarNotificationService.sendError("Тест уведомлений об исключениях", e);
+        }
+    }
+
     @Scheduled(cron = "0 * * * * *")
     public void synchronizeClanAndRaids() {
         runWithTimeout("Синхронизация клана и рейдов", startedAt -> {
