@@ -35,7 +35,7 @@ public class TelegramCommandDispatcher {
             return response;
         }
         if (telegramAccessService.isCommandBlockedInMainThread(commandName, message)) {
-            return "В основном чате команды запрещены. Используйте любую другую тему";
+            return "❌ В этом чате команды бота запрещены. Используйте любой другой чат группы.";
         }
         BotCommand command = commands.get(commandName);
         if (command == null) {
