@@ -1,6 +1,6 @@
 # Gucci Goblin
 
-This repository contains the source code for a Telegram bot created to process data from official [Clash of Clans API](https://developer.clashofclans.com/).
+This repository contains the source code for a Telegram bot created to process data from the official [Clash of Clans API](https://developer.clashofclans.com/).
 
 ## Features
 
@@ -12,7 +12,7 @@ This repository contains the source code for a Telegram bot created to process d
 - Raid season history, including participation, attacks, and Capital Gold earned
 - Tracking of missed raid attacks
 - Clan War notifications and attack reminders
-- Rating: member performance relative to other clan members, with Overall, War, and Raid ratings.
+- Rating: member performance relative to other clan members, with Overall, War, and Raid ratings
 - Administrator-controlled Telegram group and notification topic settings
 - Private replies to commands in group chats
 
@@ -41,7 +41,7 @@ This repository contains the source code for a Telegram bot created to process d
 | `/wars` | Clan War history |
 | `/raid` | Latest raid season |
 | `/raids` | Raid season history |
-| `/raid_missed` | Members who missed raid attacks |
+| `/raid_missed` | Members who made no raid attacks |
 | `/rating` | Overall member ratings |
 | `/rating_cw` | Clan War ratings and statistics |
 | `/rating_raids` | Raid ratings and statistics |
@@ -63,6 +63,8 @@ This repository contains the source code for a Telegram bot created to process d
 
 ## Running
 
+Requires **Git** and **Docker with Docker Compose**.
+
 **1. Clone the repository**
 
 ```bash
@@ -77,7 +79,7 @@ cd gucci-goblin
 
 **3. Configure environment variables**
 
-Create a .env file in the project root and fill in the variables listed in Environment Variables section.
+Create a `.env` file in the project root and fill in the variables listed in the **Environment Variables** section.
 
 **4. Build and run**
 
@@ -87,9 +89,9 @@ docker compose up -d --build
 
 **5. Configure the Telegram group**
 
-Add the bot to your group. Using an account listed in TELEGRAM_ADMIN_USER_IDS:
+Add the bot to your group. Using an account listed in `TELEGRAM_ADMIN_USER_IDS`:
 
-- Send /set_group in the group.
-- Send /war_thread inside the topic intended for Clan War notifications.
+- Send `/set_group` in the group.
+- Send `/war_thread` inside the topic intended for Clan War notifications.
 
-Use /help to view the available commands.
+Use `/help` to view the available commands.
