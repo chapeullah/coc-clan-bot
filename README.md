@@ -50,7 +50,7 @@ This repository contains the source code for a Telegram bot created to process d
 
 ## Configuration
 
-## Environment Variables
+Create a .env file in the repository root and configure the following variables:
 
 | Variable | Description | Required |
 | --- | --- | --- |
