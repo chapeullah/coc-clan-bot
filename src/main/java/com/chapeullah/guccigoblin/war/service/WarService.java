@@ -12,6 +12,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -40,9 +42,11 @@ public class WarService {
     private final WarLogService warLogService;
 
     @Transactional
-    public List<War> getCompletedByClanTagAndMemberTag(
+    public Slice<War> getCompletedByClanTagAndMemberTag(
             @NonNull String clanTag,
-            @NonNull String memberTag) {
+            @NonNull String memberTag,
+            int pageNumber,
+            int pageSize) {
 
         return warRepository
                 .findDistinctByClanTagAndStateAndWarLogSyncedAtIsNotNullAndParticipantsPlayerTagAndParticipants_ClanTag(
@@ -50,7 +54,7 @@ public class WarService {
                         "warEnded",
                         memberTag,
                         clanTag,
-                        Sort.by(Sort.Direction.DESC, "endTime", "id"));
+                        PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "endTime", "id")));
     }
 
     @Transactional

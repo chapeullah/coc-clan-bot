@@ -105,7 +105,9 @@ public class RaidSeasonClanMemberSnapshotService {
             @NonNull Member member,
             @NonNull String clanType,
             @NonNull Set<String> attackingTags) {
-        if (attackingTags.contains(member.getTag())) {
+        // A later departure, return or clan change must not erase an observed opportunity to attack.
+        if (attackingTags.contains(member.getTag())
+                || Boolean.TRUE.equals(snapshot.getParticipationOpportunityObserved())) {
             return true;
         }
 
@@ -113,9 +115,7 @@ public class RaidSeasonClanMemberSnapshotService {
             return false;
         }
 
-        // Filling the last slot must not erase an earlier observed opportunity to attack.
-        if (attackingTags.size() >= MAX_RAID_PARTICIPANTS
-                && !Boolean.TRUE.equals(snapshot.getParticipationOpportunityObserved())) {
+        if (attackingTags.size() >= MAX_RAID_PARTICIPANTS) {
             return false;
         }
 

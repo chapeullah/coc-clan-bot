@@ -7,4 +7,4 @@ RUN mvn package
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar gucci-goblin.jar
-ENTRYPOINT ["java","-jar","/app/gucci-goblin.jar"]
+ENTRYPOINT ["sh", "-c", "rm -f /tmp/gucci-goblin.ready && exec java -jar /app/gucci-goblin.jar"]

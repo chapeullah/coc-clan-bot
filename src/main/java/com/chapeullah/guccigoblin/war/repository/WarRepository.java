@@ -2,7 +2,8 @@ package com.chapeullah.guccigoblin.war.repository;
 
 import com.chapeullah.guccigoblin.war.model.War;
 import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -27,11 +28,11 @@ public interface WarRepository extends JpaRepository<War, Long> {
 
     List<War> findByClanTagAndStateOrderByEndTimeDesc(String clanTag, String state, Limit limit);
 
-    List<War> findDistinctByClanTagAndStateAndWarLogSyncedAtIsNotNullAndParticipantsPlayerTagAndParticipants_ClanTag(
+    Slice<War> findDistinctByClanTagAndStateAndWarLogSyncedAtIsNotNullAndParticipantsPlayerTagAndParticipants_ClanTag(
             String clanTag,
             String state,
             String memberTag,
             String participantClanTag,
-            Sort sort);
+            Pageable pageable);
 
 }

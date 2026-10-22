@@ -14,6 +14,7 @@ import com.chapeullah.guccigoblin.war.model.WarParticipant;
 import com.chapeullah.guccigoblin.war.service.WarService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -394,13 +395,7 @@ public class RatingService {
 
     @Transactional(readOnly = true)
     public MemberWarStatistic calculateMemberWarStatistic(@NonNull Member member) {
-        List<War> wars = warService
-                .getCompletedByClanTagAndMemberTag(
-                        member.getClan().getTag(), member.getTag())
-                .stream()
-                .filter(this::isWarReadyForRating)
-                .limit(WAR_LIMIT)
-                .toList();
+        List<War> wars = getRecentWarsReadyForRating(member);
         if (wars.isEmpty()) {
             return MemberWarStatistic.empty(member.getTag(), member.getName());
         }
@@ -670,6 +665,27 @@ public class RatingService {
         return calculateWarAverages(List.of(war))
                 .orElseThrow(() -> new IllegalStateException(
                         "War averages are missing: warId=%s".formatted(war.getId())));
+    }
+
+    private List<War> getRecentWarsReadyForRating(Member member) {
+        List<War> wars = new ArrayList<>(WAR_LIMIT);
+        int pageNumber = 0;
+        while (true) {
+            Slice<War> page = warService.getCompletedByClanTagAndMemberTag(
+                    member.getClan().getTag(), member.getTag(), pageNumber, WAR_LIMIT);
+            for (War war : page) {
+                if (isWarReadyForRating(war)) {
+                    wars.add(war);
+                    if (wars.size() == WAR_LIMIT) {
+                        return wars;
+                    }
+                }
+            }
+            if (!page.hasNext()) {
+                return wars;
+            }
+            ++pageNumber;
+        }
     }
 
     public boolean isWarReadyForRating(@NonNull War war) {
