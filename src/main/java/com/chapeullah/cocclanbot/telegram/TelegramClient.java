@@ -205,6 +205,7 @@ public class TelegramClient {
         body.put("chat_id", chatId);
         body.put("text", text);
         body.put("parse_mode", "HTML");
+        body.put("disable_notification", false);
         if (threadId != null) {
             body.put("message_thread_id", threadId);
         }
