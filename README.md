@@ -29,6 +29,23 @@ This repository contains the source code for a Telegram bot created to process d
 
 ## Telegram Commands
 
-
+| Command | Description |
+| --- | --- |
+| `/start` | Introduction and usage information |
+| `/help` | List available commands |
+| `/clan` | Clan information |
+| `/members` | Current clan roster |
+| `/member <#TAG>` | Detailed clan member profile |
+| `/player <#TAG>` | Detailed player profile |
+| `/war` | Current Clan War |
+| `/wars` | Clan War history |
+| `/raid` | Latest raid season |
+| `/raids` | Raid season history |
+| `/raid_missed` | Members who missed raid attacks |
+| `/rating` | Overall member ratings |
+| `/rating_cw` | Clan War ratings and statistics |
+| `/rating_raids` | Raid ratings and statistics |
+| `/set_group` | Set the current group as the clan group — admin only |
+| `/war_thread` | Set the current topic for Clan War notifications — admin only |
 
 ## Running
