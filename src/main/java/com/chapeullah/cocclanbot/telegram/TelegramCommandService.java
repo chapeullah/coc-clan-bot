@@ -51,6 +51,9 @@ import java.util.*;
 @DependsOn("environmentVariablesService")
 public class TelegramCommandService {
 
+    static final String KEYBOARD_MESSAGE_TEXT = "<b>Клавиатура бота</b>";
+    static final String MEMBERS_BUTTON_TEXT = "Участники клана";
+
     private static final String ACCESS_DENIED = "❌ Нет доступа";
     private static final String GROUP_NOT_SET = "❌ Группа не задана: /set_group";
     private static final String WRONG_GROUP = "❌ Команда доступна только в заданной группе.";
@@ -224,9 +227,9 @@ public class TelegramCommandService {
         }
 
         return TelegramCommandReply.sharedReply(
-                "✅ Клавиатура бота включена.\nНажми /members на клавиатуре, чтобы посмотреть состав клана.",
+                KEYBOARD_MESSAGE_TEXT,
                 Map.of(
-                        "keyboard", List.of(List.of("/members")),
+                        "keyboard", List.of(List.of(MEMBERS_BUTTON_TEXT)),
                         "resize_keyboard", true,
                         "one_time_keyboard", false,
                         "is_persistent", true,

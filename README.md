@@ -17,7 +17,7 @@ This repository contains the source code for a Telegram bot created to process d
 - Administrator-managed links between clan members and Telegram users
 - Commands can be disabled in the main chat while remaining available in other topics
 - Private replies to commands in group chats
-- A shared reply keyboard with a `/members` button, published by an administrator in the current topic
+- A shared reply keyboard with an «Участники клана» button, published by an administrator in the current topic
 
 ## Built With
 
@@ -121,8 +121,11 @@ Use `/help` to view the available commands.
 
 Send `/set_keyboard` in each topic where you want to try the bot keyboard. The
 setup message is visible to everyone and requests a persistent reply keyboard near
-the input field with a `/members` button. The button uses the existing member-list
-command and its private reply. No single keyboard topic is stored: publishing in
+the input field with an «Участники клана» button. Pressing it sends its label as a
+reply to the keyboard message and runs the existing `/members` action with a
+private response. The bot checks the replied-to message ID against its sent-message
+history in the same group and topic; an ordinary message with that label is ignored.
+No single keyboard topic is stored: publishing in
 another topic does not replace any of the bot's group or topic settings. Telegram
 clients retain the keyboard; this test feature does not register topics in the
 database. Commands, including keyboard setup, remain blocked in the main chat.

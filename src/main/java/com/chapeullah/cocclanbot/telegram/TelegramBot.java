@@ -5,6 +5,7 @@ import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramUpdate;
 import com.chapeullah.cocclanbot.telegram.message.incoming.TelegramIncomingMessageService;
 import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessageContext;
+import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,6 +25,7 @@ public class TelegramBot {
     private final TelegramCommandDispatcher telegramCommandDispatcher;
     private final TelegramIncomingMessageService telegramIncomingMessageService;
     private final TelegramAccessService telegramAccessService;
+    private final TelegramOutgoingMessageService telegramOutgoingMessageService;
 
     private long nextOffset;
     private PendingReply pendingReply;
@@ -72,8 +74,8 @@ public class TelegramBot {
         long chatId = telegramMessage.telegramChat().id();
         log.debug("Telegram IDs: chatId={}, threadId={}", chatId, telegramMessage.threadId());
 
-        String messageString = telegramMessage.text().trim();
-        if (!messageString.startsWith("/")) {
+        String messageString = resolveCommandText(telegramMessage);
+        if (messageString == null) {
             return;
         }
         if (chatId < 0 && telegramMessage.telegramUser() == null) {
@@ -123,6 +125,23 @@ public class TelegramBot {
         }
         pendingReply = new PendingReply(telegramUpdate.updateId(), telegramMessage, parts, response);
         sendPendingReply();
+    }
+
+    private String resolveCommandText(TelegramMessage message) {
+        String text = message.text().trim();
+        if (text.startsWith("/")) {
+            return text;
+        }
+        if (!TelegramCommandService.MEMBERS_BUTTON_TEXT.equals(text)) {
+            return null;
+        }
+        TelegramMessage reply = message.replyToMessage();
+        if (reply == null || reply.messageId() <= 0 || reply.ephemeralMessageId() != null) {
+            return null;
+        }
+        return telegramOutgoingMessageService.hasSentSharedMessage(
+                message.telegramChat().id(), message.forumThreadId(), reply.messageId(),
+                TelegramCommandService.KEYBOARD_MESSAGE_TEXT) ? "/members" : null;
     }
 
     private void sendPendingReply() {

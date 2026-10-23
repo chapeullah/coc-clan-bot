@@ -72,7 +72,7 @@ class TelegramKeyboardDeliveryTest {
         assertEquals(11, body.path("message_thread_id").asInt());
         assertFalse(body.has("ephemeral_message_parameters"));
         assertFalse(body.has("reply_parameters"));
-        assertEquals("/members", body.path("reply_markup").path("keyboard").get(0).get(0).asString());
+        assertEquals("Участники клана", body.path("reply_markup").path("keyboard").get(0).get(0).asString());
         verify(history).startAttempt(any(), eq(GROUP_ID), eq(11), eq(reply.text()), eq("HTML"),
                 eq(false), isNull(), anyString());
     }
@@ -136,7 +136,8 @@ class TelegramKeyboardDeliveryTest {
     }
 
     private static TelegramCommandReply keyboardReply() {
-        return TelegramCommandReply.sharedReply("Keyboard", Map.of("keyboard", List.of(List.of("/members"))));
+        return TelegramCommandReply.sharedReply("<b>Клавиатура бота</b>",
+                Map.of("keyboard", List.of(List.of("Участники клана"))));
     }
 
     private static TelegramMessage message(Integer topic, boolean ephemeral) {

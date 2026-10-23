@@ -43,7 +43,8 @@ class TelegramKeyboardCommandTest {
                     message(GROUP_ID, "supergroup", ADMIN_ID, threadId));
 
             assertTrue(reply.shared());
-            assertEquals(List.of(List.of("/members")), reply.replyMarkup().get("keyboard"));
+            assertEquals("<b>Клавиатура бота</b>", reply.text());
+            assertEquals(List.of(List.of("Участники клана")), reply.replyMarkup().get("keyboard"));
             assertEquals(true, reply.replyMarkup().get("is_persistent"));
             assertEquals(false, reply.replyMarkup().get("one_time_keyboard"));
             assertEquals(false, reply.replyMarkup().get("selective"));

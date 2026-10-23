@@ -9,6 +9,7 @@ import com.chapeullah.cocclanbot.telegram.dto.TelegramUpdate;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramUser;
 import com.chapeullah.cocclanbot.telegram.message.incoming.TelegramIncomingMessageService;
 import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessageContext;
+import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessageService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.web.client.RestClientResponseException;
@@ -28,11 +29,12 @@ class TelegramKeyboardPollingTest {
         var dispatcher = mock(TelegramCommandDispatcher.class);
         var incoming = mock(TelegramIncomingMessageService.class);
         var access = mock(TelegramAccessService.class);
-        var bot = new TelegramBot(client, dispatcher, incoming, access);
+        var bot = new TelegramBot(client, dispatcher, incoming, access,
+                mock(TelegramOutgoingMessageService.class));
         var message = message("/set_keyboard");
         var update = new TelegramUpdate(123, message);
         var reply = TelegramCommandReply.sharedReply("First\nSecond",
-                Map.of("keyboard", List.of(List.of("/members"))));
+                Map.of("keyboard", List.of(List.of("Участники клана"))));
         when(client.getUpdates(anyLong()))
                 .thenReturn(List.of(new TelegramReceivedUpdate(update, "{}")))
                 .thenReturn(List.of());
@@ -55,7 +57,7 @@ class TelegramKeyboardPollingTest {
     }
 
     @Test
-    void membersButtonUsesTheExistingCommandPathAndPrivateReply() {
+    void slashMembersCommandUsesTheExistingCommandPathAndPrivateReply() {
         var client = mock(TelegramClient.class);
         var service = mock(TelegramCommandService.class);
         var access = mock(TelegramAccessService.class);
@@ -63,7 +65,8 @@ class TelegramKeyboardPollingTest {
         when(service.getMembersMessage()).thenReturn("Members");
         var dispatcher = new TelegramCommandDispatcher(List.of(new MembersCommand(service)), access);
         var bot = new TelegramBot(client, dispatcher,
-                mock(TelegramIncomingMessageService.class), access);
+                mock(TelegramIncomingMessageService.class), access,
+                mock(TelegramOutgoingMessageService.class));
         var message = message("/members");
         var reply = TelegramCommandReply.privateReply("Members");
         when(client.getUpdates(0)).thenReturn(
