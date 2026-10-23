@@ -31,30 +31,30 @@ This repository contains the source code for a Telegram bot created to process d
 
 ## Telegram Commands
 
-| Command | Description |
-| --- | --- |
-| `/start` | Introduction and usage information |
-| `/help` | List available commands |
-| `/clan` | Clan information |
-| `/members` | Current clan roster |
-| `/member <#TAG>` | Detailed clan member profile |
-| `/player <#TAG>` | Detailed player profile |
-| `/war` | Current Clan War |
-| `/wars` | Clan War history |
-| `/raid` | Latest raid season |
-| `/raids` | Raid season history |
-| `/raid_missed` | Members who made no raid attacks |
-| `/rating` | Overall member ratings |
-| `/rating_cw` | Clan War ratings and statistics |
-| `/rating_raids` | Raid ratings and statistics |
-| `/link_member <#TAG>` | Link a current clan member to the author of the replied-to message — admin only |
-| `/unlink_member <#TAG>` | Delete a member's Telegram link — admin only |
-| `/set_group` | Set the current group as the clan group — admin only |
-| `/set_war_thread` | Set the current topic for Clan War notifications — admin only |
-| `/set_main_thread` | Set the current chat as the main chat and disable commands there — admin only |
-| `/reset_group` | Clear the clan group and all topic settings — admin only |
-| `/reset_war_thread` | Clear the Clan War notification topic — admin only |
-| `/reset_main_thread` | Clear the main chat and allow commands there again — admin only |
+| Command | Description | Admin only |
+| --- | --- | --- |
+| `/start` | Introduction and usage information | No |
+| `/help` | List available commands | No |
+| `/clan` | Clan information | No |
+| `/members` | Current clan roster | No |
+| `/member <#TAG>` | Detailed clan member profile | No |
+| `/player <#TAG>` | Detailed player profile | No |
+| `/war` | Current Clan War | No |
+| `/wars` | Clan War history | No |
+| `/raid` | Latest raid season | No |
+| `/raids` | Raid season history | No |
+| `/raid_missed` | Members who made no raid attacks | No |
+| `/rating` | Overall member ratings | No |
+| `/rating_cw` | Clan War ratings and statistics | No |
+| `/rating_raids` | Raid ratings and statistics | No |
+| `/link_member <#TAG>` | Link a current clan member to the author of the replied-to message | Yes |
+| `/unlink_member <#TAG>` | Delete a member's Telegram link | Yes |
+| `/set_group` | Set the current group as the clan group | Yes |
+| `/set_war_thread` | Set the current topic for Clan War notifications | Yes |
+| `/set_main_thread` | Set the current chat as the main chat and disable commands there | Yes |
+| `/reset_group` | Clear the clan group and all topic settings | Yes |
+| `/reset_war_thread` | Clear the Clan War notification topic | Yes |
+| `/reset_main_thread` | Clear the main chat and allow commands there again | Yes |
 
 ## Environment Variables
 
