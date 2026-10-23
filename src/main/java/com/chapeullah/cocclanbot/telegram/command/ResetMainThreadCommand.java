@@ -17,6 +17,11 @@ public class ResetMainThreadCommand implements BotCommand {
     }
 
     @Override
+    public boolean isAdminOnly() {
+        return true;
+    }
+
+    @Override
     public String getDescription() {
         return "Сбросить основной чат и разрешить в нём команды";
     }

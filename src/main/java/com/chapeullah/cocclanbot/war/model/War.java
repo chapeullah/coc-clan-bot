@@ -14,8 +14,8 @@ import java.util.Objects;
 @Table(
         name = "wars",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_wars_clans_start",
-                columnNames = {"clan_tag", "opponent_clan_tag", "start_time"}))
+                name = "uk_wars_clans_preparation",
+                columnNames = {"clan_tag", "opponent_clan_tag", "preparation_start_time"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class War {
@@ -189,8 +189,21 @@ public class War {
         this.attacksPerMember = attacksPerMember;
         this.battleModifier = battleModifier;
         this.preparationStartTime = preparationStartTime;
+        updateTimes(startTime, endTime);
+    }
+
+    public boolean updateTimes(@NonNull Instant startTime, @NonNull Instant endTime) {
+        if (startTime.isBefore(preparationStartTime) || !endTime.isAfter(startTime)) {
+            throw new IllegalArgumentException("Invalid war schedule");
+        }
+        boolean changed = !Objects.equals(this.startTime, startTime)
+                || !Objects.equals(this.endTime, endTime);
+        if (changed && warLogSyncedAt != null) {
+            throw new IllegalStateException("Cannot change the schedule of a confirmed war: warId=" + id);
+        }
         this.startTime = startTime;
         this.endTime = endTime;
+        return changed;
     }
 
     public void update(
@@ -275,12 +288,12 @@ public class War {
         }
         return Objects.equals(this.getClanTag(), other.getClanTag())
                 && Objects.equals(this.getOpponentClanTag(), other.getOpponentClanTag())
-                && Objects.equals(this.getStartTime(), other.getStartTime());
+                && Objects.equals(this.getPreparationStartTime(), other.getPreparationStartTime());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.getClanTag(), this.getOpponentClanTag(), this.getStartTime());
+        return Objects.hash(this.getClanTag(), this.getOpponentClanTag(), this.getPreparationStartTime());
     }
 
 }

@@ -17,6 +17,11 @@ public class SetGroupCommand implements BotCommand {
     }
 
     @Override
+    public boolean isAdminOnly() {
+        return true;
+    }
+
+    @Override
     public String getDescription() {
         return "Назначить текущую группу группой клана";
     }

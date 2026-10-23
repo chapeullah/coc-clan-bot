@@ -35,6 +35,17 @@ public class WarLogService {
         return warLogRepository.findByClanTagAndEndTime(clanTag, endTime);
     }
 
+    @Transactional(readOnly = true)
+    public List<WarLogEntry> findByClanAndOpponentAndEndTimeRange(
+            @NonNull String clanTag,
+            @NonNull String opponentClanTag,
+            @NonNull Instant after,
+            @NonNull Instant through) {
+        return warLogRepository
+                .findByClanTagAndOpponentClanTagAndEndTimeGreaterThanAndEndTimeLessThanEqualOrderByEndTimeAsc(
+                        clanTag, opponentClanTag, after, through);
+    }
+
     @Transactional
     public WarLogEntry getOrSyncWarLogEntry(
             @NonNull String clanTag,

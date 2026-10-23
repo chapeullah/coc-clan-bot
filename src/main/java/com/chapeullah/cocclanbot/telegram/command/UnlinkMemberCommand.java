@@ -20,6 +20,11 @@ public class UnlinkMemberCommand implements BotCommand {
     }
 
     @Override
+    public boolean isAdminOnly() {
+        return true;
+    }
+
+    @Override
     public String getDescription() {
         return DESCRIPTION;
     }

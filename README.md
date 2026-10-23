@@ -101,7 +101,15 @@ docker compose up -d --build
 
 **5. Configure the Telegram group**
 
-Add the bot to your group. Using an account listed in `TELEGRAM_ADMIN_USER_IDS`:
+Add the bot to your group and grant it administrator rights so private command
+replies in the group can still be delivered when the original reply target has
+expired or been deleted. Administrative commands are excluded from shared menus.
+A personal menu is refreshed when a user sends a command: configured bot
+administrators receive administrative commands, while other users receive only
+the commands available to them. Private non-admin menus contain only `/start` and
+`/help`.
+
+Using an account listed in `TELEGRAM_ADMIN_USER_IDS`:
 
 - Send `/set_group` in the group.
 - Send `/set_war_thread` inside the topic intended for Clan War notifications.

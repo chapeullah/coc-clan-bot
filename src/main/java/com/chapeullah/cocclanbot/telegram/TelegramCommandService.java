@@ -50,6 +50,20 @@ import java.util.*;
 @DependsOn("environmentVariablesService")
 public class TelegramCommandService {
 
+    private static final String ACCESS_DENIED = "❌ Нет доступа";
+    private static final String GROUP_NOT_SET = "❌ Группа не задана: /set_group";
+    private static final String WRONG_GROUP = "❌ Команда доступна только в заданной группе.";
+    private static final String INVALID_THREAD = "❌ Отправь команду внутри правильной темы.";
+    private static final String NO_DATA = "Нет данных";
+    private static final String NO_MEMBERS = "Список участников клана пуст";
+    private static final String NO_RAID_SEASONS = "Сезоны рейдов ещё не сохранены";
+    private static final String NO_ACTIVE_WAR = "Сейчас активной войны нет";
+    private static final String MEMBER_NOT_FOUND_TEMPLATE = "❌ Участник <code>%s</code> не найден в сохранённых данных клана";
+    private static final String DATA_PENDING = "Уточняется";
+    private static final String IN_PROGRESS = "Идёт";
+    private static final String WAR_VICTORY = "Победа";
+    private static final String WAR_DEFEAT = "Поражение";
+
     private final WarService warService;
     private final WarParticipantService warParticipantService;
     private final WarAttackService warAttackService;
@@ -76,144 +90,144 @@ public class TelegramCommandService {
     @Transactional
     public String setGroup(long chatId, Long userId) {
         if (!telegramAccessService.isAdmin(userId)) {
-            return "Нет доступа";
+            return ACCESS_DENIED;
         }
         if (chatId >= 0) {
-            return "Вызови команду в нужной группе";
+            return "❌ Вызови команду в нужной группе";
         }
         Long previousChatId = telegramGroupChatIdService.getChatId().orElse(null);
         if (!Objects.equals(previousChatId, chatId)) {
             telegramGroupChatIdService.upsertChatId(chatId);
             telegramGroupChatThreadsService.resetThreadIds();
         }
-        return "Эта группа назначена группой клана";
+        return "✅ Эта группа назначена группой клана";
     }
 
     @Transactional
     public String setWarThread(long chatId, Long userId, Integer warThreadId) {
         if (!telegramAccessService.isAdmin(userId)) {
-            return "Нет доступа";
+            return ACCESS_DENIED;
         }
         Long groupChatId = telegramGroupChatIdService
                 .getChatId()
                 .orElse(null);
         if (groupChatId == null) {
-            return "Группа не задана: /set_group";
+            return GROUP_NOT_SET;
         }
         if (chatId != groupChatId) {
-            return "Команда доступна только в заданной группе";
+            return WRONG_GROUP;
         }
         if (warThreadId == null || warThreadId <= 0) {
-            return "Отправь команду внутри правильной темы";
+            return INVALID_THREAD;
         }
         telegramGroupChatThreadsService.upsertWarThreadId(warThreadId);
-        return "Эта тема назначена для уведомлений о КВ";
+        return "✅ Этот чат назначен для уведомлений о КВ.";
     }
 
     @Transactional
     public String setMainThread(long chatId, Long userId, Integer mainThreadId) {
         if (!telegramAccessService.isAdmin(userId)) {
-            return "Нет доступа";
+            return ACCESS_DENIED;
         }
         Long groupChatId = telegramGroupChatIdService
                 .getChatId()
                 .orElse(null);
         if (groupChatId == null) {
-            return "Группа не задана: /set_group";
+            return GROUP_NOT_SET;
         }
         if (chatId != groupChatId) {
-            return "Команда доступна только в заданной группе";
+            return WRONG_GROUP;
         }
         if (mainThreadId != null && mainThreadId <= 0) {
-            return "Отправь команду внутри правильной темы";
+            return INVALID_THREAD;
         }
         telegramGroupChatThreadsService.upsertMainThreadId(mainThreadId);
-        return "Этот чат назначен основным. Команды бота здесь запрещены";
+        return "✅ Этот чат назначен основным.";
     }
 
     @Transactional
     public String resetGroup(long chatId, Long userId) {
         if (!telegramAccessService.isAdmin(userId)) {
-            return "Нет доступа";
+            return ACCESS_DENIED;
         }
         Long groupChatId = telegramGroupChatIdService.getChatId().orElse(null);
         if (groupChatId == null) {
-            return "Группа не задана";
+            return GROUP_NOT_SET;
         }
         if (chatId != groupChatId) {
-            return "Команда доступна только в заданной группе";
+            return WRONG_GROUP;
         }
         telegramGroupChatIdService.resetChatId();
         telegramGroupChatThreadsService.resetThreadIds();
-        return "Группа клана и настройки тем сброшены";
+        return "✅ Группа клана и настройки тем сброшены";
     }
 
     @Transactional
     public String resetWarThread(long chatId, Long userId) {
         if (!telegramAccessService.isAdmin(userId)) {
-            return "Нет доступа";
+            return ACCESS_DENIED;
         }
         Long groupChatId = telegramGroupChatIdService.getChatId().orElse(null);
         if (groupChatId == null) {
-            return "Группа не задана: /set_group";
+            return GROUP_NOT_SET;
         }
         if (chatId != groupChatId) {
-            return "Команда доступна только в заданной группе";
+            return WRONG_GROUP;
         }
         if (telegramGroupChatThreadsService.getWarThreadId().isEmpty()) {
-            return "Тема уведомлений о КВ не задана";
+            return "❌ Тема уведомлений о КВ не задана";
         }
         telegramGroupChatThreadsService.resetWarThreadId();
-        return "Тема уведомлений о КВ сброшена";
+        return "✅ Тема уведомлений о КВ сброшена.";
     }
 
     @Transactional
     public String resetMainThread(long chatId, Long userId) {
         if (!telegramAccessService.isAdmin(userId)) {
-            return "Нет доступа";
+            return ACCESS_DENIED;
         }
         Long groupChatId = telegramGroupChatIdService.getChatId().orElse(null);
         if (groupChatId == null) {
-            return "Группа не задана: /set_group";
+            return GROUP_NOT_SET;
         }
         if (chatId != groupChatId) {
-            return "Команда доступна только в заданной группе";
+            return WRONG_GROUP;
         }
         if (telegramGroupChatThreadsService.getMainThreadId().isEmpty()) {
-            return "Основной чат не задан";
+            return "❌ Основной чат не задан";
         }
         telegramGroupChatThreadsService.resetMainThreadId();
-        return "Основной чат сброшен. Команды доступны во всех темах группы";
+        return "✅ Основной чат сброшен.";
     }
 
     public String getLinkMemberMessage(String args, TelegramMessage message) {
         Long userId = message == null || message.telegramUser() == null
                 ? null : message.telegramUser().id();
         if (!telegramAccessService.isAdmin(userId)) {
-            return "Нет доступа";
+            return ACCESS_DENIED;
         }
 
         String tag = normalizeMemberLinkTag(args);
         if (tag == null) {
-            return "Используй: /link_member #TAG ответом на сообщение участника";
+            return "❌ Используй: /link_member #TAG ответом на сообщение участника";
         }
         TelegramMessage reply = message.replyToMessage();
         if (reply == null || reply.telegramUser() == null) {
-            return "Ответь командой /link_member #TAG на сообщение человека, которого нужно привязать";
+            return "❌ Ответь командой /link_member #TAG на сообщение человека, которого нужно привязать";
         }
         TelegramUser targetUser = reply.telegramUser();
         if (targetUser.id() <= 0 || Boolean.TRUE.equals(targetUser.isBot())) {
-            return "Нельзя привязать участника к боту. Ответь на сообщение человека";
+            return "❌ Нельзя привязать участника к боту. Ответь на сообщение человека";
         }
 
         return switch (memberTelegramLinkService.createMemberTelegramLink(tag, targetUser.id())) {
-            case CREATED -> "Участник <code>%s</code> привязан к Telegram ID <code>%d</code>"
+            case CREATED -> "✅ Участник <code>%s</code> привязан к Telegram ID <code>%d</code>"
                     .formatted(tag, targetUser.id());
-            case MEMBER_NOT_FOUND -> "Участник <code>%s</code> не найден в сохранённых данных клана"
+            case MEMBER_NOT_FOUND -> MEMBER_NOT_FOUND_TEMPLATE
                     .formatted(tag);
-            case MEMBER_NOT_IN_CLAN -> "Участник <code>%s</code> больше не состоит в клане"
+            case MEMBER_NOT_IN_CLAN -> "❌ Участник <code>%s</code> больше не состоит в клане"
                     .formatted(tag);
-            case ALREADY_LINKED -> "Участник <code>%s</code> уже привязан к Telegram. "
+            case ALREADY_LINKED -> "❌ Участник <code>%s</code> уже привязан к Telegram. "
                     .formatted(tag) + "Чтобы изменить привязку, используй /unlink_member " + tag;
         };
     }
@@ -222,17 +236,17 @@ public class TelegramCommandService {
         Long userId = message == null || message.telegramUser() == null
                 ? null : message.telegramUser().id();
         if (!telegramAccessService.isAdmin(userId)) {
-            return "Нет доступа";
+            return ACCESS_DENIED;
         }
 
         String tag = normalizeMemberLinkTag(args);
         if (tag == null) {
-            return "Используй: /unlink_member #TAG";
+            return "❌ Используй: /unlink_member #TAG";
         }
 
         return switch (memberTelegramLinkService.deleteMemberTelegramLink(tag)) {
-            case DELETED -> "Привязка участника <code>%s</code> к Telegram удалена".formatted(tag);
-            case NOT_LINKED -> "У участника <code>%s</code> нет привязки к Telegram".formatted(tag);
+            case DELETED -> "✅ Привязка участника <code>%s</code> к Telegram удалена".formatted(tag);
+            case NOT_LINKED -> "❌ У участника <code>%s</code> нет привязки к Telegram".formatted(tag);
         };
     }
 
@@ -316,14 +330,10 @@ public class TelegramCommandService {
         return privacyNotice;
     }
 
-    public String getChatId(long chatId) {
-        return "ID чата: <code>" + chatId + "</code>";
-    }
-
     public String getMembersMessage() {
         List<Member> members = memberService.getCurrentMembersByClanTag(clanTag);
         if (members.isEmpty()) {
-            return "Список участников клана пуст";
+            return NO_MEMBERS;
         }
 
         Map<String, MemberStatistic> statisticsByTag =
@@ -335,10 +345,10 @@ public class TelegramCommandService {
                     TelegramUtils.replaceEmojisWithSquares(member.getName()));
             MemberStatistic statistic = statisticsByTag.get(member.getTag());
             String ratingText = statistic == null
-                    ? "Нет данных"
+                    ? NO_DATA
                     : statistic.totalRating()
                             .map(rating -> String.format(Locale.ROOT, "%.2f", rating))
-                            .orElse("Нет данных");
+                            .orElse(NO_DATA);
             message.append("<b>%02d. %s</b> | <code>%s</code> | %s\n"
                     .formatted(
                             member.getClanRank(),
@@ -362,7 +372,7 @@ public class TelegramCommandService {
                         .thenComparing(MemberStatistic::tag))
                 .toList();
         if (statistics.isEmpty()) {
-            return "Список участников клана пуст";
+            return NO_MEMBERS;
         }
 
         StringBuilder message = new StringBuilder("<b>Рейтинг участников</b>\n\n");
@@ -387,7 +397,7 @@ public class TelegramCommandService {
                         .thenComparing(MemberWarStatistic::tag))
                 .toList();
         if (statistics.isEmpty()) {
-            return "Список участников клана пуст";
+            return NO_MEMBERS;
         }
 
         StringBuilder message = new StringBuilder("""
@@ -420,7 +430,7 @@ public class TelegramCommandService {
                         .thenComparing(MemberRaidStatistic::tag))
                 .toList();
         if (statistics.isEmpty()) {
-            return "Список участников клана пуст";
+            return NO_MEMBERS;
         }
 
         StringBuilder message = new StringBuilder("""
@@ -448,7 +458,7 @@ public class TelegramCommandService {
                         .strip());
         String ratingText = rating
                 .map(value -> String.format(Locale.ROOT, "%.2f", value))
-                .orElse("Нет данных");
+                .orElse(NO_DATA);
         message.append("<b>%02d. %s</b> — %s".formatted(number, name, ratingText));
     }
 
@@ -461,7 +471,7 @@ public class TelegramCommandService {
                                 Locale.ROOT,
                                 "%.2f",
                                 (double) statistic.warAttackCount() / statistic.warCount()))
-                : "Нет данных";
+                : NO_DATA;
     }
 
     private static String formatRaidAttackStatistics(MemberRaidStatistic statistic) {
@@ -469,7 +479,7 @@ public class TelegramCommandService {
                 ? "%s | АТ %s".formatted(
                         formatStatisticValue(statistic.averageRaidLootPerAttack(), "%.0f/ат."),
                         formatStatisticValue(statistic.averageRaidAttacksPerSeason(), "%.2f"))
-                : "Нет данных";
+                : NO_DATA;
     }
 
     private static String formatStatisticValue(Optional<Double> value, String format) {
@@ -489,7 +499,7 @@ public class TelegramCommandService {
     @Transactional(readOnly = true)
     public String getMemberMessage(String args) {
         if (args == null || args.isBlank()) {
-            return "Используй: /member #TAG";
+            return "❌ Используй: /member #TAG";
         }
 
         String tag = args.strip().toUpperCase(Locale.ROOT);
@@ -497,12 +507,12 @@ public class TelegramCommandService {
             tag = "#" + tag;
         }
         if (!tag.matches("#[A-Z0-9]+")) {
-            return "Некорректный тег. Используй: /member #TAG";
+            return "❌ Некорректный тег. Используй: /member #TAG";
         }
 
         Member member = memberService.findByTagAndClanTag(tag, clanTag).orElse(null);
         if (member == null) {
-            return "Участник <code>%s</code> не найден в сохранённых данных клана"
+            return MEMBER_NOT_FOUND_TEMPLATE
                     .formatted(TelegramUtils.escapeHtml(tag));
         }
 
@@ -511,10 +521,10 @@ public class TelegramCommandService {
         String role = TelegramUtils.escapeHtml(
                 ROLE_NAMES_RU.getOrDefault(member.getRole(), member.getRole()));
         String status = member.getInClan() == null
-                ? "Нет данных"
+                ? NO_DATA
                 : member.getInClan() ? "В клане" : "Покинул клан";
         String league = member.getLeagueTier() == null
-                ? "Нет данных"
+                ? NO_DATA
                 : TelegramUtils.escapeHtml(LEAGUE_TIER_NAMES_RU.getOrDefault(
                         member.getLeagueTier().getId(), member.getLeagueTier().getName()));
 
@@ -560,21 +570,21 @@ public class TelegramCommandService {
 
     public String getPlayerMessage(String args) {
         if (args == null || args.isBlank()) {
-            return "Используй: /player #TAG";
+            return "❌ Используй: /player #TAG";
         }
 
         String input = args.strip().toUpperCase(Locale.ROOT);
         String tag = input.startsWith("#") ? input : "#" + input;
 
         if (!tag.matches("#[A-Z0-9]+")) {
-            return "Некорректный тег. Используй: /player #TAG";
+            return "❌ Некорректный тег. Используй: /player #TAG";
         }
 
         try {
             Player player = playerService.syncPlayer(tag);
             return formatPlayerMessage(player);
         } catch (PlayerNotFoundException e) {
-            return "Игрок <code>%s</code> не найден"
+            return "❌ Игрок <code>%s</code> не найден"
                     .formatted(TelegramUtils.escapeHtml(tag));
         }
     }
@@ -584,7 +594,7 @@ public class TelegramCommandService {
                 TelegramUtils.replaceEmojisWithSquares(player.getName()));
 
         String league = player.getLeagueTier() == null
-                ? "Нет данных"
+                ? NO_DATA
                 : TelegramUtils.escapeHtml(LEAGUE_TIER_NAMES_RU.getOrDefault(
                 player.getLeagueTier().getId(),
                 player.getLeagueTier().getName()));
@@ -593,7 +603,7 @@ public class TelegramCommandService {
                 player.getWarPreference() == null ? "" : player.getWarPreference()) {
             case "in" -> "Хочет участвовать";
             case "out" -> "Не хочет участвовать";
-            default -> "Нет данных";
+            default -> NO_DATA;
         };
 
         StringBuilder message = new StringBuilder("""
@@ -622,7 +632,7 @@ public class TelegramCommandService {
                     TelegramUtils.replaceEmojisWithSquares(clan.getName()));
 
             String role = player.getRole() == null
-                    ? "Нет данных"
+                    ? NO_DATA
                     : TelegramUtils.escapeHtml(ROLE_NAMES_RU.getOrDefault(
                     player.getRole(), player.getRole()));
 
@@ -696,11 +706,11 @@ public class TelegramCommandService {
         String type = CLAN_TYPES_RU.getOrDefault(clan.getType(), clan.getType());
 
         String warLeague = clan.getWarLeague() == null
-                ? "Нет данных"
+                ? NO_DATA
                 : WAR_LEAGUE_NAMES_RU.get(clan.getWarLeague().getId());
 
         String location = clan.getLocation() == null
-                ? "Нет данных"
+                ? NO_DATA
                 : LOCATION_NAMES_RU.get(clan.getLocation().getId());
 
         String description = clan.getDescription() == null
@@ -744,7 +754,7 @@ public class TelegramCommandService {
     }
 
     private static String valueOrNoData(Object value) {
-        return value == null ? "Нет данных" : value.toString();
+        return value == null ? NO_DATA : value.toString();
     }
 
     private static String formatWarWinRate(Clan clan) {
@@ -752,7 +762,7 @@ public class TelegramCommandService {
         Integer ties = clan.getWarTies();
         Integer losses = clan.getWarLosses();
         if (wins == null || ties == null || losses == null) {
-            return "Нет данных";
+            return NO_DATA;
         }
         int totalWars = wins + ties + losses;
         if (totalWars == 0) {
@@ -766,11 +776,11 @@ public class TelegramCommandService {
     public String getCurrentWarMessage() {
         War war = warService.findCurrentByClanTag(clanTag).orElse(null);
         if (war == null) {
-            return "Сейчас активной войны нет";
+            return NO_ACTIVE_WAR;
         }
 
         boolean preparation = "preparation".equals(war.getState());
-        String state = preparation ? "Подготовка" : "Идёт";
+        String state = preparation ? "Подготовка" : IN_PROGRESS;
         int maximumAttacks = war.getTeamSize() * war.getAttacksPerMember();
         String timeTitle = preparation ? "Начало" : "Окончание";
         String time = DATE_TIME_FORMATTER.format(
@@ -839,25 +849,25 @@ public class TelegramCommandService {
 
     private static String getWarResult(War war) {
         if (war.getWarLogSyncedAt() == null) {
-            return "Уточняется";
+            return DATA_PENDING;
         }
         int starsComparison = Integer.compare(
                 war.getClanStars(), war.getOpponentClanStars());
         if (starsComparison > 0) {
-            return "Победа";
+            return WAR_VICTORY;
         }
         if (starsComparison < 0) {
-            return "Поражение";
+            return WAR_DEFEAT;
         }
 
         int destructionComparison = Double.compare(
                 war.getClanDestructionPercentage(),
                 war.getOpponentClanDestructionPercentage());
         if (destructionComparison > 0) {
-            return "Победа";
+            return WAR_VICTORY;
         }
         if (destructionComparison < 0) {
-            return "Поражение";
+            return WAR_DEFEAT;
         }
         return "Ничья";
     }
@@ -867,11 +877,11 @@ public class TelegramCommandService {
         War war = warService.findCurrentByClanTag(clanTag).orElse(null);
 
         if (war == null) {
-            return "Сейчас активной войны нет.";
+            return NO_ACTIVE_WAR;
         }
 
         if ("preparation".equals(war.getState())) {
-            return "Война ещё не началась.";
+            return "❌ Война ещё не началась.";
         }
 
         List<WarParticipant> participants = warParticipantService.getByWar(war).stream()
@@ -929,7 +939,7 @@ public class TelegramCommandService {
     public String getRaidMessage() {
         RaidSeason season = raidSeasonService.findLatestByClanTag(clanTag).orElse(null);
         if (season == null) {
-            return "Сезоны рейдов ещё не сохранены";
+            return NO_RAID_SEASONS;
         }
 
         List<RaidSeasonParticipant> participants =
@@ -938,7 +948,7 @@ public class TelegramCommandService {
                 ? Long.toString(participants.stream()
                         .filter(participant -> participant.getAttackCount() > 0)
                         .count())
-                : "Уточняется";
+                : DATA_PENDING;
 
         return """
                 <b>%s</b>
@@ -969,19 +979,19 @@ public class TelegramCommandService {
     public String getRaidMissedMessage() {
         RaidSeason season = raidSeasonService.findLatestByClanTag(clanTag).orElse(null);
         if (season == null) {
-            return "Сезоны рейдов ещё не сохранены";
+            return NO_RAID_SEASONS;
         }
 
         List<RaidSeasonParticipant> participants =
                 raidSeasonParticipantService.getByRaidSeason(season);
         if (!hasCompleteRaidParticipants(season, participants)) {
-            return "Данные об участниках рейда пока неполные";
+            return "❌ Данные об участниках рейда пока неполные";
         }
 
         List<RaidSeasonClanMemberSnapshot> members =
                 raidSeasonClanMemberSnapshotService.getByRaidSeason(season);
         if (members.isEmpty()) {
-            return "Снимок состава клана для этого сезона не сохранён";
+            return "❌ Снимок состава клана для этого сезона не сохранён";
         }
 
         Set<String> attackedTags = new HashSet<>();
@@ -1028,7 +1038,7 @@ public class TelegramCommandService {
     public String getRaidsMessage() {
         List<RaidSeason> seasons = raidSeasonService.getRecentByClanTag(clanTag);
         if (seasons.isEmpty()) {
-            return "Сезоны рейдов ещё не сохранены";
+            return NO_RAID_SEASONS;
         }
 
         StringBuilder message = new StringBuilder("<b>История рейдов</b>\n\n");
@@ -1077,10 +1087,10 @@ public class TelegramCommandService {
 
     private static String getRaidState(RaidSeason season) {
         if (season.getState() == null) {
-            return "Нет данных";
+            return NO_DATA;
         }
         return switch (season.getState()) {
-            case "ongoing" -> "Идёт";
+            case "ongoing" -> IN_PROGRESS;
             case "ended" -> "Завершён";
             default -> season.getState();
         };

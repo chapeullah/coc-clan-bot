@@ -27,11 +27,15 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -41,13 +45,16 @@ import java.util.function.Supplier;
 public class TelegramClient {
 
     private static final int MESSAGE_LENGTH_LIMIT = 4000;
+    private static final Duration EPHEMERAL_REPLY_TIMEOUT = Duration.ofSeconds(15);
 
     private final RestClient restClient;
     private final JsonMapper jsonMapper;
     private final TelegramOutgoingMessageService telegramOutgoingMessageService;
+    private final Clock clock;
 
     private String username;
     private volatile long retryAllowedAtNanos;
+    private final Map<Map<String, Object>, Boolean> configuredChatMenus = new HashMap<>();
 
     @Autowired
     public TelegramClient(@Value("${TELEGRAM_BOT_TOKEN}") String token, JsonMapper jsonMapper,
@@ -57,9 +64,15 @@ public class TelegramClient {
 
     TelegramClient(RestClient restClient, JsonMapper jsonMapper,
                    TelegramOutgoingMessageService telegramOutgoingMessageService) {
+        this(restClient, jsonMapper, telegramOutgoingMessageService, Clock.systemUTC());
+    }
+
+    TelegramClient(RestClient restClient, JsonMapper jsonMapper,
+                   TelegramOutgoingMessageService telegramOutgoingMessageService, Clock clock) {
         this.restClient = restClient;
         this.jsonMapper = jsonMapper;
         this.telegramOutgoingMessageService = telegramOutgoingMessageService;
+        this.clock = clock;
     }
 
     private static RestClient createRestClient(String token) {
@@ -127,24 +140,47 @@ public class TelegramClient {
     }
 
     public void configureCommands(List<BotCommand> commands) {
-        List<Map<String, Object>> allCommands = commands.stream()
+        List<BotCommand> userCommands = commands.stream().filter(command -> !command.isAdminOnly()).toList();
+        setCommands(userCommands, Map.of("type", "default"));
+        setCommands(userCommands, Map.of("type", "all_group_chats"));
+        setCommands(commands.stream().filter(command -> TelegramAccessService.isPublicCommand(command.getName())).toList(),
+                Map.of("type", "all_private_chats"));
+    }
+
+    public synchronized void configureChatCommands(List<BotCommand> commands, TelegramMessage message, boolean admin) {
+        if (message.telegramUser() == null) {
+            return;
+        }
+        boolean privateChat = "private".equals(message.telegramChat().type());
+        if (!privateChat && !"group".equals(message.telegramChat().type())
+                && !"supergroup".equals(message.telegramChat().type())) {
+            return;
+        }
+        Map<String, Object> scope = privateChat
+                ? Map.of("type", "chat", "chat_id", message.telegramChat().id())
+                : Map.of("type", "chat_member", "chat_id", message.telegramChat().id(),
+                         "user_id", message.telegramUser().id());
+        if (Objects.equals(configuredChatMenus.get(scope), admin)) {
+            return;
+        }
+        List<BotCommand> visibleCommands = commands.stream()
+                .filter(command -> admin || (!command.isAdminOnly()
+                        && (!privateChat || TelegramAccessService.isPublicCommand(command.getName()))))
+                .toList();
+        setCommands(visibleCommands, scope);
+        configuredChatMenus.put(scope, admin);
+    }
+
+    private void setCommands(List<BotCommand> commands, Map<String, Object> scope) {
+        List<Map<String, Object>> menu = commands.stream()
                 .map(command -> Map.<String, Object>of(
                         "command", command.getName().substring(1),
                         "description", command.getDescription(),
                         "is_ephemeral", true))
                 .toList();
-        List<Map<String, Object>> privateCommands = allCommands.stream()
-                .filter(command -> TelegramAccessService.isPublicCommand("/" + command.get("command")))
-                .toList();
-        setCommands(allCommands, "default");
-        setCommands(allCommands, "all_group_chats");
-        setCommands(privateCommands, "all_private_chats");
-    }
-
-    private void setCommands(List<Map<String, Object>> commands, String scope) {
         String requestJson = jsonMapper.writeValueAsString(Map.of(
-                "commands", commands,
-                "scope", Map.of("type", scope)));
+                "commands", menu,
+                "scope", scope));
         TelegramApiResponse<Boolean> response = executeRequest(() -> restClient.post()
                 .uri("/setMyCommands")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -167,24 +203,35 @@ public class TelegramClient {
     public void sendMessage(long chatId, Integer threadId, String text, TelegramOutgoingMessageContext context) {
         List<String> parts = splitMessage(text);
         for (int index = 0; index < parts.size(); index++) {
-            sendMessagePart(chatId, threadId, null, null, parts.get(index), context.part(index + 1, parts.size()));
+            sendMessagePart(chatId, threadId, null, Map.of(), parts.get(index), context.part(index + 1, parts.size()));
         }
     }
 
     void sendReplyPart(TelegramMessage message, String text, TelegramOutgoingMessageContext context) {
         long chatId = message.telegramChat().id();
         Long receiverUserId = chatId < 0 ? message.telegramUser().id() : null;
-        Integer ephemeralMessageId = receiverUserId == null ? null : message.ephemeralMessageId();
+        Map<String, Object> replyParameters = buildReplyParameters(message);
         try {
-            sendMessagePart(chatId, message.forumThreadId(), receiverUserId, ephemeralMessageId, text, context);
+            sendMessagePart(chatId, message.forumThreadId(), receiverUserId, replyParameters, text, context);
         } catch (RestClientResponseException exception) {
-            if (ephemeralMessageId == null || !isInvalidReply(exception)) {
+            if (replyParameters.isEmpty() || !isInvalidReply(exception)) {
                 throw exception;
             }
-            // Ephemeral reply targets expire after 15 seconds. Bots with group admin rights can send without one.
-            log.debug("Telegram reply target is unavailable, sending a private message without it: chatId={}", chatId);
-            sendMessagePart(chatId, message.forumThreadId(), receiverUserId, null, text, context);
+            // A reply target can be deleted or expire. Preserve the private recipient when retrying.
+            log.debug("Telegram reply target is unavailable, sending without it: chatId={}", chatId);
+            sendMessagePart(chatId, message.forumThreadId(), receiverUserId, Map.of(), text, context);
         }
+    }
+
+    private Map<String, Object> buildReplyParameters(TelegramMessage message) {
+        if (message.ephemeralMessageId() != null) {
+            if (message.date() > 0 && clock.instant().isBefore(
+                    Instant.ofEpochSecond(message.date()).plus(EPHEMERAL_REPLY_TIMEOUT))) {
+                return Map.of("ephemeral_message_id", message.ephemeralMessageId());
+            }
+            return Map.of();
+        }
+        return message.messageId() > 0 ? Map.of("message_id", message.messageId()) : Map.of();
     }
 
     private boolean isInvalidReply(RestClientResponseException exception) {
@@ -193,13 +240,20 @@ public class TelegramClient {
         }
         try {
             JsonNode response = jsonMapper.readTree(exception.getResponseBodyAsString());
-            return response != null && response.path("description").asString("").contains("REPLY_TO_INVALID");
+            if (response == null) {
+                return false;
+            }
+            String description = response.path("description").asString("").toLowerCase(Locale.ROOT);
+            return description.contains("reply_to_invalid")
+                    || description.contains("reply_message_id_invalid")
+                    || description.contains("message to be replied not found")
+                    || description.contains("message to reply not found");
         } catch (RuntimeException ignored) {
             return false;
         }
     }
 
-    private void sendMessagePart(long chatId, Integer threadId, Long receiverUserId, Integer ephemeralMessageId,
+    private void sendMessagePart(long chatId, Integer threadId, Long receiverUserId, Map<String, Object> replyParameters,
                                  String text, TelegramOutgoingMessageContext context) {
         Map<String, Object> body = new HashMap<>();
         body.put("chat_id", chatId);
@@ -211,10 +265,11 @@ public class TelegramClient {
         }
         if (receiverUserId != null) {
             body.put("ephemeral_message_parameters", Map.of("receiver_user_id", receiverUserId));
-            if (ephemeralMessageId != null) {
-                body.put("reply_parameters", Map.of("ephemeral_message_id", ephemeralMessageId));
-            }
         }
+        if (!replyParameters.isEmpty()) {
+            body.put("reply_parameters", replyParameters);
+        }
+        Integer ephemeralMessageId = (Integer) replyParameters.get("ephemeral_message_id");
         String requestJson = jsonMapper.writeValueAsString(body);
         executeRequest(() -> {
             sendAndRecord(context, chatId, threadId, receiverUserId != null, ephemeralMessageId, text, requestJson);

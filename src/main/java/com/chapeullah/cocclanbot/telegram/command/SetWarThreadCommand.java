@@ -20,6 +20,11 @@ public class SetWarThreadCommand implements BotCommand {
     }
 
     @Override
+    public boolean isAdminOnly() {
+        return true;
+    }
+
+    @Override
     public String getDescription() {
         return DESCRIPTION;
     }
@@ -33,6 +38,6 @@ public class SetWarThreadCommand implements BotCommand {
         return telegramCommandService.setWarThread(
                 message.telegramChat().id(),
                 userId,
-                message.threadId());
+                message.forumThreadId());
     }
 }

@@ -108,8 +108,12 @@ public class TelegramWarNotification {
     }
 
     public void markSent() {
+        markSent(Instant.now());
+    }
+
+    public void markSent(@NonNull Instant sentAt) {
         ensureNotSent();
-        this.sentAt = Instant.now();
+        this.sentAt = sentAt;
     }
 
     private void ensureNotSent() {

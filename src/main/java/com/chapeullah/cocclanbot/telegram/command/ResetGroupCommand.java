@@ -17,6 +17,11 @@ public class ResetGroupCommand implements BotCommand {
     }
 
     @Override
+    public boolean isAdminOnly() {
+        return true;
+    }
+
+    @Override
     public String getDescription() {
         return "Сбросить группу клана и все настройки тем";
     }

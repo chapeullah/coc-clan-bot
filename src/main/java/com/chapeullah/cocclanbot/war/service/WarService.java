@@ -86,12 +86,16 @@ public class WarService {
             return Optional.empty();
         }
 
-        War war = warRepository
-                .findByClanTagAndOpponentClanTagAndStartTime(
+        List<War> matchingWars = warRepository
+                .findAllByClanTagAndOpponentClanTagAndPreparationStartTimeOrderByIdAsc(
                         response.clan().tag(),
                         response.opponent().tag(),
-                        Instant.from(WAR_TIME_FORMAT.parse(response.startTime())))
-                .orElse(null);
+                        Instant.from(WAR_TIME_FORMAT.parse(response.preparationStartTime())));
+        if (matchingWars.size() > 1) {
+            throw new IllegalStateException("Duplicate war identity requires data repair: warIds="
+                    + matchingWars.stream().map(War::getId).toList());
+        }
+        War war = matchingWars.isEmpty() ? null : matchingWars.getFirst();
 
         WarClanBadgeUrls warClanBadgeUrls = toWarClanBadgeUrls(response.clan().badgeUrls());
         if (war == null) {
@@ -99,6 +103,16 @@ public class WarService {
             war.setWarClanBadgeUrls(warClanBadgeUrls);
         } else {
             if (war.getWarLogSyncedAt() == null) {
+                Instant previousStartTime = war.getStartTime();
+                Instant previousEndTime = war.getEndTime();
+                if (war.updateTimes(
+                        Instant.from(WAR_TIME_FORMAT.parse(response.startTime())),
+                        Instant.from(WAR_TIME_FORMAT.parse(response.endTime())))) {
+                    log.info("War schedule changed: warId={}, preparationStartTime={}, "
+                                    + "previousStartTime={}, startTime={}, previousEndTime={}, endTime={}",
+                            war.getId(), war.getPreparationStartTime(),
+                            previousStartTime, war.getStartTime(), previousEndTime, war.getEndTime());
+                }
                 updateWar(war, response);
             }
             if (!Objects.equals(war.getWarClanBadgeUrls(), warClanBadgeUrls)) {
@@ -142,22 +156,19 @@ public class WarService {
         List<War> syncedWars = new ArrayList<>();
 
         for (War war : wars) {
-            WarLogEntry entry = warLogService
-                    .findByClanTagAndEndTime(war.getClanTag(), war.getEndTime())
-                    .orElse(null);
+            if (warRepository.findAllByClanTagAndOpponentClanTagAndPreparationStartTimeOrderByIdAsc(
+                    war.getClanTag(), war.getOpponentClanTag(), war.getPreparationStartTime()).size() != 1) {
+                log.warn("Duplicate war identity requires data repair: warId={}, preparationStartTime={}",
+                        war.getId(), war.getPreparationStartTime());
+                continue;
+            }
+            WarLogEntry entry = findFinalWarLogEntry(war, now).orElse(null);
 
             if (entry == null) {
                 continue;
             }
 
-            if (!Objects.equals(war.getOpponentClanTag(), entry.getOpponentClanTag())
-                    || !Objects.equals(war.getTeamSize(), entry.getTeamSize())
-                    || (entry.getAttacksPerMember() != null
-                    && !Objects.equals(
-                    war.getAttacksPerMember(), entry.getAttacksPerMember()))
-                    || (entry.getBattleModifier() != null
-                    && !Objects.equals(
-                    war.getBattleModifier(), entry.getBattleModifier()))) {
+            if (!matchesWarMetadata(war, entry)) {
                 log.warn(
                         "War log entry does not match war: warId={}, warLogEntryId={}",
                         war.getId(), entry.getId());
@@ -175,6 +186,19 @@ public class WarService {
                 continue;
             }
 
+            if (warRepository.existsByClanTagAndEndTimeAndWarLogSyncedAtIsNotNull(
+                    war.getClanTag(), entry.getEndTime())) {
+                log.warn("War log entry already belongs to a confirmed war: warId={}, warLogEntryId={}",
+                        war.getId(), entry.getId());
+                continue;
+            }
+
+            Instant previousEndTime = war.getEndTime();
+            if (war.updateTimes(war.getStartTime(), entry.getEndTime())) {
+                log.info("War end time confirmed from war log: warId={}, warLogEntryId={}, "
+                                + "previousEndTime={}, endTime={}",
+                        war.getId(), entry.getId(), previousEndTime, war.getEndTime());
+            }
             war.update(
                     entry.getClanAttacks(),
                     entry.getClanStars(),
@@ -198,6 +222,54 @@ public class WarService {
         }
 
         return warRepository.saveAll(syncedWars);
+    }
+
+    private Optional<WarLogEntry> findFinalWarLogEntry(War war, Instant now) {
+        Optional<WarLogEntry> exact = warLogService.findByClanTagAndEndTime(
+                war.getClanTag(), war.getEndTime());
+        if (exact.isPresent()) {
+            return exact;
+        }
+
+        Optional<Instant> nextPreparation = warRepository
+                .findFirstByClanTagAndPreparationStartTimeGreaterThanOrderByPreparationStartTimeAsc(
+                        war.getClanTag(), war.getPreparationStartTime())
+                .map(War::getPreparationStartTime)
+                .filter(preparation -> !preparation.isAfter(now));
+        if (nextPreparation.isEmpty()) {
+            log.debug("Shifted war log match awaits the next preparation boundary: warId={}, endTime={}",
+                    war.getId(), war.getEndTime());
+            return Optional.empty();
+        }
+        Instant through = nextPreparation.orElseThrow();
+        List<WarLogEntry> candidates = warLogService.findByClanAndOpponentAndEndTimeRange(
+                        war.getClanTag(), war.getOpponentClanTag(), war.getStartTime(), through)
+                .stream()
+                .filter(entry -> matchesWarMetadata(war, entry))
+                .filter(entry -> !warRepository.existsByClanTagAndEndTimeAndWarLogSyncedAtIsNotNull(
+                        war.getClanTag(), entry.getEndTime()))
+                .toList();
+        if (candidates.size() == 1) {
+            return Optional.of(candidates.getFirst());
+        }
+        if (candidates.size() > 1) {
+            log.warn("Ambiguous war log match: warId={}, after={}, through={}, warLogEntryIds={}",
+                    war.getId(), war.getStartTime(), through,
+                    candidates.stream().map(WarLogEntry::getId).toList());
+        } else {
+            log.debug("Final war log entry not found: warId={}, endTime={}", war.getId(), war.getEndTime());
+        }
+        return Optional.empty();
+    }
+
+    private static boolean matchesWarMetadata(War war, WarLogEntry entry) {
+        return Objects.equals(war.getClanTag(), entry.getClanTag())
+                && Objects.equals(war.getOpponentClanTag(), entry.getOpponentClanTag())
+                && Objects.equals(war.getTeamSize(), entry.getTeamSize())
+                && (entry.getAttacksPerMember() == null
+                || Objects.equals(war.getAttacksPerMember(), entry.getAttacksPerMember()))
+                && (entry.getBattleModifier() == null
+                || Objects.equals(war.getBattleModifier(), entry.getBattleModifier()));
     }
 
     private War createWar(@NonNull WarResponse response) {

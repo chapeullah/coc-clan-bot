@@ -9,6 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.time.Instant;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class TelegramOutgoingMessageService {
@@ -16,6 +19,11 @@ public class TelegramOutgoingMessageService {
     private final TelegramOutgoingMessageRepository telegramOutgoingMessageRepository;
     private final TelegramIncomingMessageRepository telegramIncomingMessageRepository;
     private final JsonMapper jsonMapper;
+
+    @Transactional(readOnly = true)
+    public Optional<Instant> findWarNotificationSentAt(Long notificationId) {
+        return telegramOutgoingMessageRepository.findWarNotificationSentAt(notificationId);
+    }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Long startAttempt(TelegramOutgoingMessageContext context, long chatId, Integer threadId,

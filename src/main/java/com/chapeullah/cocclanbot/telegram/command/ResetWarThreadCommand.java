@@ -17,6 +17,11 @@ public class ResetWarThreadCommand implements BotCommand {
     }
 
     @Override
+    public boolean isAdminOnly() {
+        return true;
+    }
+
+    @Override
     public String getDescription() {
         return "Сбросить тему уведомлений о КВ";
     }

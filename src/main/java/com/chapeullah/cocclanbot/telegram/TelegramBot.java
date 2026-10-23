@@ -17,11 +17,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TelegramBot {
 
-    private static final String COMMAND_ERROR_MESSAGE = "Не удалось выполнить команду.";
+    private static final String COMMAND_ERROR_MESSAGE = "❌ Не удалось выполнить команду.";
 
     private final TelegramClient telegramClient;
     private final TelegramCommandDispatcher telegramCommandDispatcher;
     private final TelegramIncomingMessageService telegramIncomingMessageService;
+    private final TelegramAccessService telegramAccessService;
 
     private long nextOffset;
     private PendingReply pendingReply;
@@ -90,6 +91,15 @@ public class TelegramBot {
                 return;
             }
             command = command.substring(0, usernameSeparator);
+        }
+
+        try {
+            Long userId = telegramMessage.telegramUser() == null ? null : telegramMessage.telegramUser().id();
+            telegramClient.configureChatCommands(telegramCommandDispatcher.getCommands(), telegramMessage,
+                    telegramAccessService.isAdmin(userId));
+        } catch (RuntimeException exception) {
+            // Menu configuration must not prevent execution or delivery of a command reply.
+            log.warn("Failed to configure Telegram command menu: chatId={}", chatId, exception);
         }
 
         String response;

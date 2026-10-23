@@ -14,7 +14,13 @@ import java.util.Optional;
 @Repository
 public interface WarRepository extends JpaRepository<War, Long> {
 
-    Optional<War> findByClanTagAndOpponentClanTagAndStartTime(String clanTag, String opponentTag, Instant startTime);
+    List<War> findAllByClanTagAndOpponentClanTagAndPreparationStartTimeOrderByIdAsc(
+            String clanTag, String opponentClanTag, Instant preparationStartTime);
+
+    Optional<War> findFirstByClanTagAndPreparationStartTimeGreaterThanOrderByPreparationStartTimeAsc(
+            String clanTag, Instant preparationStartTime);
+
+    boolean existsByClanTagAndEndTimeAndWarLogSyncedAtIsNotNull(String clanTag, Instant endTime);
 
     List<War> findAllByEndTimeLessThanEqualAndStateNot(Instant now, String state);
 

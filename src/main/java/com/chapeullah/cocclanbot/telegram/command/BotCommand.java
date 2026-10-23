@@ -8,6 +8,10 @@ public interface BotCommand {
 
     String getDescription();
 
+    default boolean isAdminOnly() {
+        return false;
+    }
+
     String execute(String args, TelegramMessage message);
 
 }

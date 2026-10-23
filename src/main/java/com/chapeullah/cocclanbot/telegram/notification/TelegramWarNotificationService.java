@@ -5,6 +5,7 @@ import com.chapeullah.cocclanbot.telegram.TelegramClient;
 import com.chapeullah.cocclanbot.telegram.TelegramUtils;
 import com.chapeullah.cocclanbot.telegram.groupchatthreads.TelegramGroupChatThreadsService;
 import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessageContext;
+import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessageService;
 import com.chapeullah.cocclanbot.war.model.War;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class TelegramWarNotificationService {
 
     private final TelegramGroupChatIdService telegramGroupChatIdService;
     private final TelegramGroupChatThreadsService telegramGroupChatThreadsService;
+    private final TelegramOutgoingMessageService telegramOutgoingMessageService;
 
     @Value("${TELEGRAM_SYSTEM_USER_ID}")
     private long systemUserId;
@@ -63,6 +65,16 @@ public class TelegramWarNotificationService {
         if (notification != null && notification.getSentAt() != null) {
             log.debug("War notification already sent, skipping: warId={}, type=\"{}\"", war.getId(), type);
             return;
+        }
+
+        if (notification != null) {
+            Optional<Instant> sentAt = telegramOutgoingMessageService.findWarNotificationSentAt(notification.getId());
+            if (sentAt.isPresent()) {
+                notification.markSent(sentAt.orElseThrow());
+                telegramWarNotificationRepository.save(notification);
+                log.info("Recovered sent war notification from delivery history: warId={}, type={}", war.getId(), type);
+                return;
+            }
         }
 
         Long chatId = telegramGroupChatIdService.getChatId().orElse(null);
