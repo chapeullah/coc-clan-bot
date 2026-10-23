@@ -1,11 +1,9 @@
 package com.chapeullah.cocclanbot.telegram;
 
-import com.chapeullah.cocclanbot.telegram.dto.TelegramCommandReply;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramUpdate;
 import com.chapeullah.cocclanbot.telegram.message.incoming.TelegramIncomingMessageService;
 import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessageContext;
-import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,7 +23,6 @@ public class TelegramBot {
     private final TelegramCommandDispatcher telegramCommandDispatcher;
     private final TelegramIncomingMessageService telegramIncomingMessageService;
     private final TelegramAccessService telegramAccessService;
-    private final TelegramOutgoingMessageService telegramOutgoingMessageService;
 
     private long nextOffset;
     private PendingReply pendingReply;
@@ -74,8 +71,8 @@ public class TelegramBot {
         long chatId = telegramMessage.telegramChat().id();
         log.debug("Telegram IDs: chatId={}, threadId={}", chatId, telegramMessage.threadId());
 
-        String messageString = resolveCommandText(telegramMessage);
-        if (messageString == null) {
+        String messageString = telegramMessage.text().trim();
+        if (!messageString.startsWith("/")) {
             return;
         }
         if (chatId < 0 && telegramMessage.telegramUser() == null) {
@@ -105,43 +102,25 @@ public class TelegramBot {
             log.warn("Failed to configure Telegram command menu: chatId={}", chatId, exception);
         }
 
-        TelegramCommandReply response;
+        String response;
         try {
             response = telegramCommandDispatcher.execute(command, args, telegramMessage);
         } catch (RuntimeException exception) {
             log.error("Telegram command failed: updateId={}, command=\"{}\"",
                     telegramUpdate.updateId(), command, exception);
-            response = TelegramCommandReply.privateReply(COMMAND_ERROR_MESSAGE);
+            response = COMMAND_ERROR_MESSAGE;
         }
 
         List<String> parts;
         try {
-            parts = telegramClient.splitMessage(response.text());
+            parts = telegramClient.splitMessage(response);
         } catch (IllegalArgumentException exception) {
             log.error("Telegram command response could not be formatted: updateId={}, command=\"{}\"",
                     telegramUpdate.updateId(), command, exception);
             parts = List.of(COMMAND_ERROR_MESSAGE);
-            response = TelegramCommandReply.privateReply(COMMAND_ERROR_MESSAGE);
         }
-        pendingReply = new PendingReply(telegramUpdate.updateId(), telegramMessage, parts, response);
+        pendingReply = new PendingReply(telegramUpdate.updateId(), telegramMessage, parts);
         sendPendingReply();
-    }
-
-    private String resolveCommandText(TelegramMessage message) {
-        String text = message.text().trim();
-        if (text.startsWith("/")) {
-            return text;
-        }
-        if (!TelegramCommandService.MEMBERS_BUTTON_TEXT.equals(text)) {
-            return null;
-        }
-        TelegramMessage reply = message.replyToMessage();
-        if (reply == null || reply.messageId() <= 0 || reply.ephemeralMessageId() != null) {
-            return null;
-        }
-        return telegramOutgoingMessageService.hasSentSharedMessage(
-                message.telegramChat().id(), message.forumThreadId(), reply.messageId(),
-                TelegramCommandService.KEYBOARD_MESSAGE_TEXT) ? "/members" : null;
     }
 
     private void sendPendingReply() {
@@ -151,8 +130,7 @@ public class TelegramBot {
         try {
             while (pendingReply.nextPart < pendingReply.parts.size()) {
                 telegramClient.sendReplyPart(pendingReply.message, pendingReply.parts.get(pendingReply.nextPart),
-                        pendingReply.context.part(pendingReply.nextPart + 1, pendingReply.parts.size()),
-                        pendingReply.reply);
+                        pendingReply.context.part(pendingReply.nextPart + 1, pendingReply.parts.size()));
                 pendingReply.nextPart++;
             }
         } catch (RestClientResponseException exception) {
@@ -171,16 +149,14 @@ public class TelegramBot {
         private final long updateId;
         private final TelegramMessage message;
         private final List<String> parts;
-        private final TelegramCommandReply reply;
         private final TelegramOutgoingMessageContext context;
         private int nextPart;
 
-        private PendingReply(long updateId, TelegramMessage message, List<String> parts, TelegramCommandReply reply) {
+        private PendingReply(long updateId, TelegramMessage message, List<String> parts) {
             this.updateId = updateId;
             this.message = message;
             this.parts = parts;
-            this.reply = reply;
-            this.context = TelegramOutgoingMessageContext.reply(updateId, reply.shared() ? null : message.telegramUser());
+            this.context = TelegramOutgoingMessageContext.reply(updateId, message.telegramUser());
         }
     }
 

@@ -21,11 +21,6 @@ public class TelegramOutgoingMessageService {
     private final JsonMapper jsonMapper;
 
     @Transactional(readOnly = true)
-    public boolean hasSentSharedMessage(long chatId, Integer threadId, long messageId, String requestText) {
-        return telegramOutgoingMessageRepository.existsSentSharedMessage(chatId, threadId, messageId, requestText);
-    }
-
-    @Transactional(readOnly = true)
     public Optional<Instant> findWarNotificationSentAt(Long notificationId) {
         return telegramOutgoingMessageRepository.findWarNotificationSentAt(notificationId);
     }

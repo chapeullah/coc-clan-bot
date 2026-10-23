@@ -17,7 +17,6 @@ This repository contains the source code for a Telegram bot created to process d
 - Administrator-managed links between clan members and Telegram users
 - Commands can be disabled in the main chat while remaining available in other topics
 - Private replies to commands in group chats
-- A shared reply keyboard with an «Участники клана» button, published by an administrator in the current topic
 
 ## Built With
 
@@ -53,7 +52,6 @@ This repository contains the source code for a Telegram bot created to process d
 | `/set_group` | Set the current group as the clan group | Yes |
 | `/set_war_thread` | Set the current topic for Clan War notifications | Yes |
 | `/set_main_thread` | Set the current chat as the main chat and disable commands there | Yes |
-| `/set_keyboard` | Publish a shared message with the bot keyboard in the current chat or topic | Yes |
 | `/reset_group` | Clear the clan group and all topic settings | Yes |
 | `/reset_war_thread` | Clear the Clan War notification topic | Yes |
 | `/reset_main_thread` | Clear the main chat and allow commands there again | Yes |
@@ -118,21 +116,6 @@ Using an account listed in `TELEGRAM_ADMIN_USER_IDS`:
 - Send `/set_main_thread` in the main chat or topic used for conversation to disable bot commands there.
 
 Use `/help` to view the available commands.
-
-Send `/set_keyboard` in each topic where you want to try the bot keyboard. The
-setup message is visible to everyone and requests a persistent reply keyboard near
-the input field with an «Участники клана» button. Pressing it sends its label as a
-reply to the keyboard message and runs the existing `/members` action with a
-private response. The bot checks the replied-to message ID against its sent-message
-history in the same group and topic; an ordinary message with that label is ignored.
-No single keyboard topic is stored: publishing in
-another topic does not replace any of the bot's group or topic settings. Telegram
-clients retain the keyboard; this test feature does not register topics in the
-database. Commands, including keyboard setup, remain blocked in the main chat.
-
-Check keyboard display in the target Telegram clients after deployment. There is
-an [open Telegram Desktop report about reply keyboards missing in forum topics](https://bugs.telegram.org/c/47099),
-last reproduced in version 6.0.1; this does not confirm behavior in newer versions.
 
 To link a clan member, reply to that person's message with `/link_member #TAG`.
 The bot saves the author's numeric Telegram user ID, so a Telegram username is not required.
