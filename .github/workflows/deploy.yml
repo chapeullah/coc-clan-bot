@@ -57,4 +57,5 @@ jobs:
             docker compose build --no-cache --pull app
             docker compose up -d --wait --wait-timeout 90 db
             docker compose up -d --force-recreate --no-deps --wait --wait-timeout 120 app
+            docker builder prune -af
           "

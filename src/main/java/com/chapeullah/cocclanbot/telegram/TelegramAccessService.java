@@ -22,9 +22,10 @@ public class TelegramAccessService {
     private final TelegramGroupChatIdService telegramGroupChatIdService;
     private final TelegramGroupChatThreadsService telegramGroupChatThreadsService;
 
-    public TelegramAccessService(@Value("${TELEGRAM_ADMIN_USER_IDS}") String value,
-                                 TelegramGroupChatIdService telegramGroupChatIdService,
-                                 TelegramGroupChatThreadsService telegramGroupChatThreadsService) {
+    public TelegramAccessService(
+            @Value("${TELEGRAM_ADMIN_USER_IDS}") String value,
+            TelegramGroupChatIdService telegramGroupChatIdService,
+            TelegramGroupChatThreadsService telegramGroupChatThreadsService) {
         this.telegramGroupChatIdService = telegramGroupChatIdService;
         this.telegramGroupChatThreadsService = telegramGroupChatThreadsService;
         if (value == null || value.isBlank()) {

@@ -14,6 +14,7 @@ This repository contains the source code for a Telegram bot created to process d
 - Clan War notifications and attack reminders
 - Rating: member performance relative to other clan members, with Overall, War, and Raid ratings
 - Administrator-controlled Telegram group and notification topic settings
+- Administrator-managed links between clan members and Telegram users
 - Commands can be disabled in the main chat while remaining available in other topics
 - Private replies to commands in group chats
 
@@ -46,6 +47,8 @@ This repository contains the source code for a Telegram bot created to process d
 | `/rating` | Overall member ratings |
 | `/rating_cw` | Clan War ratings and statistics |
 | `/rating_raids` | Raid ratings and statistics |
+| `/link_member <#TAG>` | Link a current clan member to the author of the replied-to message — admin only |
+| `/unlink_member <#TAG>` | Delete a member's Telegram link — admin only |
 | `/set_group` | Set the current group as the clan group — admin only |
 | `/set_war_thread` | Set the current topic for Clan War notifications — admin only |
 | `/set_main_thread` | Set the current chat as the main chat and disable commands there — admin only |
@@ -105,6 +108,11 @@ Add the bot to your group. Using an account listed in `TELEGRAM_ADMIN_USER_IDS`:
 - Send `/set_main_thread` in the main chat or topic used for conversation to disable bot commands there.
 
 Use `/help` to view the available commands.
+
+To link a clan member, reply to that person's message with `/link_member #TAG`.
+The bot saves the author's numeric Telegram user ID, so a Telegram username is not required.
+Use `/unlink_member #TAG` to remove the link; replying to a message is not required for removal.
+Remove an existing link before assigning the same game account to another Telegram user.
 
 ### Managing the Application
 

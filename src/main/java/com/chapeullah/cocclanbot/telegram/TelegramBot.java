@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TelegramBot {
 
-    private static final String COMMAND_ERROR_MESSAGE = "Не удалось выполнить команду. Попробуйте позже";
+    private static final String COMMAND_ERROR_MESSAGE = "Не удалось выполнить команду.";
 
     private final TelegramClient telegramClient;
     private final TelegramCommandDispatcher telegramCommandDispatcher;
