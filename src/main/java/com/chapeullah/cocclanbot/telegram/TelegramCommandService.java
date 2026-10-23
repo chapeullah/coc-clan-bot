@@ -18,6 +18,7 @@ import com.chapeullah.cocclanbot.rating.MemberStatistic;
 import com.chapeullah.cocclanbot.rating.MemberWarStatistic;
 import com.chapeullah.cocclanbot.rating.MemberRaidStatistic;
 import com.chapeullah.cocclanbot.rating.RatingService;
+import com.chapeullah.cocclanbot.telegram.dto.TelegramCommandReply;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramUser;
 import com.chapeullah.cocclanbot.telegram.groupchatid.TelegramGroupChatIdService;
@@ -200,6 +201,38 @@ public class TelegramCommandService {
         return "✅ Основной чат сброшен.";
     }
 
+    public TelegramCommandReply getKeyboardReply(String args, TelegramMessage message) {
+        Long userId = message == null || message.telegramUser() == null
+                ? null : message.telegramUser().id();
+        if (!telegramAccessService.isAdmin(userId)) {
+            return TelegramCommandReply.privateReply(ACCESS_DENIED);
+        }
+        if (message == null || message.telegramChat() == null
+                || (!"group".equals(message.telegramChat().type())
+                && !"supergroup".equals(message.telegramChat().type()))) {
+            return TelegramCommandReply.privateReply("❌ Вызови команду в нужном чате группы");
+        }
+        Long groupChatId = telegramGroupChatIdService.getChatId().orElse(null);
+        if (groupChatId == null) {
+            return TelegramCommandReply.privateReply(GROUP_NOT_SET);
+        }
+        if (groupChatId != message.telegramChat().id()) {
+            return TelegramCommandReply.privateReply(WRONG_GROUP);
+        }
+        if (args != null && !args.isBlank()) {
+            return TelegramCommandReply.privateReply("❌ Используй: /set_keyboard");
+        }
+
+        return TelegramCommandReply.sharedReply(
+                "✅ Клавиатура бота включена.\nНажми /members на клавиатуре, чтобы посмотреть состав клана.",
+                Map.of(
+                        "keyboard", List.of(List.of("/members")),
+                        "resize_keyboard", true,
+                        "one_time_keyboard", false,
+                        "is_persistent", true,
+                        "selective", false));
+    }
+
     public String getLinkMemberMessage(String args, TelegramMessage message) {
         Long userId = message == null || message.telegramUser() == null
                 ? null : message.telegramUser().id();
@@ -305,6 +338,7 @@ public class TelegramCommandService {
                     /set_group — Назначить текущую группу группой клана
                     /set_war_thread — Назначить текущую тему для уведомлений
                     /set_main_thread — Назначить текущий чат основным и запретить в нём команды
+                    /set_keyboard — Показать клавиатуру бота в текущем чате
                     /reset_group — Сбросить группу клана и все настройки тем
                     /reset_war_thread — Сбросить тему уведомлений о КВ
                     /reset_main_thread — Сбросить основной чат и разрешить в нём команды

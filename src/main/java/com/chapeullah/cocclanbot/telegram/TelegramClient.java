@@ -2,6 +2,7 @@ package com.chapeullah.cocclanbot.telegram;
 
 import com.chapeullah.cocclanbot.telegram.command.BotCommand;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramApiResponse;
+import com.chapeullah.cocclanbot.telegram.dto.TelegramCommandReply;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramReceivedUpdate;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramUpdate;
@@ -203,23 +204,27 @@ public class TelegramClient {
     public void sendMessage(long chatId, Integer threadId, String text, TelegramOutgoingMessageContext context) {
         List<String> parts = splitMessage(text);
         for (int index = 0; index < parts.size(); index++) {
-            sendMessagePart(chatId, threadId, null, Map.of(), parts.get(index), context.part(index + 1, parts.size()));
+            sendMessagePart(chatId, threadId, null, Map.of(), Map.of(), parts.get(index),
+                    context.part(index + 1, parts.size()));
         }
     }
 
-    void sendReplyPart(TelegramMessage message, String text, TelegramOutgoingMessageContext context) {
+    void sendReplyPart(TelegramMessage message, String text, TelegramOutgoingMessageContext context,
+                       TelegramCommandReply reply) {
         long chatId = message.telegramChat().id();
-        Long receiverUserId = chatId < 0 ? message.telegramUser().id() : null;
-        Map<String, Object> replyParameters = buildReplyParameters(message);
+        Long receiverUserId = !reply.shared() && chatId < 0 ? message.telegramUser().id() : null;
+        // A shared keyboard must not reply to the administrator's ephemeral command.
+        Map<String, Object> replyParameters = reply.shared() ? Map.of() : buildReplyParameters(message);
         try {
-            sendMessagePart(chatId, message.forumThreadId(), receiverUserId, replyParameters, text, context);
+            sendMessagePart(chatId, message.forumThreadId(), receiverUserId, replyParameters,
+                    reply.replyMarkup(), text, context);
         } catch (RestClientResponseException exception) {
             if (replyParameters.isEmpty() || !isInvalidReply(exception)) {
                 throw exception;
             }
             // A reply target can be deleted or expire. Preserve the private recipient when retrying.
             log.debug("Telegram reply target is unavailable, sending without it: chatId={}", chatId);
-            sendMessagePart(chatId, message.forumThreadId(), receiverUserId, Map.of(), text, context);
+            sendMessagePart(chatId, message.forumThreadId(), receiverUserId, Map.of(), reply.replyMarkup(), text, context);
         }
     }
 
@@ -254,7 +259,7 @@ public class TelegramClient {
     }
 
     private void sendMessagePart(long chatId, Integer threadId, Long receiverUserId, Map<String, Object> replyParameters,
-                                 String text, TelegramOutgoingMessageContext context) {
+                                 Map<String, Object> replyMarkup, String text, TelegramOutgoingMessageContext context) {
         Map<String, Object> body = new HashMap<>();
         body.put("chat_id", chatId);
         body.put("text", text);
@@ -268,6 +273,9 @@ public class TelegramClient {
         }
         if (!replyParameters.isEmpty()) {
             body.put("reply_parameters", replyParameters);
+        }
+        if (!replyMarkup.isEmpty()) {
+            body.put("reply_markup", replyMarkup);
         }
         Integer ephemeralMessageId = (Integer) replyParameters.get("ephemeral_message_id");
         String requestJson = jsonMapper.writeValueAsString(body);

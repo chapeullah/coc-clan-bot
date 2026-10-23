@@ -1,6 +1,7 @@
 package com.chapeullah.cocclanbot.telegram;
 
 import com.chapeullah.cocclanbot.telegram.command.BotCommand;
+import com.chapeullah.cocclanbot.telegram.dto.TelegramCommandReply;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +25,7 @@ public class TelegramCommandDispatcher {
                         Function.identity()));
     }
 
-    public String execute(String commandName, String args, TelegramMessage message) {
+    public TelegramCommandReply execute(String commandName, String args, TelegramMessage message) {
         if (!telegramAccessService.canExecute(commandName, message)) {
             String response = "❌ Бот работает только в группе клана.\n"
                     + "В личных сообщениях доступны только /start и /help.";
@@ -32,16 +33,17 @@ public class TelegramCommandDispatcher {
                     && "private".equals(message.telegramChat().type())) {
                 response += "\n\n<i>В группе ваши команды и ответы бота видны только вам.</i>";
             }
-            return response;
+            return TelegramCommandReply.privateReply(response);
         }
         if (telegramAccessService.isCommandBlockedInMainThread(commandName, message)) {
-            return "❌ В этом чате команды бота запрещены. Используйте любой другой чат группы.";
+            return TelegramCommandReply.privateReply(
+                    "❌ В этом чате команды бота запрещены. Используйте любой другой чат группы.");
         }
         BotCommand command = commands.get(commandName);
         if (command == null) {
-            return "❌ Команда не найдена.";
+            return TelegramCommandReply.privateReply("❌ Команда не найдена.");
         }
-        return command.execute(args, message);
+        return command.executeReply(args, message);
     }
 
     public List<BotCommand> getCommands() {
