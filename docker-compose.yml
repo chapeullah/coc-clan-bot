@@ -2,6 +2,11 @@ services:
   db:
     image: postgres:16
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "2"
     environment:
       POSTGRES_DB: gucci
       POSTGRES_USER: gucci
@@ -19,6 +24,11 @@ services:
 
   app:
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "2"
     build:
       context: .
     depends_on:
