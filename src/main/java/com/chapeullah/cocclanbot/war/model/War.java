@@ -25,9 +25,6 @@ public class War {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    /**
-     * CLAN
-     */
 
     @Column(name = "clan_tag", nullable = false)
     private String clanTag;
@@ -67,9 +64,6 @@ public class War {
     @Column(name = "clan_level_changed_at", nullable = true)
     private Instant clanLevelChangedAt;
 
-    /**
-     * OPPONENT
-     */
 
     @Column(name = "opponent_clan_tag", nullable = false)
     private String opponentClanTag;
@@ -101,9 +95,6 @@ public class War {
     @Column(name = "opponent_clan_level_changed_at", nullable = true)
     private Instant opponentClanLevelChangedAt;
 
-    /**
-     * GENERAL
-     */
 
     @Column(name = "state", nullable = false)
     private String state;

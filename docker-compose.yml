@@ -39,7 +39,7 @@ services:
       SPRING_DATASOURCE_USERNAME: gucci
       SPRING_DATASOURCE_PASSWORD: gucci
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Moscow"
+      JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Moscow -Djdk.httpclient.HttpClient.log=${COC_HTTP_TRANSPORT_LOG:-}"
       APP_READINESS_FILE: /tmp/coc-clan-bot.ready
       LOG_DIR: /logs
       LOGGING_LEVEL_COM_CHAPEULLAH_COCCLANBOT: INFO

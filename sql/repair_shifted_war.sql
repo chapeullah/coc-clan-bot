@@ -1,7 +1,3 @@
--- PostgreSQL 16+. One-time repair for the inspected VPS rows: wars 2 -> 3, war_log 61.
--- Stop the application and take a fresh pg_dump before running with ON_ERROR_STOP=1.
--- Run BEFORE deploying the new preparation-time unique constraint.
--- Conflicting attacks, unexpected relationships or a different war abort the transaction.
 BEGIN;
 SET LOCAL lock_timeout = '5s';
 SET LOCAL search_path = public, pg_catalog;
@@ -78,7 +74,6 @@ BEGIN
         RAISE EXCEPTION 'Wars 2 and 3 are not the expected unconfirmed duplicate';
     END IF;
 
-    -- Refuse to delete data referenced by tables outside the inspected entity graph.
     SELECT string_agg(format('%s (%I): %s', c.conrelid::regclass, c.conname,
                              pg_get_constraintdef(c.oid)), E'\n' ORDER BY c.conname)
     INTO unexpected_foreign_keys
@@ -165,8 +160,6 @@ BEGIN
     WHERE s.war_id = 2 AND NOT EXISTS (
         SELECT 1 FROM war_attacks t WHERE t.war_id = 3 AND t.attack_order = s.attack_order);
 
-    -- This legacy table can remain after its Java entity was removed. Unique attacks
-    -- retain their IDs; notifications of duplicate attacks must follow the retained ID.
     IF to_regclass('telegram_war_attack_notification') IS NOT NULL THEN
         IF EXISTS (
             SELECT 1 FROM telegram_war_attack_notification n
@@ -188,7 +181,6 @@ BEGIN
             RAISE EXCEPTION 'Duplicate attack notifications have different destinations; inspect them before merging';
         END IF;
 
-        -- Prefer a sent notification over an unsent one; otherwise retain the target.
         DELETE FROM telegram_war_attack_notification tn
         USING war_attacks s, war_attacks t, telegram_war_attack_notification sn
         WHERE s.war_id = 2 AND t.war_id = 3 AND t.attack_order = s.attack_order
@@ -211,7 +203,6 @@ BEGIN
     DELETE FROM war_attacks WHERE war_id = 2;
     DELETE FROM war_participants WHERE war_id = 2;
 
-    -- Retain a sent notification if either duplicate was sent, preventing a resend.
     DELETE FROM telegram_war_notification t USING telegram_war_notification s
     WHERE t.war_id = 3 AND s.war_id = 2 AND t.type = s.type
       AND t.sent_at IS NULL AND s.sent_at IS NOT NULL;

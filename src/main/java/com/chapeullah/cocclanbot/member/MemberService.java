@@ -194,7 +194,6 @@ public class MemberService {
                 continue;
             }
 
-            // leagueTier
             Integer leagueTierId = response.leagueTier() == null ? null
                     : response.leagueTier().id();
             if (!leagueTiersSyncRequired
@@ -203,7 +202,6 @@ public class MemberService {
                 leagueTiersSyncRequired = true;
             }
 
-            // builderBaseLeague
             Integer builderBaseLeagueId = response.builderBaseLeague() == null ? null
                     : response.builderBaseLeague().id();
             if (!builderBaseLeaguesSyncRequired

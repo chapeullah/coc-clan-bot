@@ -98,7 +98,6 @@ public class TelegramBot {
             telegramClient.configureChatCommands(telegramCommandDispatcher.getCommands(), telegramMessage,
                     telegramAccessService.isAdmin(userId));
         } catch (RuntimeException exception) {
-            // Menu configuration must not prevent execution or delivery of a command reply.
             log.warn("Failed to configure Telegram command menu: chatId={}", chatId, exception);
         }
 

@@ -241,22 +241,16 @@ public class ClanService {
 
         Instant now = Instant.now();
 
-        // type
-        // typeChangedAt
         if (!Objects.equals(clan.getType(), response.type())) {
             clan.setType(response.type());
             clan.setTypeChangedAt(now);
         }
 
-        // description
-        // descriptionChangedAt
         if (!Objects.equals(clan.getDescription(), response.description())) {
             clan.setDescription(response.description());
             clan.setDescriptionChangedAt(now);
         }
 
-        // location
-        // locationChangedAt
         Location location = response.location() == null ? null
                 : locationService.getById(response.location().id());
         if (!Objects.equals(clan.getLocation(), location)) {
@@ -264,44 +258,32 @@ public class ClanService {
             clan.setLocationChangedAt(now);
         }
 
-        // clanBadgeUrls
-        // clanBadgeUrlsChangedAt
         ClanBadgeUrls newClanBadgeUrls = toClanBadgeUrls(response.badgeUrls());
         if (!Objects.equals(clan.getClanBadgeUrls(), newClanBadgeUrls)) {
             clan.setClanBadgeUrls(newClanBadgeUrls);
             clan.setClanBadgeUrlsChangedAt(now);
         }
 
-        // clanLevel
-        // clanLevelChangedAt
         if (!Objects.equals(clan.getClanLevel(), response.clanLevel())) {
             clan.setClanLevel(response.clanLevel());
             clan.setClanLevelChangedAt(now);
         }
 
-        // clanPoints
-        // clanPointsChanged
         if (!Objects.equals(clan.getClanPoints(), response.clanPoints())) {
             clan.setClanPoints(response.clanPoints());
             clan.setClanPointsChangedAt(now);
         }
 
-        // clanBuilderBasePoints
-        // clanBuilderBasePointsChangedAt
         if (!Objects.equals(clan.getClanBuilderBasePoints(), response.clanBuilderBasePoints())) {
             clan.setClanBuilderBasePoints(response.clanBuilderBasePoints());
             clan.setClanBuilderBasePointsChangedAt(now);
         }
 
-        // clanCapitalPoints
-        // clanCapitalPointsChangedAt
         if (!Objects.equals(clan.getClanCapitalPoints(), response.clanCapitalPoints())) {
             clan.setClanCapitalPoints(response.clanCapitalPoints());
             clan.setClanCapitalPointsChangedAt(now);
         }
 
-        // capitalLeague
-        // capitalLeagueChangedAt
         CapitalLeague capitalLeague = response.capitalLeague() == null ? null :
                 capitalLeagueService.getById(response.capitalLeague().id());
         if (!Objects.equals(clan.getCapitalLeague(), capitalLeague)) {
@@ -309,57 +291,41 @@ public class ClanService {
             clan.setCapitalLeagueChangedAt(now);
         }
 
-        // requiredTrophies
-        // requiredTrophiesChangedAt
         if (!Objects.equals(clan.getRequiredTrophies(), response.requiredTrophies())) {
             clan.setRequiredTrophies(response.requiredTrophies());
             clan.setRequiredTrophiesChangedAt(now);
         }
 
-        // warFrequency
-        // warFrequencyChangedAt
         if (!Objects.equals(clan.getWarFrequency(), response.warFrequency())) {
             clan.setWarFrequency(response.warFrequency());
             clan.setWarFrequencyChangedAt(now);
         }
 
-        // warWinStreak
-        // warWinStreakChangedAt
         if (!Objects.equals(clan.getWarWinStreak(), response.warWinStreak())) {
             clan.setWarWinStreak(response.warWinStreak());
             clan.setWarWinStreakChangedAt(now);
         }
 
-        // warWins
-        // warWinsChangedAt
         if (!Objects.equals(clan.getWarWins(), response.warWins())) {
             clan.setWarWins(response.warWins());
             clan.setWarWinsChangedAt(now);
         }
 
-        // warTies
-        // warTiesChangedAt
         if (!Objects.equals(clan.getWarTies(), response.warTies())) {
             clan.setWarTies(response.warTies());
             clan.setWarTiesChangedAt(now);
         }
 
-        // warLosses
-        // warLossesChangedAt
         if (!Objects.equals(clan.getWarLosses(), response.warLosses())) {
             clan.setWarLosses(response.warLosses());
             clan.setWarLossesChangedAt(now);
         }
 
-        // isWarLogPublic
-        // isWarLogPublicChangedAt
         if (!Objects.equals(clan.getIsWarLogPublic(), response.isWarLogPublic())) {
             clan.setIsWarLogPublic(response.isWarLogPublic());
             clan.setIsWarLogPublicChangedAt(now);
         }
 
-        // warLeague
-        // warLeagueChangedAt
         WarLeague warLeague = response.warLeague() == null ? null
                 : warLeagueService.getById(response.warLeague().id());
         if (!Objects.equals(clan.getWarLeague(), warLeague)) {
@@ -367,15 +333,11 @@ public class ClanService {
             clan.setWarLeagueChangedAt(now);
         }
 
-        // memberCount
-        // memberCountChangedAt
         if (!Objects.equals(clan.getMemberCount(), response.memberCount())) {
             clan.setMemberCount(response.memberCount());
             clan.setMemberCountChangedAt(now);
         }
 
-        // memberList
-        // memberListChangedAt
         Set<String> memberSetBefore = memberService
                 .getCurrentMembersByClanTag(clan.getTag())
                 .stream()
@@ -390,8 +352,6 @@ public class ClanService {
             clan.setMemberListChangedAt(now);
         }
 
-        // labelLinks
-        // labelLinksChangedAt
         Set<ClanLabelLink> clanLabelLinkSetBefore =
                 new HashSet<>(clanLabelLinkService
                         .getAllByClanTag(clan.getTag()));
@@ -402,8 +362,6 @@ public class ClanService {
             clan.setLabelLinksChangedAt(now);
         }
 
-        // requiredBuilderBaseTrophies
-        // requiredBuilderBaseTrophiesChangedAt
         if (!Objects.equals(
                 clan.getRequiredBuilderBaseTrophies(),
                 response.requiredBuilderBaseTrophies())) {
@@ -412,15 +370,11 @@ public class ClanService {
             clan.setRequiredBuilderBaseTrophiesChangedAt(now);
         }
 
-        // requiredTownHallLevel
-        // requiredTownHallLevelChangedAt
         if (!Objects.equals(clan.getRequiredTownHallLevel(), response.requiredTownHallLevel())) {
             clan.setRequiredTownHallLevel(response.requiredTownHallLevel());
             clan.setRequiredTownHallLevelChangedAt(now);
         }
 
-        // requiredLeagueTier
-        // requiredLeagueTierChangedAt
         LeagueTier requiredLeagueTier = response.requiredLeagueTier() == null ? null
                 : leagueTierService.getById(response.requiredLeagueTier().id());
         if (!Objects.equals(clan.getRequiredLeagueTier(), requiredLeagueTier)) {
@@ -428,8 +382,6 @@ public class ClanService {
             clan.setRequiredLeagueTierChangedAt(now);
         }
 
-        // clanChatLanguage
-        // clanChatLanguageChangedAt
         ClanChatLanguage clanChatLanguage = response.chatLanguage() == null
                 ? null
                 : clanChatLanguageService.getOrCreate(response.chatLanguage());

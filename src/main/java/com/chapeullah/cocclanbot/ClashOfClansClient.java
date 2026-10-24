@@ -12,6 +12,7 @@ import com.chapeullah.cocclanbot.war.dto.WarResponse;
 import com.chapeullah.cocclanbot.warleague.dto.WarLeaguesResponse;
 import com.chapeullah.cocclanbot.war.dto.WarLogResponse;
 import lombok.NonNull;
+import com.chapeullah.cocclanbot.diagnostics.HttpRequestDiagnostics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,7 +42,7 @@ public class ClashOfClansClient {
 
     public PlayerResponse getPlayer(@NonNull String playerTag) {
         log.debug("Fetching player: playerTag=\"{}\"", playerTag);
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getPlayer", () -> rest.get()
                 .uri("/players/{playerTag}", playerTag)
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -56,7 +57,7 @@ public class ClashOfClansClient {
 
     public ClanResponse getClan(@NonNull String clanTag) {
         log.debug("Fetching clan: clanTag=\"{}\"", clanTag);
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getClan", () -> rest.get()
                 .uri("/clans/{clanTag}", clanTag)
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -71,7 +72,7 @@ public class ClashOfClansClient {
 
     public MemberResponses getClanMembers(@NonNull String clanTag) {
         log.debug("Fetching clan members: clanTag=\"{}\"", clanTag);
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getClanMembers", () -> rest.get()
                 .uri("/clans/{clanTag}/members", clanTag)
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -86,7 +87,7 @@ public class ClashOfClansClient {
 
     public WarResponse getCurrentWar(@NonNull String clanTag) {
         log.debug("Fetching current war: clanTag=\"{}\"", clanTag);
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getCurrentWar", () -> rest.get()
                 .uri("/clans/{clanTag}/currentwar", clanTag)
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -101,7 +102,7 @@ public class ClashOfClansClient {
 
     public WarLogResponse getWarLog(@NonNull String clanTag) {
         log.debug("Fetching war log: clanTag=\"{}\"", clanTag);
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getWarLog", () -> rest.get()
                 .uri("/clans/{clanTag}/warlog", clanTag)
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -116,7 +117,7 @@ public class ClashOfClansClient {
 
     public String getCurrentRaid(@NonNull String clanTag) {
         log.debug("Fetching current raid: clanTag=\"{}\"", clanTag);
-        String rawJson = executeWithRetry(() -> rest.get()
+        String rawJson = executeWithRetry("getCurrentRaid", () -> rest.get()
                 .uri("/clans/{clanTag}/capitalraidseasons?limit=1", clanTag)
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -131,7 +132,7 @@ public class ClashOfClansClient {
 
     public LeagueTiersResponse getLeagueTiers() {
         log.debug("Fetching league tiers");
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getLeagueTiers", () -> rest.get()
                 .uri("/leaguetiers")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -146,7 +147,7 @@ public class ClashOfClansClient {
 
     public LocationsResponse getLocations() {
         log.debug("Fetching locations");
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getLocations", () -> rest.get()
                 .uri("/locations")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -161,7 +162,7 @@ public class ClashOfClansClient {
 
     public CapitalLeaguesResponse getCapitalLeagues() {
         log.debug("Fetching capital leagues");
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getCapitalLeagues", () -> rest.get()
                 .uri("/capitalleagues")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -176,7 +177,7 @@ public class ClashOfClansClient {
 
     public WarLeaguesResponse getWarLeagues() {
         log.debug("Fetching war leagues");
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getWarLeagues", () -> rest.get()
                 .uri("/warleagues")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -191,7 +192,7 @@ public class ClashOfClansClient {
 
     public BuilderBaseLeaguesResponse getBuilderBaseLeagues() {
         log.debug("Fetching builder base leagues");
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getBuilderBaseLeagues", () -> rest.get()
                 .uri("/builderbaseleagues")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -206,7 +207,7 @@ public class ClashOfClansClient {
 
     public LabelsResponse getPlayerLabelsResponse() {
         log.debug("Fetching player labels");
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getPlayerLabels", () -> rest.get()
                 .uri("/labels/players")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -221,7 +222,7 @@ public class ClashOfClansClient {
 
     public LabelsResponse getClanLabelsResponse() {
         log.debug("Fetching clan labels");
-        var response = executeWithRetry(() -> rest.get()
+        var response = executeWithRetry("getClanLabels", () -> rest.get()
                 .uri("/labels/clans")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
@@ -234,34 +235,58 @@ public class ClashOfClansClient {
         return response;
     }
 
-    private <T> T executeWithRetry(Supplier<T> request) {
-        for (int retry = 0; ; retry++) {
-            if (Thread.currentThread().isInterrupted()) {
-                throw new CancellationException("HTTP request interrupted");
-            }
-            try {
-                T response = request.get();
+    private <T> T executeWithRetry(String operation, Supplier<T> request) {
+        try (HttpRequestDiagnostics diagnostics = new HttpRequestDiagnostics(operation, MAX_RETRIES + 1)) {
+            for (int retry = 0; ; retry++) {
+                diagnostics.beginAttempt(retry + 1);
                 if (Thread.currentThread().isInterrupted()) {
-                    throw new CancellationException("HTTP request interrupted");
+                    CancellationException exception = new CancellationException("HTTP request interrupted");
+                    diagnostics.failed(exception);
+                    diagnostics.finish();
+                    log.warn("HTTP request cancelled before execution: {}", diagnostics.summary());
+                    throw exception;
                 }
-                return response;
-            } catch (ResourceAccessException e) {
-                if (Thread.currentThread().isInterrupted() || e.contains(InterruptedException.class)) {
-                    Thread.currentThread().interrupt();
-                    throw e;
+                RuntimeException attemptFailure;
+                try {
+                    T response = request.get();
+                    if (Thread.currentThread().isInterrupted()) {
+                        throw new CancellationException("HTTP request interrupted");
+                    }
+                    diagnostics.succeeded();
+                    if (retry > 0) {
+                        log.info("HTTP request recovered after retry: {}", diagnostics.summary());
+                    } else {
+                        log.debug("HTTP request succeeded: {}", diagnostics.summary());
+                    }
+                    return response;
+                } catch (RuntimeException exception) {
+                    attemptFailure = exception;
+                    diagnostics.failed(exception);
+                    boolean interrupted = Thread.currentThread().isInterrupted()
+                            || exception instanceof ResourceAccessException resource
+                            && resource.contains(InterruptedException.class);
+                    boolean retrying = exception instanceof ResourceAccessException && !interrupted && retry < MAX_RETRIES;
+                    if (!retrying) diagnostics.finish();
+                    log.warn("HTTP request failed: {}, retrying={}, retryDelayMs={}",
+                            diagnostics.summary(), retrying, retrying ? DELAY_MS : 0);
+                    if (interrupted) {
+                        Thread.currentThread().interrupt();
+                    }
+                    if (!retrying) {
+                        throw exception;
+                    }
                 }
-
-                if (retry >= MAX_RETRIES) {
-                    throw e;
-                }
-                log.warn("HTTP request failed: retry={}, maxRetries={}, delayMs={}, reason=\"{}\"",
-                        retry + 1, MAX_RETRIES, DELAY_MS, e.getMessage());
-
+                diagnostics.retryDelay();
                 try {
                     Thread.sleep(DELAY_MS);
                 } catch (InterruptedException interrupted) {
                     Thread.currentThread().interrupt();
-                    throw new IllegalStateException("HTTP request retry interrupted", interrupted);
+                    IllegalStateException exception = new IllegalStateException("HTTP request retry interrupted", interrupted);
+                    exception.addSuppressed(attemptFailure);
+                    diagnostics.failed(exception);
+                    diagnostics.finish();
+                    log.warn("HTTP request retry interrupted: {}", diagnostics.summary());
+                    throw exception;
                 }
             }
         }

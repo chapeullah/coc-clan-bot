@@ -105,7 +105,6 @@ public class RaidSeasonClanMemberSnapshotService {
             @NonNull Member member,
             @NonNull String clanType,
             @NonNull Set<String> attackingTags) {
-        // A later departure, return or clan change must not erase an observed opportunity to attack.
         if (attackingTags.contains(member.getTag())
                 || Boolean.TRUE.equals(snapshot.getParticipationOpportunityObserved())) {
             return true;

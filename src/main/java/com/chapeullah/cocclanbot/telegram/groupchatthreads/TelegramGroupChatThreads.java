@@ -15,7 +15,6 @@ public class TelegramGroupChatThreads {
 
     public static final Long SETTING_ID = 1L;
 
-    // Internal marker for General; null means that the main chat has not been configured.
     public static final int GENERAL_THREAD_ID = 0;
 
     @Id

@@ -57,18 +57,21 @@ public class TelegramClient {
     private final Map<Map<String, Object>, Boolean> configuredChatMenus = new HashMap<>();
 
     @Autowired
-    public TelegramClient(@Value("${TELEGRAM_BOT_TOKEN}") String token, JsonMapper jsonMapper,
-                          TelegramOutgoingMessageService telegramOutgoingMessageService) {
+    public TelegramClient(
+            @Value("${TELEGRAM_BOT_TOKEN}") String token, JsonMapper jsonMapper,
+            TelegramOutgoingMessageService telegramOutgoingMessageService) {
         this(createRestClient(token), jsonMapper, telegramOutgoingMessageService);
     }
 
-    TelegramClient(RestClient restClient, JsonMapper jsonMapper,
-                   TelegramOutgoingMessageService telegramOutgoingMessageService) {
+    TelegramClient(
+            RestClient restClient, JsonMapper jsonMapper,
+            TelegramOutgoingMessageService telegramOutgoingMessageService) {
         this(restClient, jsonMapper, telegramOutgoingMessageService, Clock.systemUTC());
     }
 
-    TelegramClient(RestClient restClient, JsonMapper jsonMapper,
-                   TelegramOutgoingMessageService telegramOutgoingMessageService, Clock clock) {
+    TelegramClient(
+            RestClient restClient, JsonMapper jsonMapper,
+            TelegramOutgoingMessageService telegramOutgoingMessageService, Clock clock) {
         this.restClient = restClient;
         this.jsonMapper = jsonMapper;
         this.telegramOutgoingMessageService = telegramOutgoingMessageService;
@@ -218,7 +221,6 @@ public class TelegramClient {
             if (replyParameters.isEmpty() || !isInvalidReply(exception)) {
                 throw exception;
             }
-            // A reply target can be deleted or expire. Preserve the private recipient when retrying.
             log.debug("Telegram reply target is unavailable, sending without it: chatId={}", chatId);
             sendMessagePart(chatId, message.forumThreadId(), receiverUserId, Map.of(), text, context);
         }
@@ -278,8 +280,14 @@ public class TelegramClient {
         });
     }
 
-    private void sendAndRecord(TelegramOutgoingMessageContext context, long chatId, Integer threadId,
-                               boolean ephemeral, Integer ephemeralMessageId, String text, String requestJson) {
+    private void sendAndRecord(
+            TelegramOutgoingMessageContext context,
+            long chatId,
+            Integer threadId,
+            boolean ephemeral,
+            Integer ephemeralMessageId,
+            String text,
+            String requestJson) {
         Long attemptId = telegramOutgoingMessageService.startAttempt(context, chatId, threadId,
                 text, "HTML", ephemeral, ephemeralMessageId, requestJson);
         ResponseEntity<String> response = null;
@@ -295,7 +303,6 @@ public class TelegramClient {
                 telegramOutgoingMessageService.markSent(attemptId, sentMessage, response.getStatusCode().value(),
                         response.getBody(), serializeHeaders(response.getHeaders()));
             } catch (RuntimeException exception) {
-                // Delivery already succeeded. A history failure must not trigger a duplicate send.
                 log.error("Failed to record a sent Telegram message: attemptId={}", attemptId, exception);
             }
         } catch (RestClientResponseException exception) {
@@ -342,8 +349,13 @@ public class TelegramClient {
         return message;
     }
 
-    private void recordFailure(Long attemptId, TelegramOutgoingMessageStatus status, Integer httpStatus,
-                               String rawJson, String headersJson, RuntimeException failure) {
+    private void recordFailure(
+            Long attemptId,
+            TelegramOutgoingMessageStatus status,
+            Integer httpStatus,
+            String rawJson,
+            String headersJson,
+            RuntimeException failure) {
         Throwable cause = failure;
         while (cause.getCause() != null && cause.getCause() != cause) {
             cause = cause.getCause();
@@ -395,7 +407,6 @@ public class TelegramClient {
             JsonNode response = jsonMapper.readTree(exception.getResponseBodyAsString());
             retryAfterSeconds = Math.max(1, response.path("parameters").path("retry_after").asInt(1));
         } catch (RuntimeException ignored) {
-            // Keep a short pause even when Telegram does not return valid retry parameters.
         }
         long now = System.nanoTime();
         long delay = TimeUnit.SECONDS.toNanos(retryAfterSeconds);

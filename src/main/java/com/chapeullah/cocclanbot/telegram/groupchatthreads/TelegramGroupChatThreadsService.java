@@ -75,7 +75,6 @@ public class TelegramGroupChatThreadsService {
         telegramGroupChatThreadsRepository.save(telegramGroupChatThreads);
     }
 
-    // A missing topic ID selects General rather than clearing the setting.
     @Transactional
     public void upsertMainThreadId(Integer mainThreadId) {
         int threadId = mainThreadId == null ? TelegramGroupChatThreads.GENERAL_THREAD_ID : mainThreadId;

@@ -42,9 +42,6 @@ public class WarLogEntry {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    /**
-     * GENERAL
-     */
 
     @Column(name = "result", nullable = true)
     private String result;
@@ -61,9 +58,6 @@ public class WarLogEntry {
     @Column(name = "battle_modifier", nullable = true)
     private String battleModifier;
 
-    /**
-     * CLAN
-     */
 
     @Column(name = "clan_tag", nullable = false)
     private String clanTag;
@@ -107,9 +101,6 @@ public class WarLogEntry {
     @Column(name = "clan_badge_urls_changed_at", nullable = true)
     private Instant clanBadgeUrlsChangedAt;
 
-    /**
-     * OPPONENT
-     */
 
     @Column(name = "opponent_clan_tag", nullable = true)
     private String opponentClanTag;

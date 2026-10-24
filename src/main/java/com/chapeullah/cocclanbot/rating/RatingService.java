@@ -176,7 +176,6 @@ public class RatingService {
 
             ++eligibleRaidSeasonCount;
 
-            // Use the same eligible seasons for the player and the clan baseline, including misses.
             RaidAverages seasonAverages = entry.getValue();
             clanAverageAttackCountSum += seasonAverages.attackCount();
             clanAverageBonusAttackLimitSum += seasonAverages.bonusAttackLimit();
@@ -645,7 +644,6 @@ public class RatingService {
         double coefficient = 1.0;
         Integer attackerTownHallLevel = attack.getAttackerTownHallLevel();
         Integer defenderTownHallLevel = attack.getDefenderTownHallLevel();
-        // Missing historical levels keep the base score; today's player profile is not a substitute.
         if (attackerTownHallLevel != null && attackerTownHallLevel > 0
                 && defenderTownHallLevel != null && defenderTownHallLevel > 0) {
             int difference = defenderTownHallLevel - attackerTownHallLevel;
@@ -657,7 +655,6 @@ public class RatingService {
             }
         }
 
-        // Score each attack before clan normalization; two stars upward must stay below a level triple.
         return (stars + destructionPercentage / 100.0) / 4.0 * coefficient;
     }
 

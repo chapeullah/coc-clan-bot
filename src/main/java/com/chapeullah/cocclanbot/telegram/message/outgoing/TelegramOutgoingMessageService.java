@@ -52,7 +52,6 @@ public class TelegramOutgoingMessageService {
             try {
                 response = jsonMapper.readTree(rawJson);
             } catch (RuntimeException ignored) {
-                // Preserve the original body even if it is not JSON.
             }
         }
         JsonNode parameters = response == null ? null : response.path("parameters");

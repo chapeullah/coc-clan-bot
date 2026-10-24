@@ -207,7 +207,6 @@ public class WarService {
                             ? war.getClanLevel()
                             : entry.getClanLevel(),
 
-                    // В текущей WarLogEntry нет количества атак соперника.
                     war.getOpponentClanAttacks(),
                     entry.getOpponentClanStars(),
                     entry.getOpponentClanDestructionPercentage(),

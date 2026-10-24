@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <property name="LOG_CORRELATION_PATTERN" value="[syncId=%X{syncId:-none} requestId=%X{requestId:-none}] "/>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
@@ -16,7 +17,7 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/coc-clan-bot.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxFileSize>10MB</maxFileSize>
-            <maxHistory>30</maxHistory>
+            <maxHistory>365</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>

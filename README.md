@@ -132,6 +132,41 @@ docker compose logs -f app
 
 Press `Ctrl+C` to stop viewing logs.
 
+HTTP failures include the operation, sanitized endpoint, attempt number, duration,
+configured timeouts, response status and selected response headers, response body
+read progress, error category and exception cause chain. Diagnostic snippets of
+failed response bodies are taken from at most 2 KiB, sanitized and bounded to
+2048 characters (plus a truncation marker); the HTTP response itself is unchanged.
+A successful retry produces an INFO recovery
+entry; ordinary successful HTTP requests are logged at DEBUG.
+
+Use `syncId` to follow one scheduled synchronization and `requestId` to follow all
+attempts of one logical HTTP request. A synchronization deadline records the stage
+and last recorded request when cancellation was triggered, retaining the original cause.
+Body progress counts observed reads; `responseBodyEndObserved=false` can also occur
+on success when the converter reads exactly Content-Length without probing for EOF.
+`HTTP_TIMEOUT` identifies a client timeout; it does not identify which server or
+network component caused the delay. `SYNC_DEADLINE` identifies local cancellation.
+DNS, connection, TLS, response body I/O, HTTP status and response decoding failures
+have separate categories. Suppressed exceptions remain available in the final
+stack trace. With Spring's JDK request factory, a body read timeout can surface as
+an I/O error from a closed stream without a timeout cause; it is reported as
+`RESPONSE_BODY_IO`, without guessing why the stream closed.
+
+For temporary transport diagnostics, set `COC_HTTP_TRANSPORT_LOG=errors,ssl,channel`
+in `.env` and recreate the app container so the JVM receives the setting at startup.
+This enables JDK transport logging for both CoC and Telegram HTTP clients. Leave
+the value empty for normal operation. Request headers and response contents are
+not enabled by this diagnostic preset. JDK events reach Logback through Spring
+Boot's JUL bridge. Their worker threads do not inherit the application's `syncId`
+or `requestId`; use the application HTTP entries for request correlation.
+Application console and file logging mask configured API tokens, Telegram bot
+URLs, Bearer credentials and Authorization values. Message and exception control
+characters are escaped while stack frames retain their line breaks.
+
+Archived application logs are retained for up to 365 days, subject to the 1 GB
+archive limit. The active log rotates at a 10 MB threshold before compression.
+
 **Stop the application**
 
 ```bash
