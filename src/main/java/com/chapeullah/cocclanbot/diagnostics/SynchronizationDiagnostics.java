@@ -6,6 +6,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public final class SynchronizationDiagnostics implements AutoCloseable {
+
     private static final ThreadLocal<SynchronizationDiagnostics> CURRENT = new ThreadLocal<>();
     private final SynchronizationDiagnostics previous;
     private final String previousSyncId;
@@ -138,4 +139,5 @@ public final class SynchronizationDiagnostics implements AutoCloseable {
             MDC.put("syncId", previousSyncId);
         }
     }
+
 }

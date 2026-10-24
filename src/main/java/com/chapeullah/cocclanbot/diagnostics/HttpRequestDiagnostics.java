@@ -172,7 +172,9 @@ public final class HttpRequestDiagnostics implements AutoCloseable {
             try {
                 response.close();
             } catch (RuntimeException | Error closeFailure) {
-                if (closeFailure != failure) failure.addSuppressed(closeFailure);
+                if ((Throwable) closeFailure != failure) {
+                    failure.addSuppressed(closeFailure);
+                }
             }
             throw failure;
         }
