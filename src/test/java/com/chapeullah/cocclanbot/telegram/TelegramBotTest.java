@@ -1,11 +1,14 @@
 package com.chapeullah.cocclanbot.telegram;
 
 import com.chapeullah.cocclanbot.telegram.command.MembersCommand;
+import com.chapeullah.cocclanbot.telegram.command.SetGroupCommand;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramChat;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramReceivedUpdate;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramUpdate;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramUser;
+import com.chapeullah.cocclanbot.telegram.groupchatid.TelegramGroupChatIdService;
+import com.chapeullah.cocclanbot.telegram.groupchatthreads.TelegramGroupChatThreadsService;
 import com.chapeullah.cocclanbot.telegram.message.incoming.TelegramIncomingMessageService;
 import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessageContext;
 import org.junit.jupiter.api.Test;
@@ -13,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -56,8 +60,9 @@ class TelegramBotTest {
     void slashMembersCommandUsesTheExistingCommandPathAndPrivateReply() {
         var client = mock(TelegramClient.class);
         var service = mock(TelegramCommandService.class);
-        var access = mock(TelegramAccessService.class);
-        when(access.canExecute(eq("/members"), any())).thenReturn(true);
+        var group = mock(TelegramGroupChatIdService.class);
+        when(group.getChatId()).thenReturn(Optional.of(-100123L));
+        var access = new TelegramAccessService("7", group, mock(TelegramGroupChatThreadsService.class));
         when(service.getMembersMessage()).thenReturn("Members");
         var dispatcher = new TelegramCommandDispatcher(List.of(new MembersCommand(service)), access);
         var bot = new TelegramBot(client, dispatcher,
@@ -73,6 +78,28 @@ class TelegramBotTest {
         verify(client).sendReplyPart(eq(message), eq("Members"), context.capture());
         verify(service).getMembersMessage();
         assertEquals(message.telegramUser(), context.getValue().receiver());
+    }
+
+    @Test
+    void adminCanSetFirstGroupUsingAddressedEphemeralCommand() {
+        var client = mock(TelegramClient.class);
+        var service = mock(TelegramCommandService.class);
+        var group = mock(TelegramGroupChatIdService.class);
+        when(group.getChatId()).thenReturn(Optional.empty());
+        var access = new TelegramAccessService("42", group, mock(TelegramGroupChatThreadsService.class));
+        var dispatcher = new TelegramCommandDispatcher(List.of(new SetGroupCommand(service)), access);
+        var bot = new TelegramBot(client, dispatcher, mock(TelegramIncomingMessageService.class), access);
+        var message = message("/set_group@gussicoc_bot");
+        when(client.getUsername()).thenReturn("gussicoc_bot");
+        when(client.getUpdates(0)).thenReturn(
+                List.of(new TelegramReceivedUpdate(new TelegramUpdate(123, message), "{}")));
+        when(service.setGroup(-100123L, 42L)).thenReturn("Group configured");
+        when(client.splitMessage("Group configured")).thenReturn(List.of("Group configured"));
+
+        bot.poll();
+
+        verify(service).setGroup(-100123L, 42L);
+        verify(client).sendReplyPart(eq(message), eq("Group configured"), any());
     }
 
     @Test

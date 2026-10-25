@@ -19,10 +19,8 @@ import com.chapeullah.cocclanbot.rating.MemberWarStatistic;
 import com.chapeullah.cocclanbot.rating.MemberRaidStatistic;
 import com.chapeullah.cocclanbot.rating.RatingService;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
-import com.chapeullah.cocclanbot.telegram.dto.TelegramUser;
 import com.chapeullah.cocclanbot.telegram.groupchatid.TelegramGroupChatIdService;
 import com.chapeullah.cocclanbot.telegram.groupchatthreads.TelegramGroupChatThreadsService;
-import com.chapeullah.cocclanbot.telegram.memberlink.MemberTelegramLinkService;
 import com.chapeullah.cocclanbot.war.model.War;
 import com.chapeullah.cocclanbot.war.model.WarAttack;
 import com.chapeullah.cocclanbot.war.model.WarParticipant;
@@ -74,7 +72,6 @@ public class TelegramCommandService {
     private final RatingService ratingService;
     private final ClanService clanService;
     private final PlayerService playerService;
-    private final MemberTelegramLinkService memberTelegramLinkService;
 
     private final TelegramGroupChatThreadsService telegramGroupChatThreadsService;
     private final TelegramGroupChatIdService telegramGroupChatIdService;
@@ -200,67 +197,6 @@ public class TelegramCommandService {
         return "✅ Основной чат сброшен.";
     }
 
-    public String getLinkMemberMessage(String args, TelegramMessage message) {
-        Long userId = message == null || message.telegramUser() == null
-                ? null : message.telegramUser().id();
-        if (!telegramAccessService.isAdmin(userId)) {
-            return ACCESS_DENIED;
-        }
-
-        String tag = normalizeMemberLinkTag(args);
-        if (tag == null) {
-            return "❌ Используй: /link_member #TAG ответом на сообщение участника";
-        }
-        TelegramMessage reply = message.replyToMessage();
-        if (reply == null || reply.telegramUser() == null) {
-            return "❌ Ответь командой /link_member #TAG на сообщение человека, которого нужно привязать";
-        }
-        TelegramUser targetUser = reply.telegramUser();
-        if (targetUser.id() <= 0 || Boolean.TRUE.equals(targetUser.isBot())) {
-            return "❌ Нельзя привязать участника к боту. Ответь на сообщение человека";
-        }
-
-        return switch (memberTelegramLinkService.createMemberTelegramLink(tag, targetUser.id())) {
-            case CREATED -> "✅ Участник <code>%s</code> привязан к Telegram ID <code>%d</code>"
-                    .formatted(tag, targetUser.id());
-            case MEMBER_NOT_FOUND -> MEMBER_NOT_FOUND_TEMPLATE
-                    .formatted(tag);
-            case MEMBER_NOT_IN_CLAN -> "❌ Участник <code>%s</code> больше не состоит в клане"
-                    .formatted(tag);
-            case ALREADY_LINKED -> "❌ Участник <code>%s</code> уже привязан к Telegram. "
-                    .formatted(tag) + "Чтобы изменить привязку, используй /unlink_member " + tag;
-        };
-    }
-
-    public String getUnlinkMemberMessage(String args, TelegramMessage message) {
-        Long userId = message == null || message.telegramUser() == null
-                ? null : message.telegramUser().id();
-        if (!telegramAccessService.isAdmin(userId)) {
-            return ACCESS_DENIED;
-        }
-
-        String tag = normalizeMemberLinkTag(args);
-        if (tag == null) {
-            return "❌ Используй: /unlink_member #TAG";
-        }
-
-        return switch (memberTelegramLinkService.deleteMemberTelegramLink(tag)) {
-            case DELETED -> "✅ Привязка участника <code>%s</code> к Telegram удалена".formatted(tag);
-            case NOT_LINKED -> "❌ У участника <code>%s</code> нет привязки к Telegram".formatted(tag);
-        };
-    }
-
-    private String normalizeMemberLinkTag(String args) {
-        if (args == null || args.isBlank()) {
-            return null;
-        }
-        String tag = args.strip().toUpperCase(Locale.ROOT);
-        if (!tag.startsWith("#")) {
-            tag = "#" + tag;
-        }
-        return tag.matches("#[A-Z0-9]+") ? tag : null;
-    }
-
     public String start(TelegramMessage message) {
         String start = """
             Телеграм-бот клана <a href="https://t.me/gussicoc">GUCCИ</a> (<code>#2C020L9P0</code>) в Clash of Clans.
@@ -269,7 +205,7 @@ public class TelegramCommandService {
             Используй /help, чтобы посмотреть доступные команды.
             """.strip();
         if ("private".equals(message.telegramChat().type())) {
-            start += "\n\n" + getUsageNotice(message);
+            start += "\n\n" + getUsageNotice();
         }
         return start;
     }
@@ -300,8 +236,6 @@ public class TelegramCommandService {
         if (telegramAccessService.isAdmin(userId)) {
             help += "\n\n" + """
                     <b>Команды администратора</b>
-                    /link_member #TAG — Привязать участника к Telegram ответом на его сообщение
-                    /unlink_member #TAG — Удалить привязку участника к Telegram
                     /set_group — Назначить текущую группу группой клана
                     /set_war_thread — Назначить текущую тему для уведомлений
                     /set_main_thread — Назначить текущий чат основным и запретить в нём команды
@@ -311,23 +245,15 @@ public class TelegramCommandService {
                     """.strip();
         }
         if ("private".equals(message.telegramChat().type())) {
-            help += "\n\n" + getUsageNotice(message);
+            help += "\n\n" + getUsageNotice();
         }
         return help;
     }
 
-    private boolean isLimitedPrivateChat(TelegramMessage message) {
-        Long userId = message.telegramUser() == null ? null : message.telegramUser().id();
-        return "private".equals(message.telegramChat().type()) && !telegramAccessService.isAdmin(userId);
-    }
-
-    private String getUsageNotice(TelegramMessage message) {
-        String privacyNotice = "<i>В группе ваши команды и ответы бота видны только вам.</i>";
-        if (isLimitedPrivateChat(message)) {
-            return "В личных сообщениях работают только /start и /help.\n"
-                    + "Остальные команды используй в группе <a href=\"https://t.me/gussicoc\">ГУССИ</a>.\n\n" + privacyNotice;
-        }
-        return privacyNotice;
+    private String getUsageNotice() {
+        return "В личных сообщениях работают только /start и /help.\n"
+                + "Остальные команды используй в группе <a href=\"https://t.me/gussicoc\">ГУССИ</a>.\n\n"
+                + "<i>В группе ваши команды и ответы бота видны только вам.</i>";
     }
 
     public String getMembersMessage() {

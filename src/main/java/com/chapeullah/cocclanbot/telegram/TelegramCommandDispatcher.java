@@ -26,13 +26,12 @@ public class TelegramCommandDispatcher {
 
     public String execute(String commandName, String args, TelegramMessage message) {
         if (!telegramAccessService.canExecute(commandName, message)) {
-            String response = "❌ Бот работает только в группе клана.\n"
-                    + "В личных сообщениях доступны только /start и /help.";
             if (message != null && message.telegramChat() != null
                     && "private".equals(message.telegramChat().type())) {
-                response += "\n\n<i>В группе ваши команды и ответы бота видны только вам.</i>";
+                return "❌ В личных сообщениях доступны только /start и /help.\n"
+                        + "Остальные команды используй в группе клана.";
             }
-            return response;
+            return "❌ Команда доступна только в назначенной группе клана.";
         }
         if (telegramAccessService.isCommandBlockedInMainThread(commandName, message)) {
             return "❌ В этом чате команды бота запрещены. Используйте любой другой чат группы.";

@@ -1,5 +1,9 @@
 package com.chapeullah.cocclanbot.telegram;
 
+import com.chapeullah.cocclanbot.telegram.command.HelpCommand;
+import com.chapeullah.cocclanbot.telegram.command.MembersCommand;
+import com.chapeullah.cocclanbot.telegram.command.SetGroupCommand;
+import com.chapeullah.cocclanbot.telegram.command.StartCommand;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramChat;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramUser;
@@ -8,6 +12,7 @@ import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessa
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.mock.http.client.MockClientHttpRequest;
 import org.springframework.mock.http.client.MockClientHttpResponse;
 import org.springframework.web.client.RestClient;
@@ -50,9 +55,12 @@ class TelegramClientTest {
                     boolean reject = rejectFirstReply && requests.isEmpty();
                     String response = reject
                             ? "{\"ok\":false,\"description\":\"Bad Request: message to be replied not found\"}"
-                            : SENT_MESSAGE;
-                    request.setResponse(new MockClientHttpResponse(response.getBytes(StandardCharsets.UTF_8),
-                            reject ? HttpStatus.BAD_REQUEST : HttpStatus.OK));
+                            : uri.getPath().equals("/setMyCommands")
+                                    ? "{\"ok\":true,\"result\":true}" : SENT_MESSAGE;
+                    var httpResponse = new MockClientHttpResponse(response.getBytes(StandardCharsets.UTF_8),
+                            reject ? HttpStatus.BAD_REQUEST : HttpStatus.OK);
+                    httpResponse.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+                    request.setResponse(httpResponse);
                     requests.add(request);
                     return request;
                 }).build();
@@ -106,6 +114,38 @@ class TelegramClientTest {
         assertFalse(requestBody(0).has("ephemeral_message_parameters"));
         assertFalse(requestBody(0).has("reply_parameters"));
         assertEquals(11, requestBody(0).path("message_thread_id").asInt());
+    }
+
+    @Test
+    void privateAdminMenuContainsOnlyPublicCommands() {
+        var service = mock(TelegramCommandService.class);
+        var source = new TelegramMessage(1, NOW.getEpochSecond(),
+                new TelegramChat(42L, "private", null, null, null, null),
+                new TelegramUser(42L, null, "Admin", null, false), null,
+                "/help", null, null, null, false);
+
+        client.configureChatCommands(List.of(new StartCommand(service), new HelpCommand(service),
+                new MembersCommand(service), new SetGroupCommand(service)), source, true);
+
+        JsonNode body = requestBody(0);
+        assertEquals("chat", body.path("scope").path("type").asText());
+        assertEquals(42L, body.path("scope").path("chat_id").asLong());
+        assertEquals(2, body.path("commands").size());
+        assertEquals("start", body.path("commands").get(0).path("command").asText());
+        assertEquals("help", body.path("commands").get(1).path("command").asText());
+    }
+
+    @Test
+    void groupAdminMenuRetainsAdministrativeCommands() {
+        var service = mock(TelegramCommandService.class);
+
+        client.configureChatCommands(List.of(new MembersCommand(service), new SetGroupCommand(service)),
+                message(11, true), true);
+
+        JsonNode body = requestBody(0);
+        assertEquals("chat_member", body.path("scope").path("type").asText());
+        assertEquals(2, body.path("commands").size());
+        assertEquals("set_group", body.path("commands").get(1).path("command").asText());
     }
 
     private JsonNode requestBody(int index) {

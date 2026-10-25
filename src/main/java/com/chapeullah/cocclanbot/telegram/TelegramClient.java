@@ -167,8 +167,8 @@ public class TelegramClient {
             return;
         }
         List<BotCommand> visibleCommands = commands.stream()
-                .filter(command -> admin || (!command.isAdminOnly()
-                        && (!privateChat || TelegramAccessService.isPublicCommand(command.getName()))))
+                .filter(command -> (!privateChat || TelegramAccessService.isPublicCommand(command.getName()))
+                        && (admin || !command.isAdminOnly()))
                 .toList();
         setCommands(visibleCommands, scope);
         configuredChatMenus.put(scope, admin);
