@@ -32,7 +32,7 @@ public class HttpConfig {
         DiagnosticSanitizer.registerSecret(telegramToken);
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofMillis(HttpRequestDiagnostics.CONNECT_TIMEOUT_MS))
-                .version(HttpClient.Version.HTTP_1_1)
+                //.version(HttpClient.Version.HTTP_1_1)
                 .build();
 
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
