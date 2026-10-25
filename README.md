@@ -5,7 +5,7 @@ This repository contains the source code for a Telegram bot created to process d
 ## Features
 
 - Persistent storage of collected data over time
-- Automatic data synchronization with the Clash of Clans API every minute
+- Automatic data synchronization with the Clash of Clans API every five minutes
 - Cumulative tracking of troops donated and received across seasons
 - Clan membership tracking, including departures and returns
 - Clan War history, including participants, attacks, and results
