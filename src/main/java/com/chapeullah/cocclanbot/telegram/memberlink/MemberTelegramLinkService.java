@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class MemberTelegramLinkService {
@@ -18,6 +20,17 @@ public class MemberTelegramLinkService {
     private final MemberService memberService;
 
     private final MemberTelegramLinkRepository memberTelegramLinkRepository;
+
+    @Transactional(readOnly = true)
+    public boolean hasMemberTelegramLinks(@NonNull Long telegramUserId) {
+        return memberTelegramLinkRepository.existsByTelegramUserId(telegramUserId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MemberTelegramLink> getMemberTelegramLinks(
+            @NonNull Long telegramUserId) {
+        return memberTelegramLinkRepository.findAllByTelegramUserId(telegramUserId);
+    }
 
     @Transactional
     public MemberTelegramLinkCreateResult createMemberTelegramLink(

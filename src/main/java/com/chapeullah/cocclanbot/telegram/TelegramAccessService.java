@@ -3,6 +3,7 @@ package com.chapeullah.cocclanbot.telegram;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import com.chapeullah.cocclanbot.telegram.groupchatid.TelegramGroupChatIdService;
 import com.chapeullah.cocclanbot.telegram.groupchatthreads.TelegramGroupChatThreadsService;
+import com.chapeullah.cocclanbot.telegram.memberlink.MemberTelegramLinkService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
@@ -21,13 +22,16 @@ public class TelegramAccessService {
     private final Set<Long> adminUserIds;
     private final TelegramGroupChatIdService telegramGroupChatIdService;
     private final TelegramGroupChatThreadsService telegramGroupChatThreadsService;
+    private final MemberTelegramLinkService memberTelegramLinkService;
 
     public TelegramAccessService(
             @Value("${TELEGRAM_ADMIN_USER_IDS}") String value,
             TelegramGroupChatIdService telegramGroupChatIdService,
-            TelegramGroupChatThreadsService telegramGroupChatThreadsService) {
+            TelegramGroupChatThreadsService telegramGroupChatThreadsService,
+            MemberTelegramLinkService memberTelegramLinkService) {
         this.telegramGroupChatIdService = telegramGroupChatIdService;
         this.telegramGroupChatThreadsService = telegramGroupChatThreadsService;
+        this.memberTelegramLinkService = memberTelegramLinkService;
         if (value == null || value.isBlank()) {
             throw new IllegalStateException("Required environment variable is missing or blank: " + ENVIRONMENT_VARIABLE);
         }
@@ -59,7 +63,9 @@ public class TelegramAccessService {
         if (message == null || message.telegramChat() == null) {
             return false;
         }
+
         String chatType = message.telegramChat().type();
+
         if (!"group".equals(chatType) && !"supergroup".equals(chatType)) {
             return false;
         }
@@ -78,17 +84,26 @@ public class TelegramAccessService {
         if (message == null || message.telegramChat() == null) {
             return false;
         }
+
         Long userId = message.telegramUser() == null ? null : message.telegramUser().id();
+
+        if (userId == null || !memberTelegramLinkService.hasMemberTelegramLinks(userId)) {
+            return false;
+        }
+
         if (isAdmin(userId)) {
             return true;
         }
+
         String chatType = message.telegramChat().type();
         if ("private".equals(chatType)) {
             return isPublicCommand(commandName);
         }
+
         if (!"group".equals(chatType) && !"supergroup".equals(chatType)) {
             return false;
         }
+
         return telegramGroupChatIdService.getChatId()
                 .filter(chatId -> chatId == message.telegramChat().id())
                 .isPresent();

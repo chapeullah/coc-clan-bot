@@ -44,7 +44,6 @@ public final class DiagnosticSanitizer {
         String masked = TelegramUtils.maskBotToken(text);
         for (String secret : SECRETS.stream().sorted(Comparator.comparingInt(String::length).reversed()).toList()) {
             masked = masked.replace(secret, "<redacted>");
-            // A converter or upstream error may already have truncated a token.
             int from = 0;
             while (secret.length() > 8 && (from = masked.indexOf(secret.substring(0, 8), from)) >= 0) {
                 int length = 8;

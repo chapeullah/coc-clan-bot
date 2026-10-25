@@ -28,7 +28,6 @@ public class TelegramTokenMaskingLayout extends PatternLayout {
         return throwable == null ? null : new SanitizedThrowable(throwable);
     }
 
-    // Sanitize only data, so even a message containing just a newline cannot alter stack formatting.
     private record SanitizedEvent(ILoggingEvent event) implements ILoggingEvent {
         @Override public String getThreadName() { return event.getThreadName(); }
         @Override public Level getLevel() { return event.getLevel(); }
