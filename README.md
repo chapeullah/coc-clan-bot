@@ -26,7 +26,7 @@ This repository contains the source code for a Telegram bot created to process d
 - Lombok
 - Maven
 - Docker Compose
-- CI/CD — GitHub Actions
+- GitHub Actions
 
 ## Telegram Commands
 
