@@ -57,7 +57,7 @@ public class Scheduler {
         }
     }
 
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 * * * * *")
     public void synchronizeClanAndRaids() {
         runWithTimeout("Clan and Raid synchronization", startedAt -> {
             synchronizeClan(startedAt);
@@ -66,7 +66,7 @@ public class Scheduler {
         });
     }
 
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 * * * * *")
     public void synchronizeWars() {
         runWithTimeout("Wars synchronization", startedAt -> {
             finishEndedWars(startedAt);
