@@ -1,4 +1,4 @@
-package com.chapeullah.cocclanbot.telegram;
+package com.chapeullah.cocclanbot;
 
 import java.util.Map;
 
@@ -6,18 +6,18 @@ public final class ClashOfClansTranslations {
 
     private ClashOfClansTranslations() {}
 
-    public static final Map<String, String> CLAN_TYPES_RU = Map.ofEntries(
+    public static final Map<String, String> CLAN_TYPES_RU = Map.<String, String>ofEntries(
             Map.entry("open", "Открытый"),
             Map.entry("inviteOnly", "По приглашению"),
             Map.entry("closed", "Закрытый"));
 
-    public static final Map<String, String> ROLE_NAMES_RU = Map.ofEntries(
+    public static final Map<String, String> ROLE_NAMES_RU = Map.<String, String>ofEntries(
             Map.entry("leader", "Глава"),
             Map.entry("coLeader", "Соруководитель"),
             Map.entry("admin", "Старейшина"),
             Map.entry("member", "Участник"));
 
-    public static final Map<Integer, String> LEAGUE_TIER_NAMES_RU = Map.ofEntries(
+    public static final Map<Integer, String> LEAGUE_TIER_NAMES_RU = Map.<Integer, String>ofEntries(
             Map.entry(105000000, "Без лиги"),
             Map.entry(105000001, "Лига скелетов 1"),
             Map.entry(105000002, "Лига скелетов 2"),
@@ -56,7 +56,7 @@ public final class ClashOfClansTranslations {
             Map.entry(105000035, "Легендарная лига II"),
             Map.entry(105000036, "Легендарная лига I"));
 
-    public static final Map<Integer, String> WAR_LEAGUE_NAMES_RU = Map.ofEntries(
+    public static final Map<Integer, String> WAR_LEAGUE_NAMES_RU = Map.<Integer, String>ofEntries(
             Map.entry(48000000, "Без лиги"),
             Map.entry(48000001, "Бронзовая лига III"),
             Map.entry(48000002, "Бронзовая лига II"),
@@ -81,7 +81,7 @@ public final class ClashOfClansTranslations {
             Map.entry(48000021, "Лига титанов I"),
             Map.entry(48000022, "Легендарная лига"));
 
-    public static final Map<Integer, String> LOCATION_NAMES_RU = Map.ofEntries(
+    public static final Map<Integer, String> LOCATION_NAMES_RU = Map.<Integer, String>ofEntries(
             Map.entry(32000000, "Европа"),
             Map.entry(32000001, "Северная Америка"),
             Map.entry(32000002, "Южная Америка"),
@@ -345,4 +345,5 @@ public final class ClashOfClansTranslations {
             Map.entry(32000260, "Зимбабве"),
             Map.entry(32000266, "Европа"),
             Map.entry(32000267, "Азия"));
+
 }

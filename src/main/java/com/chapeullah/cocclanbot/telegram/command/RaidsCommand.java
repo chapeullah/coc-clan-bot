@@ -1,32 +1,28 @@
 package com.chapeullah.cocclanbot.telegram.command;
 
-import com.chapeullah.cocclanbot.telegram.TelegramCommandService;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class RaidsCommand implements BotCommand {
-
-    private final TelegramCommandService telegramCommandService;
+public final class RaidsCommand implements BotCommand {
 
     private static final String NAME = "/raids";
     private static final String DESCRIPTION = "История рейдов";
+    private static final BotCommandType TYPE = BotCommandType.RAID;
+    private static final boolean ADMIN_ONLY = false;
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+    private final BotCommandMessageService botCommandMessageService;
 
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
-    }
+    @Override public String getName() { return NAME; }
+    @Override public String getDescription() { return DESCRIPTION; }
+    @Override public BotCommandType getType() { return TYPE; }
+    @Override public boolean isAdminOnly() { return ADMIN_ONLY; }
 
     @Override
     public String execute(String args, TelegramMessage message) {
-        return telegramCommandService.getRaidsMessage();
+        return botCommandMessageService.getRaidsMessage();
     }
 
 }

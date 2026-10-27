@@ -19,4 +19,5 @@ public record TelegramMessage(
     public Integer forumThreadId() {
         return Boolean.TRUE.equals(topicMessage) ? threadId : null;
     }
+
 }

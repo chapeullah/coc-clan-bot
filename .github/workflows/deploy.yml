@@ -2,10 +2,6 @@ name: CI/CD to VPS
 run-name: Deploy ${{ github.ref_name }} by @${{ github.actor }}
 
 on:
-  push:
-    branches:
-      - main
-
   workflow_dispatch:
 
 concurrency:

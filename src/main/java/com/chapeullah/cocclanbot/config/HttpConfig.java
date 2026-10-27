@@ -33,10 +33,8 @@ public class HttpConfig {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofMillis(HttpRequestDiagnostics.CONNECT_TIMEOUT_MS))
                 .build();
-
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
         factory.setReadTimeout(Duration.ofMillis(HttpRequestDiagnostics.READ_TIMEOUT_MS));
-
         return withDiagnostics(RestClient.builder()
                 .baseUrl(baseUrl)
                 .requestFactory(factory)).build();

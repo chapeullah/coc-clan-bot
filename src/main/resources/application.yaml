@@ -1,13 +1,23 @@
 coc:
-  base-url: ${COC_API_BASE_URL}
-  api-token: ${COC_API_TOKEN}
+  api:
+    base-url: ${COC_API_BASE_URL}
+    token: ${COC_API_TOKEN}
+    response-timeout-ms: ${COC_API_RESPONSE_TIMEOUT_MS:55000}
   clan-tag: ${COC_CLAN_TAG}
+
+telegram:
+  bot:
+    token: ${TELEGRAM_BOT_TOKEN}
+    poll-delay-ms: ${TELEGRAM_BOT_POLL_DELAY_MS:1000}
+  system-user-id: ${TELEGRAM_SYSTEM_USER_ID:}
+  admin-user-ids: ${TELEGRAM_ADMIN_USER_IDS:}
 
 spring:
   task:
     scheduling:
       pool:
         size: 3
+
   application:
     name: coc-clan-bot
 

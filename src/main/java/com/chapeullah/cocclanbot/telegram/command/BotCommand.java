@@ -5,12 +5,9 @@ import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 public interface BotCommand {
 
     String getName();
-
     String getDescription();
-
-    default boolean isAdminOnly() {
-        return false;
-    }
+    BotCommandType getType();
+    boolean isAdminOnly();
 
     String execute(String args, TelegramMessage message);
 
