@@ -3,6 +3,7 @@ package com.chapeullah.cocclanbot;
 import com.chapeullah.cocclanbot.builderbaseleague.dto.BuilderBaseLeaguesResponse;
 import com.chapeullah.cocclanbot.capitalleague.dto.CapitalLeaguesResponse;
 import com.chapeullah.cocclanbot.clan.dto.ClanResponse;
+import com.chapeullah.cocclanbot.config.properties.CocProperties;
 import com.chapeullah.cocclanbot.label.dto.LabelsResponse;
 import com.chapeullah.cocclanbot.leaguetier.dto.LeagueTiersResponse;
 import com.chapeullah.cocclanbot.location.dto.LocationsResponse;
@@ -13,10 +14,7 @@ import com.chapeullah.cocclanbot.warleague.dto.WarLeaguesResponse;
 import com.chapeullah.cocclanbot.war.dto.WarLogResponse;
 import lombok.NonNull;
 import com.chapeullah.cocclanbot.diagnostics.HttpRequestDiagnostics;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -28,8 +26,6 @@ import java.util.function.Supplier;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
-@DependsOn("environmentVariablesService")
 public class ClashOfClansClient {
 
     private static final int MAX_RETRIES = 2;
@@ -37,8 +33,12 @@ public class ClashOfClansClient {
 
     private final RestClient rest;
 
-    @Value("${coc.api-token}")
-    private String apiToken;
+    private final String apiToken;
+
+    public ClashOfClansClient(RestClient rest, CocProperties cocProperties) {
+        this.rest = rest;
+        this.apiToken = cocProperties.getApiToken();
+    }
 
     public PlayerResponse getPlayer(@NonNull String playerTag) {
         log.debug("Fetching player: playerTag=\"{}\"", playerTag);

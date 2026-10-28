@@ -28,7 +28,7 @@ public class TelegramBot {
     private PendingReply pendingReply;
     private boolean commandsConfigured;
 
-    @Scheduled(fixedDelayString = "${TELEGRAM_BOT_POLL_DELAY_MS:1000}")
+    @Scheduled(fixedDelayString = "${telegram.bot.poll-delay-ms:1000}")
     public void poll() {
         if (telegramClient.isRateLimited()) {
             return;

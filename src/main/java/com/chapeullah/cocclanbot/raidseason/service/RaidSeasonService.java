@@ -9,7 +9,6 @@ import com.chapeullah.cocclanbot.raidseason.repository.RaidSeasonRepository;
 import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.json.JsonMapper;
@@ -21,7 +20,6 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@DependsOn("environmentVariablesService")
 public class RaidSeasonService {
 
     private static final DateTimeFormatter RAID_TIME_FORMAT = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss.SSSX");

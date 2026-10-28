@@ -1,6 +1,7 @@
 package com.chapeullah.cocclanbot.config;
 
 import com.chapeullah.cocclanbot.clan.service.ClanService;
+import com.chapeullah.cocclanbot.config.properties.CocProperties;
 import com.chapeullah.cocclanbot.diagnostics.SynchronizationDiagnostics;
 import com.chapeullah.cocclanbot.clan.model.Clan;
 import com.chapeullah.cocclanbot.raidseason.model.RaidSeason;
@@ -10,10 +11,7 @@ import com.chapeullah.cocclanbot.war.model.War;
 import com.chapeullah.cocclanbot.war.service.WarService;
 import com.chapeullah.cocclanbot.war.service.WarLogService;
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -29,12 +27,9 @@ import java.util.function.LongConsumer;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
-@DependsOn("environmentVariablesService")
 public class Scheduler {
 
-    @Value("${COC_API_RESPONSE_TIMEOUT_MS}")
-    private long cocApiResponseTimeoutMs;
+    private final long cocApiResponseTimeoutMs;
 
     private final ScheduledExecutorService timeoutExecutor = Executors.newSingleThreadScheduledExecutor(
             Thread.ofPlatform().name("synchronization-timeout").daemon(true).factory());
@@ -46,8 +41,23 @@ public class Scheduler {
     private final ClanService clanService;
     private final RaidSeasonService raidSeasonService;
 
-    @Value("${coc.clan-tag}")
-    private String clanTag;
+    private final String clanTag;
+
+    public Scheduler(
+            CocProperties cocProperties,
+            TelegramWarNotificationService telegramWarNotificationService,
+            WarLogService warLogService,
+            WarService warService,
+            ClanService clanService,
+            RaidSeasonService raidSeasonService) {
+        this.cocApiResponseTimeoutMs = cocProperties.getApiResponseTimeoutMs();
+        this.clanTag = cocProperties.getClanTag();
+        this.telegramWarNotificationService = telegramWarNotificationService;
+        this.warLogService = warLogService;
+        this.warService = warService;
+        this.clanService = clanService;
+        this.raidSeasonService = raidSeasonService;
+    }
 
     public void sendTestExceptionNotification() {
         try {

@@ -90,7 +90,7 @@ class BotCommandMessageServiceTest {
 
     @Test
     void emptyRosterDoesNotCalculateRatings() {
-        when(memberService.getAllMembersByClanTag(CLAN_TAG)).thenReturn(List.of());
+        when(memberService.getCurrentMembersByClanTag(CLAN_TAG)).thenReturn(List.of());
 
         assertThat(service.getMembersMessage(CLAN_TAG)).isEqualTo(NO_MEMBERS);
         verifyNoInteractions(ratingService);

@@ -27,20 +27,20 @@ public class CocProperties {
 
     public void setApiToken(String apiToken) {
         if (apiToken == null) {
-            throw new IllegalArgumentException("coc.api-token must not be null");
+            throw new IllegalArgumentException("coc.api.token must not be null");
         }
         if (apiToken.isBlank()) {
-            throw new IllegalArgumentException("coc.api-token must not be blank");
+            throw new IllegalArgumentException("coc.api.token must not be blank");
         }
         this.apiToken = apiToken;
     }
 
     public void setApiResponseTimeoutMs(Long apiResponseTimeoutMs) {
         if (apiResponseTimeoutMs == null) {
-            throw new IllegalArgumentException("coc.api-response-timeout-ms must not be null");
+            throw new IllegalArgumentException("coc.api.response-timeout-ms must not be null");
         }
         if (apiResponseTimeoutMs <= 0) {
-            throw new IllegalArgumentException("coc.api-response-timeout-ms must be positive");
+            throw new IllegalArgumentException("coc.api.response-timeout-ms must be positive");
         }
         this.apiResponseTimeoutMs = apiResponseTimeoutMs;
     }

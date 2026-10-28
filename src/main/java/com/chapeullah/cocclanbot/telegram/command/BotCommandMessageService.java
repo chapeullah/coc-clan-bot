@@ -28,7 +28,6 @@ import com.chapeullah.cocclanbot.war.service.WarService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,7 +45,6 @@ import static com.chapeullah.cocclanbot.telegram.command.BotMessages.*;
 
 @Service
 @RequiredArgsConstructor
-@DependsOn("environmentVariablesService")
 public class BotCommandMessageService {
 
     private final ClanService clanService;
@@ -125,7 +123,7 @@ public class BotCommandMessageService {
 
     @Transactional(readOnly = true)
     public String getMembersMessage(@NonNull String clanTag) {
-        List<Member> members = memberService.getAllMembersByClanTag(clanTag);
+        List<Member> members = memberService.getCurrentMembersByClanTag(clanTag);
         if (members.isEmpty()) {
             return NO_MEMBERS;
         }

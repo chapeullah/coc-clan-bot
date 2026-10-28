@@ -56,6 +56,9 @@ public class TelegramProperties {
         if (systemUserId == null) {
             throw new IllegalArgumentException("telegram.system-user-id must not be null");
         }
+        if (systemUserId <= 0) {
+            throw new IllegalArgumentException("telegram.system-user-id must be positive");
+        }
         this.systemUserId = Optional.of(systemUserId);
     }
 
@@ -66,6 +69,9 @@ public class TelegramProperties {
         if (adminUserIds.isEmpty()) {
             this.adminUserIds = List.of();
             return;
+        }
+        if (adminUserIds.stream().anyMatch(id -> id == null || id <= 0)) {
+            throw new IllegalArgumentException("telegram.admin-user-ids must contain only positive user IDs");
         }
         this.adminUserIds = List.copyOf(adminUserIds);
     }

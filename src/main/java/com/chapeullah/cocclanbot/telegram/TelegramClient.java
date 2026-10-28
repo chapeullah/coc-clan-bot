@@ -1,5 +1,6 @@
 package com.chapeullah.cocclanbot.telegram;
 
+import com.chapeullah.cocclanbot.config.properties.TelegramProperties;
 import com.chapeullah.cocclanbot.telegram.command.BotCommand;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramApiResponse;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
@@ -11,8 +12,6 @@ import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessa
 import com.chapeullah.cocclanbot.telegram.message.outgoing.TelegramOutgoingMessageStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpHeaders;
@@ -41,7 +40,6 @@ import java.util.function.Supplier;
 
 @Slf4j
 @Component
-@DependsOn("environmentVariablesService")
 public class TelegramClient {
 
     private static final int MESSAGE_LENGTH_LIMIT = 4000;
@@ -58,9 +56,9 @@ public class TelegramClient {
 
     @Autowired
     public TelegramClient(
-            @Value("${TELEGRAM_BOT_TOKEN}") String token, JsonMapper jsonMapper,
+            TelegramProperties telegramProperties, JsonMapper jsonMapper,
             TelegramOutgoingMessageService telegramOutgoingMessageService) {
-        this(createRestClient(token), jsonMapper, telegramOutgoingMessageService);
+        this(createRestClient(telegramProperties.getBotToken()), jsonMapper, telegramOutgoingMessageService);
     }
 
     TelegramClient(

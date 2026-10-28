@@ -31,7 +31,6 @@ class BotCommandWiringTest {
     @Test
     void allCommandBeansStartWithoutCircularDependenciesAndHelpFiltersAdministratorCommands() {
         try (var context = new AnnotationConfigApplicationContext()) {
-            context.registerBean("environmentVariablesService", Object.class, Object::new);
             for (Class<?> type : List.of(
                     ClanService.class, MemberService.class, WarService.class,
                     WarParticipantService.class, WarAttackService.class,

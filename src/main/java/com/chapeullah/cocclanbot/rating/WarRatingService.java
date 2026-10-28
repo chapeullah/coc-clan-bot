@@ -8,8 +8,6 @@ import com.chapeullah.cocclanbot.war.model.WarParticipant;
 import com.chapeullah.cocclanbot.war.service.WarService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +17,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@DependsOn("environmentVariablesService")
 public class WarRatingService {
 
     private static final int WAR_LIMIT = 16;

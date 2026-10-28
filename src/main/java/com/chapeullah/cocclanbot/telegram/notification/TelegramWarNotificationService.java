@@ -1,5 +1,6 @@
 package com.chapeullah.cocclanbot.telegram.notification;
 
+import com.chapeullah.cocclanbot.config.properties.TelegramProperties;
 import com.chapeullah.cocclanbot.telegram.groupchatid.TelegramGroupChatIdService;
 import com.chapeullah.cocclanbot.telegram.TelegramClient;
 import com.chapeullah.cocclanbot.telegram.TelegramUtils;
@@ -10,8 +11,6 @@ import com.chapeullah.cocclanbot.war.model.War;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -23,10 +22,10 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@DependsOn("environmentVariablesService")
 public class TelegramWarNotificationService {
 
     private final TelegramClient telegramClient;
+    private final TelegramProperties telegramProperties;
 
     private final TelegramWarNotificationRepository telegramWarNotificationRepository;
 
@@ -34,15 +33,16 @@ public class TelegramWarNotificationService {
     private final TelegramGroupChatThreadsService telegramGroupChatThreadsService;
     private final TelegramOutgoingMessageService telegramOutgoingMessageService;
 
-    @Value("${TELEGRAM_SYSTEM_USER_ID}")
-    private long systemUserId;
-
     private static final Map<TelegramWarNotificationType, String> WAR_NOTIFICATION_TYPES = Map.of(
             TelegramWarNotificationType.PREPARATION, "⏳ Подготовка к войне",
             TelegramWarNotificationType.FIRST_ATTACK, "⚔️ Война началась",
             TelegramWarNotificationType.SECOND_ATTACK, "🔔 Напоминание о второй атаке");
 
     public void sendError(String operation, Exception exception) {
+        Long systemUserId = telegramProperties.getSystemUserId().orElse(null);
+        if (systemUserId == null) {
+            return;
+        }
         try {
             telegramClient.sendMessage(systemUserId, null,
                     TelegramUtils.escapeHtml(TelegramUtils.maskBotToken("❌ ERROR: " + operation + "\n\n" + exception)),

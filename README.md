@@ -5,7 +5,7 @@ This repository contains the source code for a Telegram bot created to process d
 ## Features
 
 - Persistent storage of collected data over time
-- Automatic data synchronization with the Clash of Clans API every minute
+- Automatic data synchronization with the Clash of Clans API every five minutes
 - Cumulative tracking of troops donated and received across seasons
 - Clan membership tracking, including departures and returns
 - Clan War history, including participants, attacks, and results
@@ -37,14 +37,13 @@ This repository contains the source code for a Telegram bot created to process d
 | `/clan` | Clan information                                                 | No |
 | `/members` | Current clan members                                             | No |
 | `/member <#TAG>` | Detailed clan member profile                                     | No |
-| `/player <#TAG>` | Detailed player profile                                          | No |
 | `/war` | Current Clan War                                                 | No |
 | `/wars` | Clan War history                                                 | No |
 | `/raid` | Latest raid season                                               | No |
 | `/raids` | Raid season history                                              | No |
 | `/raid_missed` | Members who made no raid attacks                                 | No |
 | `/rating` | Overall member ratings                                           | No |
-| `/rating_cw` | Clan War ratings and statistics                                  | No |
+| `/rating_wars` | Clan War ratings and statistics                                  | No |
 | `/rating_raids` | Raid ratings and statistics                                      | No |
 | `/set_group` | Set the current group as the clan group                          | Yes |
 | `/set_war_thread` | Set the current topic for Clan War notifications                 | Yes |
@@ -62,10 +61,10 @@ Copy `.env.example` to `.env` in the project root and replace the example values
 | `COC_API_BASE_URL` | Clash of Clans API base URL | Yes |
 | `COC_API_TOKEN` | Clash of Clans API token | Yes |
 | `COC_CLAN_TAG` | Clan tag to monitor | Yes |
-| `COC_API_RESPONSE_TIMEOUT_MS` | Synchronization time limit in milliseconds | Yes |
+| `COC_API_RESPONSE_TIMEOUT_MS` | Synchronization time limit in milliseconds; defaults to 55000 | No |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token | Yes |
-| `TELEGRAM_SYSTEM_USER_ID` | Positive Telegram user ID for system notifications in a private chat | Yes |
-| `TELEGRAM_ADMIN_USER_IDS` | Comma-separated administrator user IDs | Yes |
+| `TELEGRAM_SYSTEM_USER_ID` | Positive Telegram user ID for system error notifications; leave empty to disable them | No |
+| `TELEGRAM_ADMIN_USER_IDS` | Comma-separated positive administrator user IDs; leave empty to disable admin commands | No |
 | `TELEGRAM_BOT_POLL_DELAY_MS` | Polling delay in milliseconds; defaults to 1000 | No |
 
 For `TELEGRAM_SYSTEM_USER_ID`, enter the numeric user ID of the system notification recipient. The recipient should start a private chat with the bot by sending `/start` before receiving notifications.
@@ -130,4 +129,4 @@ docker compose start
 
 ## CI/CD
 
-The repository includes a GitHub Actions workflow that deploys the application to a VPS on pushes to `main` or through a manual workflow run.
+The repository includes a GitHub Actions workflow that deploys the application to a VPS through a manual workflow run (`workflow_dispatch`).
