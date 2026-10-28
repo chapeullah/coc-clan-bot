@@ -22,7 +22,7 @@ public class ResetGroupCommand implements BotCommand {
 
     @Override
     public String execute(String args, TelegramMessage message) {
-        Long userId = message.telegramUser() == null ? null : message.telegramUser().id();
-        return botCommandMessageService.resetGroup(message.telegramChat().id(), userId);
+        return botCommandMessageService.getResetGroupMessage(message);
     }
+
 }

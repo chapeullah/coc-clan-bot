@@ -22,7 +22,7 @@ public class ResetMainThreadCommand implements BotCommand {
 
     @Override
     public String execute(String args, TelegramMessage message) {
-        Long userId = message.telegramUser() == null ? null : message.telegramUser().id();
-        return botCommandMessageService.resetMainThread(message.telegramChat().id(), userId);
+        return botCommandMessageService.getResetMainThreadMessage(message);
     }
+
 }

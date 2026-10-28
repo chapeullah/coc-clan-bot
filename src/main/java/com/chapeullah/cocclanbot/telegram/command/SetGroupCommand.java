@@ -22,7 +22,7 @@ public class SetGroupCommand implements BotCommand {
 
     @Override
     public String execute(String args, TelegramMessage message) {
-        Long userId = message.telegramUser() == null ? null : message.telegramUser().id();
-        return botCommandMessageService.getSetGroupMessage(message.telegramChat().id(), userId);
+        return botCommandMessageService.getSetGroupMessage(message);
     }
+
 }

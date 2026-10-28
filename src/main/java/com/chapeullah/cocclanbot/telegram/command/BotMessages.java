@@ -2,8 +2,10 @@ package com.chapeullah.cocclanbot.telegram.command;
 
 import com.chapeullah.cocclanbot.leaguetier.LeagueTier;
 import com.chapeullah.cocclanbot.location.Location;
+import com.chapeullah.cocclanbot.raidseason.model.RaidSeason;
 import com.chapeullah.cocclanbot.raidseason.model.RaidSeasonClanMemberSnapshot;
 import com.chapeullah.cocclanbot.telegram.TelegramUtils;
+import com.chapeullah.cocclanbot.war.model.War;
 import com.chapeullah.cocclanbot.warleague.WarLeague;
 import lombok.NonNull;
 
@@ -30,6 +32,29 @@ public final class BotMessages {
     public static final String NO_DATA = "Нет данных";
     public static final String DATA_PENDING = "Уточняется";
     public static final String IN_PROGRESS = "Идёт";
+    public static final String NO_MEMBERS = "Список участников клана пуст";
+    public static final String NO_RAID_SEASONS = "Сезоны рейдов ещё не сохранены";
+    public static final String NO_ACTIVE_WAR = "Сейчас активной войны нет";
+    public static final String NO_COMPLETED_WARS = "Завершённые войны не найдены";
+    public static final String WAR_VICTORY = "Победа";
+    public static final String WAR_DEFEAT = "Поражение";
+    public static final String WAR_DRAW = "Ничья";
+    public static final String WAR_NOT_STARTED = ERROR_EMOJI + SPACE + "Война ещё не началась.";
+    public static final String ALL_ATTACKS_USED = "Все участники использовали свои атаки.";
+
+    public static final String ACCESS_DENIED = ERROR_EMOJI + SPACE + "Нет доступа";
+    public static final String GROUP_NOT_SET = ERROR_EMOJI + SPACE + "Группа не задана: /set_group";
+    public static final String WRONG_GROUP = ERROR_EMOJI + SPACE + "Команда доступна только в заданной группе.";
+    public static final String INVALID_THREAD = ERROR_EMOJI + SPACE + "Отправь команду внутри правильной темы.";
+    public static final String SET_GROUP_PRIVATE_CHAT = ERROR_EMOJI + SPACE + "Вызови команду в нужной группе";
+    public static final String GROUP_SET = SUCCESS_EMOJI + SPACE + "Эта группа назначена группой клана";
+    public static final String GROUP_RESET = SUCCESS_EMOJI + SPACE + "Группа клана и настройки тем сброшены";
+    public static final String WAR_THREAD_SET = SUCCESS_EMOJI + SPACE + "Этот чат назначен для уведомлений о КВ.";
+    public static final String WAR_THREAD_NOT_SET = ERROR_EMOJI + SPACE + "Тема уведомлений о КВ не задана";
+    public static final String WAR_THREAD_RESET = SUCCESS_EMOJI + SPACE + "Тема уведомлений о КВ сброшена.";
+    public static final String MAIN_THREAD_SET = SUCCESS_EMOJI + SPACE + "Этот чат назначен основным.";
+    public static final String MAIN_THREAD_NOT_SET = ERROR_EMOJI + SPACE + "Основной чат не задан";
+    public static final String MAIN_THREAD_RESET = SUCCESS_EMOJI + SPACE + "Основной чат сброшен.";
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter
             .ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.of("Europe/Moscow"));
@@ -40,9 +65,11 @@ public final class BotMessages {
             
             <i>В группе команды и ответы бота видны только Вам.</i>""";
 
-    public static final String MEMBER_TAG_REQUIRED = "Не указан тег участника.\nФормат команды: /member #TAG";
-    public static final String INVALID_MEMBER_TAG_FORMAT = "Некорректный формат тега участника.\nФормат тега: #ABC123";
-    public static final String MEMBER_NOT_FOUND = "Участник не найден";
+    public static final String MEMBER_TAG_REQUIRED =
+            ERROR_EMOJI + SPACE + "Не указан тег участника.\nФормат команды: /member #TAG";
+    public static final String INVALID_MEMBER_TAG_FORMAT =
+            ERROR_EMOJI + SPACE + "Некорректный формат тега участника.\nФормат тега: #ABC123";
+    public static final String MEMBER_NOT_FOUND = ERROR_EMOJI + SPACE + "Участник не найден";
 
     public static final String RAID_NOT_FOUND =
             ERROR_EMOJI + SPACE + "Рейды не найдены.";
@@ -50,6 +77,12 @@ public final class BotMessages {
             ERROR_EMOJI + SPACE + "Данные об атаках рейда неполные или несогласованные.";
     public static final String RAID_SNAPSHOT_NOT_FOUND =
             ERROR_EMOJI + SPACE + "Снимок состава клана для этого сезона рейдов не найден.";
+
+    private static final String START_MESSAGE = """
+            Телеграм-бот клана <a href="https://t.me/gussicoc">GUCCИ</a> (<code>#2C020L9P0</code>) в Clash of Clans.
+            Не работает с другими кланами.
+
+            Используй /help, чтобы посмотреть доступные команды.""";
 
     private static String valueOrNoData(Object value) {
         return value == null ? NO_DATA : value.toString();
@@ -309,6 +342,163 @@ public final class BotMessages {
             case "ended" -> "Завершён";
             default -> state;
         };
+    }
+
+    public static String formatStartMessage(boolean isPrivateChat) {
+        return isPrivateChat ? START_MESSAGE + "\n\n" + USAGE_NOTICE : START_MESSAGE;
+    }
+
+    public static String formatRatingListItem(int number, @NonNull String memberName, Double rating) {
+        String name = TelegramUtils.escapeHtml(
+                TelegramUtils.replaceEmojisWithSquares(memberName)
+                        .replaceAll("(?U)\\s+", " ")
+                        .strip());
+        String ratingText = rating == null ? NO_DATA : String.format(Locale.ROOT, "%.2f", rating);
+        return "<b>%02d. %s</b> — %s".formatted(number, name, ratingText);
+    }
+
+    public static String formatWarRatingListItem(
+            int number,
+            @NonNull String memberName,
+            Double rating,
+            Double averageStars,
+            Double averageDestruction,
+            Double averageAttackCount) {
+        String line = formatRatingListItem(number, memberName, rating);
+        if (rating == null) {
+            return line;
+        }
+        String details = averageAttackCount == null
+                ? NO_DATA
+                : "%s | %s | АТ %s".formatted(
+                        formatStatisticValue(averageStars, "%.2f★"),
+                        formatStatisticValue(averageDestruction, "%.1f%%"),
+                        formatStatisticValue(averageAttackCount, "%.2f"));
+        return line + " | " + details;
+    }
+
+    public static String formatRaidRatingListItem(
+            int number,
+            @NonNull String memberName,
+            Double rating,
+            Double averageLootPerAttack,
+            Double averageAttacksPerSeason) {
+        String line = formatRatingListItem(number, memberName, rating);
+        if (rating == null) {
+            return line;
+        }
+        String details = averageLootPerAttack == null
+                ? NO_DATA
+                : "%s | АТ %s".formatted(
+                        formatStatisticValue(averageLootPerAttack, "%.0f/ат."),
+                        formatStatisticValue(averageAttacksPerSeason, "%.2f"));
+        return line + " | " + details;
+    }
+
+    private static String formatStatisticValue(Double value, String format) {
+        return value == null ? "-" : String.format(Locale.ROOT, format, value);
+    }
+
+    public static String formatRatingMessage(@NonNull List<String> lines) {
+        return ("<b>Рейтинг участников</b>\n\n" + String.join("\n", lines)).strip();
+    }
+
+    public static String formatWarRatingMessage(@NonNull List<String> lines) {
+        return ("""
+                <b>Рейтинг КВ</b>
+                Средние значения за атаку в КВ.
+                АТ — атаки.
+
+                """ + String.join("\n", lines)).strip();
+    }
+
+    public static String formatRaidRatingMessage(@NonNull List<String> lines) {
+        return ("""
+                <b>Рейтинг рейдов</b>
+                Средние значения за атаку в рейде.
+                АТ — атаки.
+
+                """ + String.join("\n", lines)).strip();
+    }
+
+    public static String formatCurrentWarMessage(@NonNull War war, int maximumAttacks) {
+        boolean preparation = "preparation".equals(war.getState());
+        return """
+                <b>Текущая война</b>
+
+                <b>%s</b> — <b>%s</b>
+                Статус: %s
+                Размер: %d на %d
+
+                Звёзды: %d — %d
+                Разрушение: %.2f%% — %.2f%%
+                Наши атаки: %d из %d
+                Атаки соперника: %d из %d
+
+                %s: %s (МСК)
+                """.formatted(
+                TelegramUtils.escapeHtml(war.getClanName()),
+                TelegramUtils.escapeHtml(war.getOpponentClanName()),
+                preparation ? "Подготовка" : IN_PROGRESS,
+                war.getTeamSize(), war.getTeamSize(),
+                war.getClanStars(), war.getOpponentClanStars(),
+                war.getClanDestructionPercentage(), war.getOpponentClanDestructionPercentage(),
+                war.getClanAttacks(), maximumAttacks,
+                war.getOpponentClanAttacks(), maximumAttacks,
+                preparation ? "Начало" : "Окончание",
+                DATE_TIME_FORMATTER.format(preparation ? war.getStartTime() : war.getEndTime())).strip();
+    }
+
+    public static String formatWarHistoryItem(@NonNull War war, @NonNull String result) {
+        return """
+                <b>%s</b> — <b>%s</b>
+                Результат: %s
+                Звёзды: %d — %d
+                Разрушение: %.2f%% — %.2f%%
+                Завершена: %s (МСК)
+                """.formatted(
+                TelegramUtils.escapeHtml(war.getClanName()),
+                TelegramUtils.escapeHtml(war.getOpponentClanName()),
+                result,
+                war.getClanStars(), war.getOpponentClanStars(),
+                war.getClanDestructionPercentage(), war.getOpponentClanDestructionPercentage(),
+                DATE_TIME_FORMATTER.format(war.getEndTime())).strip();
+    }
+
+    public static String formatWarsMessage(@NonNull List<String> lines) {
+        return ("<b>История войн</b>\n\n" + String.join("\n\n", lines)).strip();
+    }
+
+    public static String formatRaidsMessage(@NonNull List<RaidSeason> raidSeasons) {
+        StringBuilder message = new StringBuilder("<b>История рейдов</b>\n\n");
+        for (RaidSeason season : raidSeasons) {
+            message.append("""
+                    <b>%s</b> (МСК)
+                    Статус: %s
+                    Столичное золото: %s
+                    Атаки: %s
+                    Завершено рейдов: %s
+                    Уничтожено районов: %s
+
+                    """.formatted(
+                    formatRaidPeriod(season.getStartTime(), season.getEndTime()),
+                    TelegramUtils.escapeHtml(formatRaidState(season.getState())),
+                    valueOrNoData(season.getCapitalTotalLoot()),
+                    valueOrNoData(season.getTotalAttacks()),
+                    valueOrNoData(season.getRaidsCompleted()),
+                    valueOrNoData(season.getEnemyDistrictsDestroyed())));
+        }
+        return message.toString().strip();
+    }
+
+    public static String formatUnusedAttackListItem(
+            Integer mapPosition, @NonNull String playerName, int remaining, int attacksPerMember) {
+        return "%s. %s — %s из %s".formatted(
+                mapPosition, TelegramUtils.escapeHtml(playerName), remaining, attacksPerMember);
+    }
+
+    public static String formatUnusedAttacksMessage(@NonNull List<String> lines) {
+        return "<b>Неиспользованные атаки</b>\n\n" + String.join("\n", lines);
     }
 
     public static String formatHelpMessage(

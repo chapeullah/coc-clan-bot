@@ -22,11 +22,7 @@ public class SetMainThreadCommand implements BotCommand {
 
     @Override
     public String execute(String args, TelegramMessage message) {
-        Long userId = message.telegramUser() == null ? null : message.telegramUser().id();
-        return botCommandMessageService.setMainThread(
-                message.telegramChat().id(),
-                userId,
-                message.forumThreadId());
+        return botCommandMessageService.getSetMainThreadMessage(message);
     }
 
 }

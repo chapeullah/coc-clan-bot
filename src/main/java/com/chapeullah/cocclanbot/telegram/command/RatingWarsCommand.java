@@ -1,7 +1,6 @@
 package com.chapeullah.cocclanbot.telegram.command;
 
 import com.chapeullah.cocclanbot.config.properties.CocProperties;
-import com.chapeullah.cocclanbot.rating.WarRatingService;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -16,7 +15,6 @@ public class RatingWarsCommand implements BotCommand {
     private static final boolean ADMIN_ONLY = false;
 
     private final BotCommandMessageService botCommandMessageService;
-    private final WarRatingService warRatingService;
 
     private final CocProperties cocProperties;
 
@@ -27,8 +25,7 @@ public class RatingWarsCommand implements BotCommand {
 
     @Override
     public String execute(String args, TelegramMessage message) {
-        var statistics = warRatingService.getMemberWarStatistics(cocProperties.getClanTag());
-        return botCommandMessageService.getWarRatingMessage(statistics);
+        return botCommandMessageService.getWarRatingMessage(cocProperties.getClanTag());
     }
 
 }

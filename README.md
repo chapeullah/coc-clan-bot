@@ -30,28 +30,28 @@ This repository contains the source code for a Telegram bot created to process d
 
 ## Telegram Commands
 
-| Command | Description | Admin only |
-| --- | --- | --- |
-| `/start` | Introduction and usage information | No |
-| `/help` | List available commands | No |
-| `/clan` | Clan information | No |
-| `/members` | Current clan roster | No |
-| `/member <#TAG>` | Detailed clan member profile | No |
-| `/player <#TAG>` | Detailed player profile | No |
-| `/war` | Current Clan War | No |
-| `/wars` | Clan War history | No |
-| `/raid` | Latest raid season | No |
-| `/raids` | Raid season history | No |
-| `/raid_missed` | Members who made no raid attacks | No |
-| `/rating` | Overall member ratings | No |
-| `/rating_cw` | Clan War ratings and statistics | No |
-| `/rating_raids` | Raid ratings and statistics | No |
-| `/set_group` | Set the current group as the clan group | Yes |
-| `/set_war_thread` | Set the current topic for Clan War notifications | Yes |
+| Command | Description                                                      | Admin only |
+| --- |------------------------------------------------------------------| --- |
+| `/start` | Introduction and usage information                               | No |
+| `/help` | List available commands                                          | No |
+| `/clan` | Clan information                                                 | No |
+| `/members` | Current clan members                                             | No |
+| `/member <#TAG>` | Detailed clan member profile                                     | No |
+| `/player <#TAG>` | Detailed player profile                                          | No |
+| `/war` | Current Clan War                                                 | No |
+| `/wars` | Clan War history                                                 | No |
+| `/raid` | Latest raid season                                               | No |
+| `/raids` | Raid season history                                              | No |
+| `/raid_missed` | Members who made no raid attacks                                 | No |
+| `/rating` | Overall member ratings                                           | No |
+| `/rating_cw` | Clan War ratings and statistics                                  | No |
+| `/rating_raids` | Raid ratings and statistics                                      | No |
+| `/set_group` | Set the current group as the clan group                          | Yes |
+| `/set_war_thread` | Set the current topic for Clan War notifications                 | Yes |
 | `/set_main_thread` | Set the current chat as the main chat and disable commands there | Yes |
-| `/reset_group` | Clear the clan group and all topic settings | Yes |
-| `/reset_war_thread` | Clear the Clan War notification topic | Yes |
-| `/reset_main_thread` | Clear the main chat and allow commands there again | Yes |
+| `/reset_group` | Clear the clan group and all topic settings                      | Yes |
+| `/reset_war_thread` | Clear the Clan War notification topic                            | Yes |
+| `/reset_main_thread` | Clear the main chat and allow commands there again               | Yes |
 
 ## Environment Variables
 
@@ -98,15 +98,6 @@ docker compose up -d --build
 
 **5. Configure the Telegram group**
 
-Add the bot to your group and grant it administrator rights so private command
-replies in the group can still be delivered when the original reply target has
-expired or been deleted. Administrative commands are excluded from shared menus.
-A personal menu is refreshed when a user sends a command: configured bot
-administrators receive administrative commands, while other users receive only
-the commands available to them. Private chats allow only `/start` and `/help`,
-including for administrators. Clan commands are available only in the configured
-group; administrators can use `/set_group` in a group to configure it.
-
 Using an account listed in `TELEGRAM_ADMIN_USER_IDS`:
 
 - Send `/set_group` in the group.
@@ -124,41 +115,6 @@ docker compose logs -f app
 ```
 
 Press `Ctrl+C` to stop viewing logs.
-
-HTTP failures include the operation, sanitized endpoint, attempt number, duration,
-configured timeouts, response status and selected response headers, response body
-read progress, error category and exception cause chain. Diagnostic snippets of
-failed response bodies are taken from at most 2 KiB, sanitized and bounded to
-2048 characters (plus a truncation marker); the HTTP response itself is unchanged.
-A successful retry produces an INFO recovery
-entry; ordinary successful HTTP requests are logged at DEBUG.
-
-Use `syncId` to follow one scheduled synchronization and `requestId` to follow all
-attempts of one logical HTTP request. A synchronization deadline records the stage
-and last recorded request when cancellation was triggered, retaining the original cause.
-Body progress counts observed reads; `responseBodyEndObserved=false` can also occur
-on success when the converter reads exactly Content-Length without probing for EOF.
-`HTTP_TIMEOUT` identifies a client timeout; it does not identify which server or
-network component caused the delay. `SYNC_DEADLINE` identifies local cancellation.
-DNS, connection, TLS, response body I/O, HTTP status and response decoding failures
-have separate categories. Suppressed exceptions remain available in the final
-stack trace. With Spring's JDK request factory, a body read timeout can surface as
-an I/O error from a closed stream without a timeout cause; it is reported as
-`RESPONSE_BODY_IO`, without guessing why the stream closed.
-
-For temporary transport diagnostics, set `COC_HTTP_TRANSPORT_LOG=errors,ssl,channel`
-in `.env` and recreate the app container so the JVM receives the setting at startup.
-This enables JDK transport logging for both CoC and Telegram HTTP clients. Leave
-the value empty for normal operation. Request headers and response contents are
-not enabled by this diagnostic preset. JDK events reach Logback through Spring
-Boot's JUL bridge. Their worker threads do not inherit the application's `syncId`
-or `requestId`; use the application HTTP entries for request correlation.
-Application console and file logging mask configured API tokens, Telegram bot
-URLs, Bearer credentials and Authorization values. Message and exception control
-characters are escaped while stack frames retain their line breaks.
-
-Archived application logs are retained for up to 365 days, subject to the 1 GB
-archive limit. The active log rotates at a 10 MB threshold before compression.
 
 **Stop the application**
 
