@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public final class StartCommand implements BotCommand {
+public class StartCommand implements BotCommand {
 
     private static final String NAME = "/start";
     private static final String DESCRIPTION = "Начало работы с ботом";

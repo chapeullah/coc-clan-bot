@@ -27,16 +27,11 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.chapeullah.cocclanbot.ClashOfClansTranslations.CLAN_TYPES_RU;
-import static com.chapeullah.cocclanbot.ClashOfClansTranslations.LOCATION_NAMES_RU;
-import static com.chapeullah.cocclanbot.ClashOfClansTranslations.LEAGUE_TIER_NAMES_RU;
-import static com.chapeullah.cocclanbot.ClashOfClansTranslations.ROLE_NAMES_RU;
-import static com.chapeullah.cocclanbot.ClashOfClansTranslations.WAR_LEAGUE_NAMES_RU;
+import static com.chapeullah.cocclanbot.telegram.command.BotMessages.*;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,20 +42,12 @@ public class BotCommandMessageService {
     private static final String GROUP_NOT_SET = "❌ Группа не задана: /set_group";
     private static final String WRONG_GROUP = "❌ Команда доступна только в заданной группе.";
     private static final String INVALID_THREAD = "❌ Отправь команду внутри правильной темы.";
-    private static final String NO_DATA = "Нет данных";
+
     private static final String NO_MEMBERS = "Список участников клана пуст";
     private static final String NO_RAID_SEASONS = "Сезоны рейдов ещё не сохранены";
     private static final String NO_ACTIVE_WAR = "Сейчас активной войны нет";
-    private static final String DATA_PENDING = "Уточняется";
-    private static final String IN_PROGRESS = "Идёт";
     private static final String WAR_VICTORY = "Победа";
     private static final String WAR_DEFEAT = "Поражение";
-
-    private static final String USAGE_NOTICE = """
-            В личных сообщениях доступны только /start и /help.
-            Остальные команды используйте в группе <a href="https://t.me/gussicoc">ГУССИ</a>.
-            
-            <i>В группе команды и ответы бота видны только Вам.</i>""";
 
     private final WarService warService;
     private final WarParticipantService warParticipantService;
@@ -81,186 +68,101 @@ public class BotCommandMessageService {
 
     @Transactional(readOnly = true)
     public String getClanMessage(@NonNull Clan clan) {
-        String type = clan.getType();
-        if (type == null) {
-            throw new IllegalStateException("Clan type is null: clanTag=\"" + clan.getTag() + "\"");
-        }
-        type = CLAN_TYPES_RU.get(type);
-        if (type == null) {
-            throw new IllegalStateException(
-                    "Missing clan type translation: type=\"" + clan.getType() + "\", clanTag=\"" + clan.getTag() + "\"");
-        }
-
-        String warLeague = NO_DATA;
-        if (clan.getWarLeague() != null) {
-            Integer id = clan.getWarLeague().getId();
-            warLeague = WAR_LEAGUE_NAMES_RU.get(id);
-            if (warLeague == null) {
-                throw new IllegalStateException(
-                        "Missing war league translation: warLeagueId=" + id + ", clanTag=\"" + clan.getTag() + "\"");
-            }
-        }
-
-        String location = NO_DATA;
-        if (clan.getLocation() != null) {
-            Integer id = clan.getLocation().getId();
-            location = LOCATION_NAMES_RU.get(id);
-            if (location == null) {
-                throw new IllegalStateException(
-                        "Missing location translation: locationId=" + id + ", clanTag=\"" + clan.getTag() + "\"");
-            }
-        }
-
-        String description = clan.getDescription() == null || clan.getDescription().isBlank() ? "Без описания"
-                : TelegramUtils.escapeHtml(clan.getDescription());
-        return """
-                <b>%s</b>
-                <code>%s</code>
-                
-                %s
-                
-                Уровень: %s
-                Участники: %s из 50
-                Тип: %s
-                Очки клана: %s
-                Очки столицы: %s
-                
-                Военная лига: %s
-                Винрейт: %s
-                Победы: %s
-                Серия побед: %s
-                
-                Расположение: %s"""
-                .formatted(
-                        TelegramUtils.escapeHtml(clan.getName()),
-                        TelegramUtils.escapeHtml(clan.getTag()),
-                        description,
-                        valueOrNoData(clan.getClanLevel()),
-                        valueOrNoData(clan.getMemberCount()),
-                        TelegramUtils.escapeHtml(type),
-                        valueOrNoData(clan.getClanPoints()),
-                        valueOrNoData(clan.getClanCapitalPoints()),
-                        warLeague,
-                        formatWarWinRate(clan),
-                        valueOrNoData(clan.getWarWins()),
-                        valueOrNoData(clan.getWarWinStreak()),
-                        location);
-    }
-
-    private static String formatWarWinRate(@NonNull Clan clan) {
         Integer wins = clan.getWarWins();
         Integer losses = clan.getWarLosses();
-        if (wins == null || losses == null) {
-            return NO_DATA;
+        Double warWinRate = null;
+        if (wins != null && losses != null) {
+            long totalWars = (long) wins + losses;
+            if (totalWars != 0) {
+                warWinRate = wins * 100.0 / totalWars;
+            }
         }
 
-        int totalWarsCount = wins + losses;
-        if (totalWarsCount == 0) {
-            return NO_DATA;
-        }
-
-        double winRate = (double) wins * 100 / totalWarsCount; // Excluding ties
-        return "%.2f%%".formatted(winRate);
+        return BotMessages.formatClanMessage(
+                clan.getName(),
+                clan.getTag(),
+                clan.getDescription(),
+                clan.getClanLevel(),
+                clan.getMemberCount(),
+                clan.getType(),
+                clan.getClanPoints(),
+                clan.getClanCapitalPoints(),
+                clan.getWarLeague(),
+                warWinRate,
+                wins,
+                clan.getWarWinStreak(),
+                clan.getLocation());
     }
 
     public String getHelpMessage(
             @NonNull Map<BotCommandType, List<BotCommand>> commandsByType,
             boolean isAdmin,
             boolean isPrivateChat) {
-        StringBuilder message = new StringBuilder("<b>Доступные команды</b>\n\n");
-        message.append(commandsByType.values()
+        List<List<BotCommand>> visibleGroups = commandsByType.values()
                 .stream()
                 .map(commands -> commands
                         .stream()
-                        .filter(command -> (isAdmin || !command.isAdminOnly()))
-                        .map(command -> command.getName() + " — " + command.getDescription())
-                        .collect(Collectors.joining("\n")))
+                        .filter(command -> isAdmin || !command.isAdminOnly())
+                        .toList())
                 .filter(group -> !group.isEmpty())
-                .collect(Collectors.joining("\n\n")));
-        if (isPrivateChat) {
-            message.append("\n\n").append(USAGE_NOTICE);
-        }
-        return message.toString();
+                .toList();
+        return BotMessages.formatHelpMessage(visibleGroups, isPrivateChat);
     }
 
     @Transactional(readOnly = true)
     public String getMemberMessage(@NonNull Member member) {
-        String name = TelegramUtils.escapeHtml(TelegramUtils.replaceEmojisWithSquares(member.getName()));
-
-        String role = ROLE_NAMES_RU.get(member.getRole());
-        if (role == null) {
-            throw new IllegalStateException("Missing member role translation: role=\"" + member.getRole()
-                    + "\", memberTag=\"" + member.getTag() + "\"");
-        }
-        role = TelegramUtils.escapeHtml(role);
-
-        String league = member.getLeagueTier() == null ? NO_DATA : TelegramUtils
-                .escapeHtml(LEAGUE_TIER_NAMES_RU.getOrDefault(
-                        member.getLeagueTier().getId(), member.getLeagueTier().getName()));
-
-        StringBuilder message = new StringBuilder("""
-                <b>%s</b>
-                <code>%s</code>
-
-                Роль: %s
-                """.formatted(
-                name, TelegramUtils.escapeHtml(member.getTag()), role));
-        if (Objects.equals(Boolean.TRUE, member.getInClan())) {
-            message.append("Место в клане: %s\n".formatted(valueOrNoData(member.getClanRank())));
-        }
-
-        message.append("""
-                Ратуша: %s
-                Уровень: %s
-                Лига: %s
-                Трофеи: %s
-                Трофеи деревни строителя: %s
-
-                <b>Пожертвования за сезон</b>
-                Отдано: %s
-                Получено: %s
-
-                <b>Пожертвования за всё время</b>
-                Отдано: %s
-                Получено: %s
-                """.formatted(
-                valueOrNoData(member.getTownHallLevel()),
-                valueOrNoData(member.getExpLevel()),
-                league,
-                valueOrNoData(member.getTrophies()),
-                valueOrNoData(member.getBuilderBaseTrophies()),
-                valueOrNoData(member.getDonations()),
-                valueOrNoData(member.getDonationsReceived()),
-                valueOrNoData(member.getTotalDonations()),
-                valueOrNoData(member.getTotalDonationsReceived())));
-        if (Objects.equals(Boolean.FALSE, member.getInClan())) {
-            message.append("\n<i>Последние сохранённые данные участника</i>");
-        }
-        return message.toString().strip();
-    }
-
-    private static String valueOrNoData(Object value) {
-        return value == null ? NO_DATA : value.toString();
+        return BotMessages.formatMemberMessage(
+                member.getName(),
+                member.getTag(),
+                member.getRole(),
+                member.getInClan(),
+                member.getClanRank(),
+                member.getTownHallLevel(),
+                member.getExpLevel(),
+                member.getLeagueTier(),
+                member.getTrophies(),
+                member.getBuilderBaseTrophies(),
+                member.getDonations(),
+                member.getDonationsReceived(),
+                member.getTotalDonations(),
+                member.getTotalDonationsReceived());
     }
 
     public String getMembersMessage(
             @NonNull List<Member> members,
             @NonNull Map<String, MemberStatistic> statisticsByTag) {
-        StringBuilder message = new StringBuilder("<b>Участники клана</b>\n\n");
-        members.forEach(member -> {
-            String name = TelegramUtils.escapeHtml(TelegramUtils.replaceEmojisWithSquares(member.getName()));
-            MemberStatistic statistic = statisticsByTag.get(member.getTag());
-            String ratingText = statistic == null ? NO_DATA : statistic.totalRating()
-                    .map(rating -> String.format(Locale.ROOT, "%.2f", rating))
-                    .orElse(NO_DATA);
-            message.append("<b>%02d. %s</b> | <code>%s</code> | %s\n"
-                    .formatted(
+        List<String> memberLines = members.stream()
+                .map(member -> {
+                    MemberStatistic statistic = statisticsByTag.get(member.getTag());
+                    Double rating = statistic == null ? null : statistic.totalRating().orElse(null);
+                    return BotMessages.formatMemberListItem(
                             member.getClanRank(),
-                            name,
-                            TelegramUtils.escapeHtml(member.getTag()),
-                            ratingText));
-        });
-        return message.toString().strip();
+                            member.getName(),
+                            member.getTag(),
+                            rating);
+                })
+                .toList();
+        return BotMessages.formatMembersMessage(memberLines);
+    }
+
+    @Transactional(readOnly = true)
+    public String getRaidMessage(
+            @NonNull RaidSeason raidSeason,
+            @NonNull List<RaidSeasonParticipant> participants) {
+        Long participantCount = isRaidAttackCountConsistent(raidSeason, participants)
+                ? participants.stream()
+                        .filter(participant -> participant.getAttackCount() > 0)
+                        .count()
+                : null;
+        return BotMessages.formatRaidMessage(
+                raidSeason.getState(),
+                raidSeason.getStartTime(),
+                raidSeason.getEndTime(),
+                raidSeason.getCapitalTotalLoot(),
+                raidSeason.getTotalAttacks(),
+                participantCount,
+                raidSeason.getRaidsCompleted(),
+                raidSeason.getEnemyDistrictsDestroyed());
     }
 
     @Transactional
@@ -678,62 +580,20 @@ public class BotCommandMessageService {
     }
 
     @Transactional(readOnly = true)
-    public String getRaidMessage(@NonNull) {
-        RaidSeason season = raidSeasonService.findLatestByClanTag(clanTag).orElse(null);
-        if (season == null) {
-            return NO_RAID_SEASONS;
+    public String getRaidMissedMessage(@NonNull String clanTag) {
+        RaidSeason raidSeason = raidSeasonService.findLatestByClanTag(clanTag).orElse(null);
+        if (raidSeason == null) {
+            return RAID_NOT_FOUND;
         }
 
-        List<RaidSeasonParticipant> participants =
-                raidSeasonParticipantService.getByRaidSeason(season);
-        String participantCount = hasCompleteRaidParticipants(season, participants)
-                ? Long.toString(participants.stream()
-                        .filter(participant -> participant.getAttackCount() > 0)
-                        .count())
-                : DATA_PENDING;
-
-        return """
-                <b>%s</b>
-
-                Статус: %s
-                Период: %s (МСК)
-
-                Столичное золото: %s
-                Атаки: %s
-                Участников с атаками: %s
-                Завершено рейдов: %s
-                Уничтожено районов: %s
-                """.formatted(
-                        "ongoing".equals(season.getState())
-                                ? "Текущий сезон рейдов"
-                                : "Последний сезон рейдов",
-                        TelegramUtils.escapeHtml(getRaidState(season)),
-                        getRaidPeriod(season),
-                        valueOrNoData(season.getCapitalTotalLoot()),
-                        valueOrNoData(season.getTotalAttacks()),
-                        participantCount,
-                        valueOrNoData(season.getRaidsCompleted()),
-                        valueOrNoData(season.getEnemyDistrictsDestroyed()))
-                .strip();
-    }
-
-    @Transactional(readOnly = true)
-    public String getRaidMissedMessage() {
-        RaidSeason season = raidSeasonService.findLatestByClanTag(clanTag).orElse(null);
-        if (season == null) {
-            return NO_RAID_SEASONS;
+        List<RaidSeasonParticipant> participants = raidSeasonParticipantService.getByRaidSeason(raidSeason);
+        if (!isRaidAttackCountConsistent(raidSeason, participants)) {
+            return RAID_ATTACK_DATA_INCONSISTENT;
         }
 
-        List<RaidSeasonParticipant> participants =
-                raidSeasonParticipantService.getByRaidSeason(season);
-        if (!hasCompleteRaidParticipants(season, participants)) {
-            return "❌ Данные об участниках рейда пока неполные";
-        }
-
-        List<RaidSeasonClanMemberSnapshot> members =
-                raidSeasonClanMemberSnapshotService.getByRaidSeason(season);
+        List<RaidSeasonClanMemberSnapshot> members = raidSeasonClanMemberSnapshotService.getByRaidSeason(raidSeason);
         if (members.isEmpty()) {
-            return "❌ Снимок состава клана для этого сезона не сохранён";
+            return RAID_SNAPSHOT_NOT_FOUND;
         }
 
         Set<String> attackedTags = new HashSet<>();
@@ -743,48 +603,21 @@ public class BotCommandMessageService {
             }
         }
 
-        StringBuilder message = new StringBuilder("""
-                <b>Участники без атак в рейдах</b>
-
-                Период: %s (МСК)
-                Статус: %s
-                Состав клана, сохранённый в течение сезона
-                Подтверждённо недопущенные участники исключены
-
-                """.formatted(
-                        getRaidPeriod(season),
-                        TelegramUtils.escapeHtml(getRaidState(season))));
-
-        int number = 1;
-        for (RaidSeasonClanMemberSnapshot member : members) {
-            if (attackedTags.contains(member.getTag())
-                    || Boolean.FALSE.equals(member.getParticipationEligible())) {
-                continue;
-            }
-
-            String name = TelegramUtils.escapeHtml(
-                    TelegramUtils.replaceEmojisWithSquares(member.getName()));
-            message.append("%02d. %s | <code>%s</code>\n"
-                    .formatted(
-                            number++,
-                            name,
-                            TelegramUtils.escapeHtml(member.getTag())));
-        }
-        if (number == 1) {
-            message.append("Среди учитываемых участников нет игроков без атак");
-        }
-        return message.toString().strip();
+        List<RaidSeasonClanMemberSnapshot> membersWithoutAttacks = members.stream()
+                .filter(member -> !attackedTags.contains(member.getTag()))
+                .filter(member -> !Boolean.FALSE.equals(member.getParticipationEligible()))
+                .toList();
+        return BotMessages.formatRaidMissedMessage(
+                raidSeason.getState(),
+                raidSeason.getStartTime(),
+                raidSeason.getEndTime(),
+                membersWithoutAttacks);
     }
 
     @Transactional(readOnly = true)
-    public String getRaidsMessage() {
-        List<RaidSeason> seasons = raidSeasonService.getRecentByClanTag(clanTag);
-        if (seasons.isEmpty()) {
-            return NO_RAID_SEASONS;
-        }
-
+    public String getRaidsMessage(@NonNull List<RaidSeason> raidSeasons) {
         StringBuilder message = new StringBuilder("<b>История рейдов</b>\n\n");
-        for (RaidSeason season : seasons) {
+        for (RaidSeason raidSeason : raidSeasons) {
             message.append("""
                     <b>%s</b> (МСК)
                     Статус: %s
@@ -794,19 +627,20 @@ public class BotCommandMessageService {
                     Уничтожено районов: %s
 
                     """.formatted(
-                            getRaidPeriod(season),
-                            TelegramUtils.escapeHtml(getRaidState(season)),
-                            valueOrNoData(season.getCapitalTotalLoot()),
-                            valueOrNoData(season.getTotalAttacks()),
-                            valueOrNoData(season.getRaidsCompleted()),
-                            valueOrNoData(season.getEnemyDistrictsDestroyed())));
+                            formatRaidPeriod(raidSeason.getStartTime(), raidSeason.getEndTime()),
+                            TelegramUtils.escapeHtml(formatRaidState(raidSeason.getState())),
+                            valueOrNoData(raidSeason.getCapitalTotalLoot()),
+                            valueOrNoData(raidSeason.getTotalAttacks()),
+                            valueOrNoData(raidSeason.getRaidsCompleted()),
+                            valueOrNoData(raidSeason.getEnemyDistrictsDestroyed())));
         }
         return message.toString().strip();
     }
 
-    private static boolean hasCompleteRaidParticipants(
-            RaidSeason season, List<RaidSeasonParticipant> participants) {
-        Integer expectedAttacks = season.getTotalAttacks();
+    public static boolean isRaidAttackCountConsistent(
+            @NonNull RaidSeason raidSeason,
+            @NonNull List<RaidSeasonParticipant> participants) {
+        Integer expectedAttacks = raidSeason.getTotalAttacks();
         if (expectedAttacks == null || expectedAttacks < 0) {
             return false;
         }
@@ -820,22 +654,6 @@ public class BotCommandMessageService {
             actualAttacks += attackCount;
         }
         return actualAttacks == expectedAttacks;
-    }
-
-    private static String getRaidPeriod(RaidSeason season) {
-        return DATE_TIME_FORMATTER.format(season.getStartTime()) + " — "
-                + DATE_TIME_FORMATTER.format(season.getEndTime());
-    }
-
-    private static String getRaidState(RaidSeason season) {
-        if (season.getState() == null) {
-            return NO_DATA;
-        }
-        return switch (season.getState()) {
-            case "ongoing" -> IN_PROGRESS;
-            case "ended" -> "Завершён";
-            default -> season.getState();
-        };
     }
 
 }

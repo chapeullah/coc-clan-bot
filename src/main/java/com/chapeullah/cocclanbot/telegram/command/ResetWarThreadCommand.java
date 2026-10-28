@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public final class ResetWarThreadCommand implements BotCommand {
+public class ResetWarThreadCommand implements BotCommand {
 
     private static final String NAME = "/reset_war_thread";
     private static final String DESCRIPTION = "Сбросить тему уведомлений о КВ";

@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
 
+import static com.chapeullah.cocclanbot.telegram.command.BotMessages.*;
+
 @Component
 @RequiredArgsConstructor
 public class MemberCommand implements BotCommand {
@@ -33,7 +35,7 @@ public class MemberCommand implements BotCommand {
     @Transactional(readOnly = true)
     public String execute(String args, TelegramMessage message) {
         if (args == null || args.isBlank()) {
-            return "❌ Не указан тег участника.\nФормат команды: /member #TAG";
+            return ERROR_EMOJI + SPACE + MEMBER_TAG_REQUIRED;
         }
 
         String tag = args.strip().toUpperCase(Locale.ROOT);
@@ -41,12 +43,12 @@ public class MemberCommand implements BotCommand {
             tag = "#" + tag;
         }
         if (!tag.matches("#[A-Z0-9]+")) {
-            return "❌ Некорректный формат тега участника.\nФормат команды: /member #TAG";
+            return ERROR_EMOJI + SPACE + INVALID_MEMBER_TAG_FORMAT;
         }
 
         Member member = memberService.findByTagAndClanTag(tag, cocProperties.getClanTag()).orElse(null);
         if (member == null) {
-            return "❌ Участник с тегом " + tag + " не найден в клане.";
+            return ERROR_EMOJI + SPACE + MEMBER_NOT_FOUND;
         }
 
         return botCommandMessageService.getMemberMessage(member);

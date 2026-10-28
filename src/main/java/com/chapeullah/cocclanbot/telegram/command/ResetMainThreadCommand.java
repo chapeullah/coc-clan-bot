@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public final class ResetMainThreadCommand implements BotCommand {
+public class ResetMainThreadCommand implements BotCommand {
 
     private static final String NAME = "/reset_main_thread";
     private static final String DESCRIPTION = "Сбросить основной чат и разрешить в нём команды";

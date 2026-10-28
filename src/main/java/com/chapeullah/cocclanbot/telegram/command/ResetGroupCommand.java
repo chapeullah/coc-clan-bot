@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public final class ResetGroupCommand implements BotCommand {
+public class ResetGroupCommand implements BotCommand {
 
     private static final String NAME = "/reset_group";
     private static final String DESCRIPTION = "Сбросить группу клана и все настройки тем";

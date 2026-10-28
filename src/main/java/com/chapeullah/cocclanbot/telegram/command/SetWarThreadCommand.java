@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public final class SetWarThreadCommand implements BotCommand {
+public class SetWarThreadCommand implements BotCommand {
 
     private static final String NAME = "/set_war_thread";
     private static final String DESCRIPTION = "Назначить текущую тему для уведомлений";

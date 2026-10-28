@@ -20,6 +20,7 @@ public class HelpCommand implements BotCommand {
 
     private final BotCommandMessageService botCommandMessageService;
     private final ObjectProvider<BotCommandService> botCommandService;
+
     private final TelegramAccessService telegramAccessService;
 
     @Override public String getName() { return NAME; }

@@ -1,12 +1,13 @@
 package com.chapeullah.cocclanbot.telegram.command;
 
+import com.chapeullah.cocclanbot.config.properties.CocProperties;
 import com.chapeullah.cocclanbot.telegram.dto.TelegramMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public final class RaidMissedCommand implements BotCommand {
+public class RaidMissedCommand implements BotCommand {
 
     private static final String NAME = "/raid_missed";
     private static final String DESCRIPTION = "Участники без атак в рейдах";
@@ -15,6 +16,8 @@ public final class RaidMissedCommand implements BotCommand {
 
     private final BotCommandMessageService botCommandMessageService;
 
+    private final CocProperties cocProperties;
+
     @Override public String getName() { return NAME; }
     @Override public String getDescription() { return DESCRIPTION; }
     @Override public BotCommandType getType() { return TYPE; }
@@ -22,7 +25,7 @@ public final class RaidMissedCommand implements BotCommand {
 
     @Override
     public String execute(String args, TelegramMessage message) {
-        return botCommandMessageService.getRaidMissedMessage();
+        return botCommandMessageService.getRaidMissedMessage(cocProperties.getClanTag());
     }
 
 }

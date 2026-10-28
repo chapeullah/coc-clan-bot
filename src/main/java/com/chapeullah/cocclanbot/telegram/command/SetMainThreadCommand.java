@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public final class SetMainThreadCommand implements BotCommand {
+public class SetMainThreadCommand implements BotCommand {
 
     private static final String NAME = "/set_main_thread";
     private static final String DESCRIPTION = "Назначить текущий чат основным и запретить в нём команды";

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public final class SetGroupCommand implements BotCommand {
+public class SetGroupCommand implements BotCommand {
 
     private static final String NAME = "/set_group";
     private static final String DESCRIPTION = "Назначить текущую группу группой клана";

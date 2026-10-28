@@ -17,12 +17,10 @@ import java.util.Objects;
 public class CapitalLeague {
 
     @Id
-    @Column(name = "id",
-            nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
-    @Column(name = "name",
-            nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
     public CapitalLeague(@NonNull Integer id, @NonNull String name) {

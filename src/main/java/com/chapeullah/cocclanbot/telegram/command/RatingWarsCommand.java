@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public final class RatingWarsCommand implements BotCommand {
+public class RatingWarsCommand implements BotCommand {
 
     private static final String NAME = "/rating_wars";
     private static final String DESCRIPTION = "Рейтинг участников клановых войн";
